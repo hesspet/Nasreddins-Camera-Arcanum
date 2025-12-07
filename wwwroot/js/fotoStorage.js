@@ -7,9 +7,33 @@ function detectEnvironment() {
 
     return {
         platform: isAndroid ? "android" : isIOS ? "ios" : isWindows ? "windows" : isMac ? "mac" : "web",
-        preferredFolder: isAndroid || isIOS ? "CameraRoll" : "Pictures",
-        basePath: isWindows ? "C:/Users" : isMac ? "/Users" : isAndroid ? "/storage/emulated/0" : isIOS ? "/Documents" : "/",
+        preferredFolder: isAndroid || isIOS ? "CameraRoll" : isWindows ? "Camera Roll" : "Pictures",
+        basePath: isWindows
+            ? "C:\\Users\\Public\\Pictures"
+            : isMac
+              ? "/Users"
+              : isAndroid
+                ? "/storage/emulated/0"
+                : isIOS
+                  ? "/Documents"
+                  : "/",
+        pathSeparator: isWindows ? "\\" : "/",
     };
+}
+
+function buildPath(env, fileName, useFallbackFolder) {
+    const separator = env.pathSeparator;
+    const rawBasePath = env.basePath || "";
+    const hasLeadingSeparator = rawBasePath.startsWith(separator);
+    const basePath = rawBasePath.replace(separator === "\\" ? /[\\]+$/ : /\/+$/, "");
+    const folder = (useFallbackFolder ? "in-memory" : env.preferredFolder || "").replace(
+        separator === "\\" ? /^[\\]+|[\\]+$/g : /^\/+|\/+$/g,
+        "",
+    );
+
+    const segments = [basePath, folder, fileName].filter(Boolean);
+    const joined = segments.join(separator || "/");
+    return hasLeadingSeparator && !joined.startsWith(separator) ? `${separator}${joined}` : joined;
 }
 
 async function getOrCreateDirectory(root, name) {
@@ -37,32 +61,34 @@ export async function savePhotoToFilesystem(dataUrl) {
         const writable = await fileHandle.createWritable();
         await writable.write(await dataUrlToArrayBuffer(dataUrl));
         await writable.close();
+        const path = buildPath(env, fileName, false);
         console.info(
             "Foto gespeichert",
             {
-                path: `${env.basePath}/${env.preferredFolder}/${fileName}`,
+                path,
                 fileName,
                 persistedToFilesystem: true,
             },
         );
         return {
-            path: `${env.basePath}/${env.preferredFolder}/${fileName}`,
+            path,
             previewDataUrl,
             inMemoryFallback: false,
         };
     }
 
     // Fallback to in-memory persistence when no filesystem API is available
+    const path = buildPath(env, fileName, true);
     console.info(
         "Foto gespeichert (In-Memory-Fallback)",
         {
-            path: `${env.basePath}/in-memory/${fileName}`,
+            path,
             fileName,
             persistedToFilesystem: false,
         },
     );
     return {
-        path: `${env.basePath}/in-memory/${fileName}`,
+        path,
         previewDataUrl,
         inMemoryFallback: true,
     };
