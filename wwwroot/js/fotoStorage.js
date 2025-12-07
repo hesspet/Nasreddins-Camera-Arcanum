@@ -26,11 +26,12 @@ async function dataUrlToArrayBuffer(dataUrl) {
 }
 
 async function fileToDataUrl(file) {
-    const arrayBuffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    const base64String = btoa(String.fromCharCode(...bytes));
-    const extension = file.type?.split("/")[1] ?? "png";
-    return `data:${file.type || "image/png"};base64,${base64String}`;
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 export async function savePhotoToFilesystem(dataUrl) {
