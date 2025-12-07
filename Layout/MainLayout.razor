@@ -1,6 +1,8 @@
+@inherits LayoutComponentBase
+
 <MudLayout>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="1" Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Always" Class="drawer">
-        <MudStack Spacing="0.5" Class="drawer-content">
+        <MudStack Spacing="1" Class="drawer-content">
             <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ms-2 mt-1">Navigation</MudText>
             <MudNavMenu Dense="true">
                 <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
