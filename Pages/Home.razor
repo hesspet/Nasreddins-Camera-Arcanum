@@ -1,7 +1,56 @@
-﻿@page "/"
+@page "/"
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudStack Spacing="1.5">
+    <MudPaper Class="pa-4 home-hero" Elevation="1">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.h5">Willkommen bei Nasreddin's Camera Arcanum</MudText>
+            <MudText Typo="Typo.body1">
+                Eine mobilefreundliche Oberfläche, die blitzschnell auf Touch reagiert und deine Kamera-Workflows in den Mittelpunkt stellt.
+            </MudText>
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                <MudChip Color="Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Bolt">Reaktiv</MudChip>
+                <MudChip Color="Color.Secondary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.PhoneIphone">Smartphone Ready</MudChip>
+                <MudChip Color="Color.Info" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Explore">Entdecken</MudChip>
+            </MudStack>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Class="mt-2" FullWidth="true">
+                Jetzt starten
+            </MudButton>
+        </MudStack>
+    </MudPaper>
 
-Welcome to your new app.
+    <MudGrid GutterSize="2">
+        <MudItem xs="12" sm="6">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudStack Spacing="0.5">
+                    <MudIcon Icon="@Icons.Material.Filled.CameraAlt" Color="Color.Primary" Size="Size.Large" />
+                    <MudText Typo="Typo.subtitle1">Schneller Zugriff</MudText>
+                    <MudText Typo="Typo.body2">
+                        Öffne wichtige Bereiche direkt aus dem Drawer und bleib immer im Flow.
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudStack Spacing="0.5">
+                    <MudIcon Icon="@Icons.Material.Filled.TouchApp" Color="Color.Secondary" Size="Size.Large" />
+                    <MudText Typo="Typo.subtitle1">Touch-optimierte Controls</MudText>
+                    <MudText Typo="Typo.body2">
+                        Große Abstände, klare Buttons und schnelle Reaktionen sorgen für eine angenehme Bedienung.
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudStack Spacing="0.75">
+                    <MudText Typo="Typo.subtitle1">Live-Status</MudText>
+                    <MudProgressLinear Color="Color.Success" Value="72" Rounded="true" Class="mt-1" />
+                    <MudText Typo="Typo.caption">Projektstatus: Synchronisation fast abgeschlossen.</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudStack>
