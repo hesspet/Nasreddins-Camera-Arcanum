@@ -8,7 +8,7 @@ function detectEnvironment() {
     return {
         platform: isAndroid ? "android" : isIOS ? "ios" : isWindows ? "windows" : isMac ? "mac" : "web",
         preferredFolder: isAndroid || isIOS ? "CameraRoll" : "Pictures",
-        basePath: isWindows ? "C:/Users" : isMac ? "/Users" : isAndroid ? "/storage/emulated/0" : isIOS ? "/Documents" : "/".
+        basePath: isWindows ? "C:/Users" : isMac ? "/Users" : isAndroid ? "/storage/emulated/0" : isIOS ? "/Documents" : "/",
     };
 }
 
