@@ -25,13 +25,15 @@
 @code {
     private string? _capturedPhoto;
 
-    private void HandleCapture(string? photo)
+    private async Task HandleCapture(string? photo)
     {
         _capturedPhoto = photo;
+        await InvokeAsync(StateHasChanged);
     }
 
-    private void ResetCapture()
+    private async Task ResetCapture()
     {
         _capturedPhoto = null;
+        await InvokeAsync(StateHasChanged);
     }
 }
