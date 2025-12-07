@@ -24,11 +24,11 @@ public class FotoStorage : IAsyncDisposable
         {
             var module = await _moduleTask.Value;
             var result = await module.InvokeAsync<BrowserStorageResult>(
-                "savePhotoToFilesystem",
+                "savePhotoInBrowser",
                 cancellationToken,
                 dataUrl);
 
-            return new StoredPhoto(result.Path, result.PreviewDataUrl, result.InMemoryFallback is not true);
+            return new StoredPhoto(result.Path, result.PreviewDataUrl, false);
         }
 
         var buffer = ExtractBytesFromDataUrl(dataUrl);
@@ -152,9 +152,6 @@ public class FotoStorage : IAsyncDisposable
 
         [JsonPropertyName("previewDataUrl")]
         public string PreviewDataUrl { get; init; } = string.Empty;
-
-        [JsonPropertyName("inMemoryFallback")]
-        public bool? InMemoryFallback { get; init; }
     }
 }
 
