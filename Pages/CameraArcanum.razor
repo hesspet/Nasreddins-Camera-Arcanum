@@ -1,0 +1,37 @@
+@page "/camera-arcanum"
+
+<PageTitle>Camera Arcanum</PageTitle>
+
+<MudStack Spacing="2">
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.h5">Kameramodus</MudText>
+            <MudText Typo="Typo.body2">
+                Öffne die Live-Vorschau, löse per großem Kameraknopf aus und sieh dir dein Foto direkt danach in der Vorschau an.
+            </MudText>
+        </MudStack>
+    </MudPaper>
+
+    @if (string.IsNullOrEmpty(_capturedPhoto))
+    {
+        <CameraView OnCapture="HandleCapture" />
+    }
+    else
+    {
+        <PhotoPreview PhotoDataUrl="_capturedPhoto" OnRetake="ResetCapture" />
+    }
+</MudStack>
+
+@code {
+    private string? _capturedPhoto;
+
+    private void HandleCapture(string? photo)
+    {
+        _capturedPhoto = photo;
+    }
+
+    private void ResetCapture()
+    {
+        _capturedPhoto = null;
+    }
+}

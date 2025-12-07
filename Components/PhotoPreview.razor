@@ -1,0 +1,19 @@
+<MudPaper Class="photo-preview" Elevation="2">
+    @if (!string.IsNullOrEmpty(PhotoDataUrl))
+    {
+        <img src="@PhotoDataUrl" alt="Aufgenommenes Foto" class="photo-image" />
+    }
+    <MudStack Row="true" Spacing="2" JustifyContent="JustifyContent.Center" Class="mt-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Replay" OnClick="OnRetake">
+            Nochmals aufnehmen
+        </MudButton>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string? PhotoDataUrl { get; set; }
+
+    [Parameter]
+    public EventCallback OnRetake { get; set; }
+}
