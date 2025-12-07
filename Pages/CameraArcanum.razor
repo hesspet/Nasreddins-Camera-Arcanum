@@ -12,6 +12,11 @@
         </MudStack>
     </MudPaper>
 
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+    }
+
     @if (string.IsNullOrEmpty(_capturedPhoto))
     {
         <CameraView OnCapture="HandleCapture" />
@@ -24,16 +29,33 @@
 
 @code {
     private string? _capturedPhoto;
+    private string? _errorMessage;
+
+    [Inject]
+    private FotoStorage FotoStorage { get; set; } = default!;
 
     private async Task HandleCapture(string? photo)
     {
-        _capturedPhoto = photo;
+        _errorMessage = null;
+
+        try
+        {
+            var storedPhoto = await FotoStorage.SavePhotoAsync(photo);
+            _capturedPhoto = storedPhoto.PreviewDataUrl;
+        }
+        catch (Exception ex)
+        {
+            _capturedPhoto = null;
+            _errorMessage = ex.Message;
+        }
+
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task ResetCapture()
     {
         _capturedPhoto = null;
+        _errorMessage = null;
         await InvokeAsync(StateHasChanged);
     }
 }
