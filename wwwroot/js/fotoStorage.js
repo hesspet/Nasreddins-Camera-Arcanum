@@ -37,6 +37,14 @@ export async function savePhotoToFilesystem(dataUrl) {
         const writable = await fileHandle.createWritable();
         await writable.write(await dataUrlToArrayBuffer(dataUrl));
         await writable.close();
+        console.info(
+            "Foto gespeichert",
+            {
+                path: `${env.basePath}/${env.preferredFolder}/${fileName}`,
+                fileName,
+                persistedToFilesystem: true,
+            },
+        );
         return {
             path: `${env.basePath}/${env.preferredFolder}/${fileName}`,
             previewDataUrl,
@@ -45,6 +53,14 @@ export async function savePhotoToFilesystem(dataUrl) {
     }
 
     // Fallback to in-memory persistence when no filesystem API is available
+    console.info(
+        "Foto gespeichert (In-Memory-Fallback)",
+        {
+            path: `${env.basePath}/in-memory/${fileName}`,
+            fileName,
+            persistedToFilesystem: false,
+        },
+    );
     return {
         path: `${env.basePath}/in-memory/${fileName}`,
         previewDataUrl,
