@@ -39,7 +39,10 @@
                         <MudText Typo="Typo.body2">
                             Ziehe eine Bilddatei hierher oder wähle sie aus deinem Dateisystem aus. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
                         </MudText>
-                        <MudFileUpload T="IBrowserFile" FilesChanged="@HandleFileSelected" Accept="image/*" MaxFileSize="10485760" ButtonText="Datei auswählen" ChipColor="Color.Primary" Hidden="false" InputClass="file-drop-zone" Dense="true" />
+                        <MudFileUpload T="IBrowserFile" FilesChanged="@HandleFileSelected" 
+                            Accept="image/*" MaxFileSize="10485760" ButtonText="Datei auswählen" 
+                            ChipColor="Color.Primary" Hidden="false" InputClass="file-drop-zone" 
+                            Dense="true" />
                     </MudStack>
                 </MudPaper>
             </MudItem>
@@ -70,9 +73,7 @@
     private static readonly string[] AllowedContentTypes =
     {
         "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp"
+        "image/png"
     };
 
     private string? _capturedPhoto;
@@ -104,14 +105,9 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleFileSelected(IEnumerable<IBrowserFile> files)
+    private async Task HandleFileSelected(IBrowserFile file)
     {
-        if (files is null)
-        {
-            return;
-        }
-
-        var file = files.FirstOrDefault();
+      
         if (file is null)
         {
             return;
@@ -120,7 +116,7 @@
 
         if (!IsSupportedImage(file))
         {
-            _errorMessage = "Bitte wähle eine gültige Bilddatei aus (PNG, JPG, GIF, WEBP).";
+            _errorMessage = "Bitte wähle eine gültige Bilddatei aus (PNG, JPG).";
             await InvokeAsync(StateHasChanged);
             return;
         }
