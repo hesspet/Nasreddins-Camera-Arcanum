@@ -1,0 +1,14 @@
+.home-hero {
+    background: linear-gradient(135deg, #e3f2fd, #e0f7fa);
+}
+
+.mud-chip {
+    min-width: 96px;
+    justify-content: center;
+}
+
+@media (max-width: 599px) {
+    .mud-chip {
+        width: 100%;
+    }
+}
