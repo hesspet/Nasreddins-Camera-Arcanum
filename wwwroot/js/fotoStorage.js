@@ -25,18 +25,10 @@ async function dataUrlToArrayBuffer(dataUrl) {
     return response.arrayBuffer();
 }
 
-async function fileToDataUrl(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
 export async function savePhotoToFilesystem(dataUrl) {
     const env = detectEnvironment();
     const fileName = `camera_arcanum_${Date.now()}.png`;
+    const previewDataUrl = dataUrl;
 
     if (navigator.storage?.getDirectory) {
         const root = await navigator.storage.getDirectory();
@@ -45,9 +37,6 @@ export async function savePhotoToFilesystem(dataUrl) {
         const writable = await fileHandle.createWritable();
         await writable.write(await dataUrlToArrayBuffer(dataUrl));
         await writable.close();
-
-        const storedFile = await fileHandle.getFile();
-        const previewDataUrl = await fileToDataUrl(storedFile);
         return {
             path: `${env.basePath}/${env.preferredFolder}/${fileName}`,
             previewDataUrl,
@@ -56,8 +45,6 @@ export async function savePhotoToFilesystem(dataUrl) {
     }
 
     // Fallback to in-memory persistence when no filesystem API is available
-    const buffer = await dataUrlToArrayBuffer(dataUrl);
-    const previewDataUrl = await fileToDataUrl(new File([buffer], fileName, { type: "image/png" }));
     return {
         path: `${env.basePath}/in-memory/${fileName}`,
         previewDataUrl,
