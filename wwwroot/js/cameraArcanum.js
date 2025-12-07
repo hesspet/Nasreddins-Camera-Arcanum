@@ -17,9 +17,16 @@ export async function startCamera(videoElement) {
 }
 
 export function captureFrame(videoElement) {
+    const width = videoElement.videoWidth || videoElement.clientWidth || 640;
+    const height = videoElement.videoHeight || videoElement.clientHeight || 480;
+
+    if (!width || !height) {
+        throw new Error("Die Kamera-Vorschau ist noch nicht bereit.");
+    }
+
     const canvas = document.createElement("canvas");
-    canvas.width = videoElement.videoWidth;
-    canvas.height = videoElement.videoHeight;
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext("2d");
     ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL("image/png");
