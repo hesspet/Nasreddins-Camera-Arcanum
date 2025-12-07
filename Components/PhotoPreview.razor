@@ -3,10 +3,17 @@
     {
         <img src="@PhotoDataUrl" alt="Aufgenommenes Foto" class="photo-image" />
     }
+
     <MudStack Row="true" Spacing="2" JustifyContent="JustifyContent.Center" Class="mt-2">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Replay" OnClick="OnRetake">
             Nochmals aufnehmen
         </MudButton>
+        @if (!string.IsNullOrEmpty(PhotoDataUrl))
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@PhotoDataUrl" Download="@DownloadFileName">
+                Foto herunterladen
+            </MudButton>
+        }
     </MudStack>
 </MudPaper>
 
@@ -16,4 +23,6 @@
 
     [Parameter]
     public EventCallback OnRetake { get; set; }
+
+    private string DownloadFileName => "camera_arcanum_photo.png";
 }
