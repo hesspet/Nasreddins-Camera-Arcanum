@@ -8,6 +8,21 @@ a, .btn-link {
     color: #1565c0;
 }
 
+.file-drop-zone {
+    border: 2px dashed var(--mud-palette-primary);
+    border-radius: 8px;
+    background-color: var(--mud-palette-grey-lighten-5);
+    color: var(--mud-palette-text-secondary);
+    width: 100%;
+    min-height: 140px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+}
+
 .content {
     padding-top: 1rem;
 }
