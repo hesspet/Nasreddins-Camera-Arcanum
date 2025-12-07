@@ -39,9 +39,7 @@
                         <MudText Typo="Typo.body2">
                             Ziehe eine Bilddatei hierher oder wähle sie aus deinem Dateisystem aus. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
                         </MudText>
-                        <MudFileUpload T="IBrowserFile" FilesChanged="@((files) => HandleFileSelected(files))" 
-                                Accept="image/*" MaxFileSize="10485760" ButtonText="Datei auswählen" 
-                                ChipColor="Color.Primary" Dense="true" />
+                        <MudFileUpload T="IBrowserFile" FilesChanged="@HandleFileSelected" Accept="image/*" MaxFileSize="10485760" ButtonText="Datei auswählen" ChipColor="Color.Primary" Hidden="false" InputClass="file-drop-zone" Dense="true" />
                     </MudStack>
                 </MudPaper>
             </MudItem>
