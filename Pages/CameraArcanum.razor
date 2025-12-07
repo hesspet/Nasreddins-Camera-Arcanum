@@ -25,6 +25,20 @@
     }
     else
     {
+        @if (!string.IsNullOrWhiteSpace(_lastSavedPath))
+        {
+            <MudAlert Severity="@(_persistedToFilesystem ? Severity.Success : Severity.Info)" Icon="@Icons.Material.Filled.Save">
+                @if (_persistedToFilesystem)
+                {
+                    <text>Foto gespeichert unter: @_lastSavedPath</text>
+                }
+                else
+                {
+                    <text>Foto als Download bereitgestellt: @_lastSavedPath</text>
+                }
+            </MudAlert>
+        }
+
         <PhotoPreview PhotoDataUrl="_capturedPhoto" OnRetake="ResetCapture" />
     }
 </MudStack>
@@ -32,6 +46,8 @@
 @code {
     private string? _capturedPhoto;
     private string? _errorMessage;
+    private string? _lastSavedPath;
+    private bool _persistedToFilesystem;
 
     [Inject]
     private FotoStorage FotoStorage { get; set; } = default!;
@@ -44,11 +60,14 @@
         {
             var storedPhoto = await FotoStorage.SavePhotoAsync(photo);
             _capturedPhoto = storedPhoto.PreviewDataUrl;
+            _lastSavedPath = storedPhoto.FilePath;
+            _persistedToFilesystem = storedPhoto.PersistedToFilesystem;
         }
         catch (Exception ex)
         {
             _capturedPhoto = null;
             _errorMessage = ex.Message;
+            _lastSavedPath = null;
         }
 
         await InvokeAsync(StateHasChanged);
@@ -58,6 +77,8 @@
     {
         _capturedPhoto = null;
         _errorMessage = null;
+        _lastSavedPath = null;
+        _persistedToFilesystem = false;
         await InvokeAsync(StateHasChanged);
     }
 }
