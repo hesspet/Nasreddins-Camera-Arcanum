@@ -49,27 +49,58 @@ async function dataUrlToArrayBuffer(dataUrl) {
     return response.arrayBuffer();
 }
 
+async function writeWithPicker(blob, fileName) {
+    const fileHandle = await window.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [
+            {
+                description: "Bilddatei",
+                accept: {
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                    "image/webp": [".webp"],
+                },
+            },
+        ],
+    });
+
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+
+    return fileHandle.name || fileName;
+}
+
+function triggerBrowserDownload(blob, fileName, platform) {
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = fileName;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+        URL.revokeObjectURL(downloadUrl);
+        link.remove();
+    });
+
+    return `Download (${platform || "web"}): ${fileName}`;
+}
+
 export async function savePhotoToFilesystem(dataUrl) {
     const env = detectEnvironment();
     const fileName = `camera_arcanum_${Date.now()}.png`;
     const previewDataUrl = dataUrl;
+    const blob = await (await fetch(dataUrl)).blob();
 
-    if (navigator.storage?.getDirectory) {
-        const root = await navigator.storage.getDirectory();
-        const folder = await getOrCreateDirectory(root, env.preferredFolder);
-        const fileHandle = await folder.getFileHandle(fileName, { create: true });
-        const writable = await fileHandle.createWritable();
-        await writable.write(await dataUrlToArrayBuffer(dataUrl));
-        await writable.close();
-        const path = buildPath(env, fileName, false);
-        console.info(
-            "Foto gespeichert",
-            {
-                path,
-                fileName,
-                persistedToFilesystem: true,
-            },
-        );
+    if (window.showSaveFilePicker) {
+        const storedName = await writeWithPicker(blob, fileName);
+        const path = buildPath(env, storedName || fileName, false);
+        console.info("Foto gespeichert", {
+            path,
+            fileName: storedName || fileName,
+            persistedToFilesystem: true,
+        });
         return {
             path,
             previewDataUrl,
@@ -77,19 +108,16 @@ export async function savePhotoToFilesystem(dataUrl) {
         };
     }
 
-    // Fallback to in-memory persistence when no filesystem API is available
-    const path = buildPath(env, fileName, true);
-    console.info(
-        "Foto gespeichert (In-Memory-Fallback)",
-        {
-            path,
-            fileName,
-            persistedToFilesystem: false,
-        },
-    );
+    const downloadPath = triggerBrowserDownload(blob, fileName, env.platform);
+    console.info("Foto als Download bereitgestellt", {
+        path: downloadPath,
+        fileName,
+        persistedToFilesystem: true,
+    });
+
     return {
-        path,
+        path: downloadPath,
         previewDataUrl,
-        inMemoryFallback: true,
+        inMemoryFallback: false,
     };
 }
