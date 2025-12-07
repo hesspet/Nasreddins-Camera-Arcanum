@@ -1,6 +1,7 @@
 @page "/camera-arcanum"
 @using Nasreddins_Camera_Arcanum.Components
 @using Nasreddins_Camera_Arcanum.Helpers
+@using Microsoft.AspNetCore.Components.Forms
 
 <PageTitle>Camera Arcanum</PageTitle>
 
@@ -10,6 +11,9 @@
             <MudText Typo="Typo.h5">Kameramodus</MudText>
             <MudText Typo="Typo.body2">
                 Öffne die Live-Vorschau, löse per großem Kameraknopf aus und sieh dir dein Foto direkt danach in der Vorschau an.
+            </MudText>
+            <MudText Typo="Typo.body2">
+                Alternativ kannst du ein vorhandenes Bild hochladen, um die Verarbeitung ohne Live-Kamera zu testen.
             </MudText>
         </MudStack>
     </MudPaper>
@@ -21,7 +25,25 @@
 
     @if (string.IsNullOrEmpty(_capturedPhoto))
     {
-        <CameraView OnCapture="HandleCapture" />
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="1">
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">Live-Foto aufnehmen</MudText>
+                    <CameraView OnCapture="HandleCapture" />
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="1">
+                    <MudStack Spacing="1">
+                        <MudText Typo="Typo.subtitle1">Bild hochladen</MudText>
+                        <MudText Typo="Typo.body2">
+                            Ziehe eine Bilddatei hierher oder wähle sie aus deinem Dateisystem aus. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
+                        </MudText>
+                        <MudFileUpload T="IBrowserFile" FilesChanged="HandleFileSelected" Accept="image/*" MaxFileSize="10485760" ButtonText="Datei auswählen" ChipColor="Color.Primary" Dense="true"/>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
     }
     else
     {
@@ -44,6 +66,15 @@
 </MudStack>
 
 @code {
+    private const long MaxUploadSize = 10 * 1024 * 1024;
+    private static readonly string[] AllowedContentTypes =
+    {
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp"
+    };
+
     private string? _capturedPhoto;
     private string? _errorMessage;
     private string? _lastSavedPath;
@@ -71,6 +102,80 @@
         }
 
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleFileSelected(IReadOnlyList<IBrowserFile> files)
+    {
+        if (files is null || files.Count == 0)
+        {
+            return;
+        }
+
+        var file = files[0];
+        _errorMessage = null;
+
+        if (!IsSupportedImage(file))
+        {
+            _errorMessage = "Bitte wähle eine gültige Bilddatei aus (PNG, JPG, GIF, WEBP).";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        try
+        {
+            var dataUrl = await ReadFileAsDataUrlAsync(file);
+            await HandleCapture(dataUrl);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Hochladen fehlgeschlagen: {ex.Message}";
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private static bool IsSupportedImage(IBrowserFile file)
+    {
+        if (AllowedContentTypes.Any(type => string.Equals(type, file.ContentType, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        var extension = Path.GetExtension(file.Name);
+        return extension.ToLowerInvariant() switch
+        {
+            ".jpeg" or ".jpg" => true,
+            ".png" => true,
+            ".gif" => true,
+            ".webp" => true,
+            _ => false,
+        };
+    }
+
+    private static string GetMimeType(IBrowserFile file)
+    {
+        if (!string.IsNullOrWhiteSpace(file.ContentType) && file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+        {
+            return file.ContentType;
+        }
+
+        var extension = Path.GetExtension(file.Name).ToLowerInvariant();
+        return extension switch
+        {
+            ".jpeg" or ".jpg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => "image/png",
+        };
+    }
+
+    private static async Task<string> ReadFileAsDataUrlAsync(IBrowserFile file)
+    {
+        await using var stream = file.OpenReadStream(MaxUploadSize);
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        var base64 = Convert.ToBase64String(memoryStream.ToArray());
+        var mimeType = GetMimeType(file);
+        return $"data:{mimeType};base64,{base64}";
     }
 
     private async Task ResetCapture()
