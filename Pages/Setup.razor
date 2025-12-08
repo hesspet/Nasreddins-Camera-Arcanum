@@ -1,0 +1,98 @@
+@page "/setup"
+
+<PageTitle>Body Segmentation Setup</PageTitle>
+
+<MudStack Spacing="2">
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.h5">Body-Segmentation Setup</MudText>
+            <MudText Typo="Typo.body2">
+                Wähle hier die Parameter für das MediaPipe Selfie Segmentierungsmodell. Die Einstellungen wirken sich direkt auf
+                die Vorschau und die erzeugten Vorder-/Hintergrund-Bilder aus.
+            </MudText>
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.subtitle1">Modell-Parameter</MudText>
+
+            <MudSelect @bind-Value="_options.ModelType" Label="Modellvariante" Variant="Variant.Outlined">
+                <MudSelectItem Value="general">General (empfohlen)</MudSelectItem>
+                <MudSelectItem Value="landscape">Landscape</MudSelectItem>
+            </MudSelect>
+
+            <MudSlider @bind-Value="_options.SegmentationThreshold"
+                        Min="0.05"
+                        Max="0.95"
+                        Step="0.05"
+                        Color="Color.Secondary"
+                        Variant="Variant.Filled"
+                        ValueLabel="@true"
+                        ValueLabelFormat="0.00"
+                        Label="Schwellwert (Personenerkennung)">
+            </MudSlider>
+            <MudText Typo="Typo.caption">
+                Höhere Werte bevorzugen klarere Silhouetten, niedrigere Werte fangen mehr Umgebung ein.
+            </MudText>
+
+            <MudSlider @bind-Value="_options.MaskBlurAmount"
+                        Min="0"
+                        Max="20"
+                        Step="1"
+                        Color="Color.Secondary"
+                        Variant="Variant.Filled"
+                        ValueLabel="@true"
+                        ValueLabelFormat="0"
+                        Label="Maskenweichzeichnung (Pixel)">
+            </MudSlider>
+            <MudText Typo="Typo.caption">
+                Der Unschärferadius glättet die Kanten zwischen Person und Hintergrund.
+            </MudText>
+
+            <MudStack Row="true" Spacing="1">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="ApplySettings">
+                    Einstellungen übernehmen
+                </MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Restore" OnClick="ResetDefaults">
+                    Auf Standard zurücksetzen
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+</MudStack>
+
+@code {
+    private readonly SegmentationOptions _options = new();
+
+    [Inject]
+    private SegmentationSettings Settings { get; set; } = default!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        CopyFrom(Settings.Options, _options);
+    }
+
+    private void ApplySettings()
+    {
+        Settings.Update(_options);
+        Snackbar.Add("Segmentierungs-Einstellungen aktualisiert", Severity.Success);
+    }
+
+    private void ResetDefaults()
+    {
+        CopyFrom(new SegmentationOptions(), _options);
+        Settings.Update(_options);
+        Snackbar.Add("Standardwerte wiederhergestellt", Severity.Info);
+    }
+
+    private static void CopyFrom(SegmentationOptions source, SegmentationOptions target)
+    {
+        target.ModelType = source.ModelType;
+        target.SegmentationThreshold = source.SegmentationThreshold;
+        target.MaskBlurAmount = source.MaskBlurAmount;
+    }
+}

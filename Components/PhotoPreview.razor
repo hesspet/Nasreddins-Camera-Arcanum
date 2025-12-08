@@ -1,11 +1,21 @@
+@implements IAsyncDisposable
+
 <MudPaper Class="photo-preview" Elevation="2">
     @if (!string.IsNullOrEmpty(PhotoDataUrl))
     {
-        <img src="@PhotoDataUrl" alt="Aufgenommenes Foto" class="photo-image" />
+        <div class="photo-wrapper">
+            <img @ref="_photoRef" src="@PhotoDataUrl" alt="Aufgenommenes Foto" class="photo-image" @onclick="HandleImageClick" />
+            <div class="photo-hint">Auf das Motiv tippen, um die Segmentierung zu starten.</div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_segmentationError))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">@_segmentationError</MudAlert>
     }
 
     <MudStack Row="true" Spacing="2" JustifyContent="JustifyContent.Center" Class="mt-2">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Replay" OnClick="OnRetake">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Replay" OnClick="HandleRetake">
             Nochmals aufnehmen
         </MudButton>
         @if (!string.IsNullOrEmpty(PhotoDataUrl))
@@ -15,6 +25,8 @@
             </MudButton>
         }
     </MudStack>
+
+    <SegmentationPreview ForegroundDataUrl="@_foreground" BackgroundDataUrl="@_background" IsBusy="@_isSegmenting" OnRetry="RetrySegmentation" />
 </MudPaper>
 
 @code {
@@ -24,5 +36,128 @@
     [Parameter]
     public EventCallback OnRetake { get; set; }
 
+    private string? _foreground;
+    private string? _background;
+    private string? _segmentationError;
+    private bool _isSegmenting;
+    private ElementReference _photoRef;
+    private IJSObjectReference? _segmentationModule;
+    private SegmentationFocus? _lastFocus;
+    private string? _lastPhotoDataUrl;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    [Inject]
+    private SegmentationSettings SegmentationSettings { get; set; } = default!;
+
     private string DownloadFileName => "camera_arcanum_photo.png";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.Equals(PhotoDataUrl, _lastPhotoDataUrl, StringComparison.Ordinal))
+        {
+            _lastPhotoDataUrl = PhotoDataUrl;
+            await ResetSegmentationAsync();
+        }
+    }
+
+    private async Task HandleImageClick(MouseEventArgs args)
+    {
+        if (PhotoDataUrl is null || _isSegmenting)
+        {
+            return;
+        }
+
+        var metrics = await EnsureMetricsAsync();
+        if (metrics is not null)
+        {
+            var scaleX = metrics.NaturalWidth / Math.Max(1, metrics.ClientWidth);
+            var scaleY = metrics.NaturalHeight / Math.Max(1, metrics.ClientHeight);
+            _lastFocus = new SegmentationFocus(args.OffsetX * scaleX, args.OffsetY * scaleY);
+        }
+
+        await RunSegmentationAsync();
+    }
+
+    private async Task RetrySegmentation()
+    {
+        await RunSegmentationAsync();
+    }
+
+    private async Task RunSegmentationAsync()
+    {
+        if (PhotoDataUrl is null)
+        {
+            return;
+        }
+
+        _segmentationError = null;
+        _isSegmenting = true;
+
+        _segmentationModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/bodySegmentation.js");
+
+        try
+        {
+            var result = await _segmentationModule.InvokeAsync<SegmentationResult>(
+                "segmentPhoto",
+                PhotoDataUrl,
+                _lastFocus,
+                SegmentationSettings.Options);
+
+            _foreground = result.ForegroundDataUrl;
+            _background = result.BackgroundDataUrl;
+        }
+        catch (JSException ex)
+        {
+            _segmentationError = $"Segmentierung fehlgeschlagen: {ex.Message}";
+            _foreground = null;
+            _background = null;
+        }
+        finally
+        {
+            _isSegmenting = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task<ImageMetrics?> EnsureMetricsAsync()
+    {
+        _segmentationModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/bodySegmentation.js");
+        return await _segmentationModule.InvokeAsync<ImageMetrics>("getImageMetrics", _photoRef);
+    }
+
+    private async Task ResetSegmentationAsync()
+    {
+        _foreground = null;
+        _background = null;
+        _segmentationError = null;
+        _lastFocus = null;
+
+        if (_segmentationModule is not null)
+        {
+            await _segmentationModule.DisposeAsync();
+            _segmentationModule = null;
+        }
+    }
+
+    private async Task HandleRetake()
+    {
+        await ResetSegmentationAsync();
+        await OnRetake.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_segmentationModule is not null)
+        {
+            await _segmentationModule.DisposeAsync();
+        }
+    }
+
+    private sealed record SegmentationResult(string ForegroundDataUrl, string BackgroundDataUrl);
+
+    private sealed record SegmentationFocus(double X, double Y);
+
+    private sealed record ImageMetrics(double ClientWidth, double ClientHeight, double NaturalWidth, double NaturalHeight);
 }
