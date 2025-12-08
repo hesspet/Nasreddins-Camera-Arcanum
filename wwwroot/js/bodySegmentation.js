@@ -62,6 +62,27 @@ function buildConfig(options) {
     };
 }
 
+function blurMask(mask, blurRadius) {
+    if (!blurRadius || blurRadius <= 0 || !mask?.width || !mask?.height) {
+        return mask;
+    }
+
+    const sourceCanvas = document.createElement("canvas");
+    sourceCanvas.width = mask.width;
+    sourceCanvas.height = mask.height;
+    const sourceCtx = sourceCanvas.getContext("2d");
+    sourceCtx.putImageData(mask, 0, 0);
+
+    const targetCanvas = document.createElement("canvas");
+    targetCanvas.width = mask.width;
+    targetCanvas.height = mask.height;
+    const targetCtx = targetCanvas.getContext("2d");
+    targetCtx.filter = `blur(${blurRadius}px)`;
+    targetCtx.drawImage(sourceCanvas, 0, 0);
+
+    return targetCtx.getImageData(0, 0, mask.width, mask.height);
+}
+
 async function getSegmenter(config) {
     const requestedKey = `${config.modelType}`;
 
@@ -161,10 +182,11 @@ export async function segmentPhoto(photoDataUrl, focusPoint, options) {
         { r: 255, g: 255, b: 255, a: 255 },
         { r: 0, g: 0, b: 0, a: 0 },
         false,
-        config.maskBlurAmount
+        config.segmentationThreshold
     );
 
-    const enhancedMask = applyFocusHint(mask, focusPoint);
+    const blurredMask = blurMask(mask, config.maskBlurAmount);
+    const enhancedMask = applyFocusHint(blurredMask, focusPoint);
     const foregroundDataUrl = createLayer(image, enhancedMask, false);
     const backgroundDataUrl = createLayer(image, enhancedMask, true);
 
