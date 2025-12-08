@@ -8,8 +8,6 @@ namespace Nasreddins_Camera_Arcanum.Helpers;
 
 public sealed class ImageMergeService
 {
-    private readonly HttpClient _httpClient;
-
     public ImageMergeService(HttpClient httpClient)
     {
         _httpClient = httpClient;
@@ -40,7 +38,7 @@ public sealed class ImageMergeService
             {
                 Size = overlayTargetSize,
                 Mode = ResizeMode.Pad,
-                Sampler = KnownResamplers.Bilinear,
+                Sampler = KnownResamplers.Bicubic,
                 PadColor = Color.Transparent
             }));
 
@@ -55,27 +53,12 @@ public sealed class ImageMergeService
         return $"data:image/png;base64,{base64}";
     }
 
-    private static Point CalculatePlacement(PointF? focusPoint, Size targetSize, Size overlaySize)
-    {
-        var defaultPoint = new PointF(targetSize.Width / 2f, targetSize.Height / 2f);
-        var anchor = focusPoint ?? defaultPoint;
-
-        var x = (int)Math.Round(anchor.X - overlaySize.Width / 2f);
-        var y = (int)Math.Round(anchor.Y - overlaySize.Height / 2f);
-
-        var maxX = targetSize.Width - overlaySize.Width;
-        var maxY = targetSize.Height - overlaySize.Height;
-
-        x = Math.Clamp(x, 0, Math.Max(0, maxX));
-        y = Math.Clamp(y, 0, Math.Max(0, maxY));
-
-        return new Point(x, y);
-    }
+    private readonly HttpClient _httpClient;
 
     private static void BlendImage(Image<Rgba32> background, Image<Rgba32> overlay, Point placement)
     {
         var destinationBounds = new Rectangle(Point.Empty, new Size(background.Width, background.Height));
-        var overlayBounds = new Rectangle(placement, overlay.Size());
+        var overlayBounds = new Rectangle(placement, overlay.Size);
         var targetBounds = Rectangle.Intersect(destinationBounds, overlayBounds);
 
         if (targetBounds.Width == 0 || targetBounds.Height == 0)
@@ -122,6 +105,23 @@ public sealed class ImageMergeService
                 }
             });
         });
+    }
+
+    private static Point CalculatePlacement(PointF? focusPoint, Size targetSize, Size overlaySize)
+    {
+        var defaultPoint = new PointF(targetSize.Width / 2f, targetSize.Height / 2f);
+        var anchor = focusPoint ?? defaultPoint;
+
+        var x = (int)Math.Round(anchor.X - overlaySize.Width / 2f);
+        var y = (int)Math.Round(anchor.Y - overlaySize.Height / 2f);
+
+        var maxX = targetSize.Width - overlaySize.Width;
+        var maxY = targetSize.Height - overlaySize.Height;
+
+        x = Math.Clamp(x, 0, Math.Max(0, maxX));
+        y = Math.Clamp(y, 0, Math.Max(0, maxY));
+
+        return new Point(x, y);
     }
 
     private static byte[] ExtractBytesFromDataUrl(string dataUrl)
