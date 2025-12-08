@@ -87,7 +87,6 @@
     private string? _segmentationError;
     private bool _isSegmenting;
     private ElementReference _photoRef;
-    private IJSObjectReference? _segmentationModule;
     private SegmentationFocus? _lastFocus;
     private string? _lastPhotoDataUrl;
     private string? _selectionInfo;
@@ -103,6 +102,9 @@
 
     [Inject]
     private ImageMergeService ImageMergeService { get; set; } = default!;
+
+    [Inject]
+    private SegmentationService SegmentationService { get; set; } = default!;
 
     private string DownloadFileName => "camera_arcanum_photo.png";
     private string MergedDownloadFileName => "camera_arcanum_merge.png";
@@ -153,12 +155,9 @@
         _mergeError = null;
         _isSegmenting = true;
 
-        _segmentationModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
-
         try
         {
-            var result = await _segmentationModule.InvokeAsync<SegmentationResult>(
-                "segmentPhoto",
+            var result = await SegmentationService.SegmentPhotoAsync(
                 PhotoDataUrl,
                 _lastFocus,
                 SegmentationSettings.Options);
@@ -181,8 +180,7 @@
 
     private async Task<ImageMetrics?> EnsureMetricsAsync()
     {
-        _segmentationModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
-        return await _segmentationModule.InvokeAsync<ImageMetrics>("getImageMetrics", _photoRef);
+        return await SegmentationService.GetImageMetricsAsync(_photoRef);
     }
 
     private async Task ResetSegmentationAsync()
@@ -196,11 +194,7 @@
         _mergeError = null;
         _isMerging = false;
 
-        if (_segmentationModule is not null)
-        {
-            await _segmentationModule.DisposeAsync();
-            _segmentationModule = null;
-        }
+        await SegmentationService.ResetAsync();
     }
 
     private async Task HandleRetake()
@@ -248,15 +242,6 @@
 
     public async ValueTask DisposeAsync()
     {
-        if (_segmentationModule is not null)
-        {
-            await _segmentationModule.DisposeAsync();
-        }
+        await SegmentationService.DisposeAsync();
     }
-
-    private sealed record SegmentationResult(string ForegroundDataUrl, string BackgroundDataUrl);
-
-    private sealed record SegmentationFocus(double X, double Y);
-
-    private sealed record ImageMetrics(double ClientWidth, double ClientHeight, double NaturalWidth, double NaturalHeight);
 }

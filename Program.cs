@@ -12,6 +12,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddMudServices();
 builder.Services.AddScoped<FotoStorage>();
 builder.Services.AddScoped<SegmentationSettings>();
+builder.Services.AddScoped<SegmentationService>();
 builder.Services.AddScoped<ImageMergeService>();
 
 await builder.Build().RunAsync();
