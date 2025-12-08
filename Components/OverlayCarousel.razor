@@ -38,7 +38,7 @@
                 </MudButton>
             </MudStack>
 
-            <MudSwitch @bind-Checked="_useOriginalBackground" CheckedChanged="HandleBackgroundToggleAsync" Color="Color.Primary" Label="Originalbild als Hintergrund verwenden" />
+            <MudSwitch T="bool" Checked="@_useOriginalBackground" CheckedChanged="HandleBackgroundToggleAsync" Color="Color.Primary" Label="Originalbild als Hintergrund verwenden" />
 
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ProceedAsync">
                 Auswahl bestätigen
