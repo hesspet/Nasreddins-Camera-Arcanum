@@ -46,25 +46,8 @@ public sealed class ImageMergeService
 
         var placement = CalculatePlacement(focusPoint, targetSize, overlay.Size);
 
-        background.Mutate(ctx =>
-        {
-            ctx.DrawImage(
-                overlay,
-                placement,
-                new GraphicsOptions
-                {
-                    BlendPercentage = 1f,
-                    AlphaCompositionMode = PixelAlphaCompositionMode.SrcOver
-                });
-
-            ctx.DrawImage(
-                foreground,
-                new GraphicsOptions
-                {
-                    BlendPercentage = 1f,
-                    AlphaCompositionMode = PixelAlphaCompositionMode.SrcOver
-                });
-        });
+        BlendImage(background, overlay, placement);
+        BlendImage(background, foreground, Point.Empty);
 
         using var output = new MemoryStream();
         background.Save(output, new PngEncoder());
@@ -87,6 +70,58 @@ public sealed class ImageMergeService
         y = Math.Clamp(y, 0, Math.Max(0, maxY));
 
         return new Point(x, y);
+    }
+
+    private static void BlendImage(Image<Rgba32> background, Image<Rgba32> overlay, Point placement)
+    {
+        var destinationBounds = new Rectangle(Point.Empty, new Size(background.Width, background.Height));
+        var overlayBounds = new Rectangle(placement, overlay.Size());
+        var targetBounds = Rectangle.Intersect(destinationBounds, overlayBounds);
+
+        if (targetBounds.Width == 0 || targetBounds.Height == 0)
+        {
+            return;
+        }
+
+        var overlayOffset = new Point(targetBounds.X - placement.X, targetBounds.Y - placement.Y);
+
+        background.ProcessPixelRows(backgroundAccessor =>
+        {
+            overlay.ProcessPixelRows(overlayAccessor =>
+            {
+                for (var y = 0; y < targetBounds.Height; y++)
+                {
+                    var backgroundRow = backgroundAccessor.GetRowSpan(targetBounds.Y + y);
+                    var overlayRow = overlayAccessor.GetRowSpan(overlayOffset.Y + y);
+
+                    for (var x = 0; x < targetBounds.Width; x++)
+                    {
+                        ref var destinationPixel = ref backgroundRow[targetBounds.X + x];
+                        var sourcePixel = overlayRow[overlayOffset.X + x];
+
+                        if (sourcePixel.A == 0)
+                        {
+                            continue;
+                        }
+
+                        if (sourcePixel.A == byte.MaxValue)
+                        {
+                            destinationPixel = sourcePixel;
+                            continue;
+                        }
+
+                        var sourceAlpha = sourcePixel.A / 255f;
+                        var destinationAlpha = destinationPixel.A / 255f;
+                        var outputAlpha = sourceAlpha + destinationAlpha * (1f - sourceAlpha);
+
+                        destinationPixel.R = (byte)Math.Round((sourcePixel.R * sourceAlpha + destinationPixel.R * destinationAlpha * (1f - sourceAlpha)) / outputAlpha);
+                        destinationPixel.G = (byte)Math.Round((sourcePixel.G * sourceAlpha + destinationPixel.G * destinationAlpha * (1f - sourceAlpha)) / outputAlpha);
+                        destinationPixel.B = (byte)Math.Round((sourcePixel.B * sourceAlpha + destinationPixel.B * destinationAlpha * (1f - sourceAlpha)) / outputAlpha);
+                        destinationPixel.A = (byte)Math.Round(outputAlpha * 255f);
+                    }
+                }
+            });
+        });
     }
 
     private static byte[] ExtractBytesFromDataUrl(string dataUrl)
