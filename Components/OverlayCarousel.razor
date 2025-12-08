@@ -1,0 +1,209 @@
+<MudPaper Class="overlay-carousel" Elevation="1">
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudIcon Icon="@Icons.Material.Filled.Collections" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle1">Zwischenschicht auswählen</MudText>
+        </MudStack>
+
+        @if (_overlays.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-secondary-text">Keine Overlays gefunden.</MudText>
+        }
+        else
+        {
+            <div class="carousel-stage" @onpointerdown="HandlePointerDown" @onpointerup="HandlePointerUp">
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" />
+                <div class="carousel-image-wrapper">
+                    <img src="@CurrentOverlay?.Path" alt="@CurrentOverlay?.Title" class="carousel-image" @ondblclick="ProceedAsync" />
+                    <div class="carousel-caption">@CurrentOverlay?.Title</div>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" />
+            </div>
+
+            <MudStack Row="true" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Spacing="1">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" StartIcon="@Icons.Material.Filled.NavigateBefore">
+                    Zurück
+                </MudButton>
+                <MudChipSet T="int" MultiSelection="false" Class="carousel-bullets">
+                    @for (var i = 0; i < _overlays.Count; i++)
+                    {
+                        var isActive = i == _currentIndex;
+                        <MudChip T="int" Value="@i" Color="@(isActive ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="() => SelectIndexAsync(i)">
+                            @(i + 1)
+                        </MudChip>
+                    }
+                </MudChipSet>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" EndIcon="@Icons.Material.Filled.NavigateNext">
+                    Weiter
+                </MudButton>
+            </MudStack>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ProceedAsync">
+                Auswahl bestätigen
+            </MudButton>
+            <MudText Typo="Typo.caption" Class="mud-secondary-text">
+                Tipp: Doppelklick auf das Bild oder den Button startet den nächsten Schritt (Dummy).
+            </MudText>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    private const string StorageKey = "merge-overlay-last-selection";
+
+    private IReadOnlyList<MergeOverlay> _overlays = MergeOverlayCatalog.Overlays;
+    private int _currentIndex;
+    private double? _pointerStartX;
+
+    [Parameter]
+    public EventCallback<string> OnProceed { get; set; }
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    private bool _canNavigate => _overlays.Count > 1;
+
+    private MergeOverlay? CurrentOverlay => _overlays.Count > 0 && _currentIndex >= 0 && _currentIndex < _overlays.Count
+        ? _overlays[_currentIndex]
+        : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RestoreSelectionAsync();
+    }
+
+    private async Task RestoreSelectionAsync()
+    {
+        _overlays = MergeOverlayCatalog.Overlays;
+
+        var storedPath = await GetStoredPathAsync();
+        var storedIndex = FindIndexByPath(storedPath);
+        _currentIndex = storedIndex >= 0 ? storedIndex : 0;
+    }
+
+    private int FindIndexByPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return -1;
+        }
+
+        for (var i = 0; i < _overlays.Count; i++)
+        {
+            if (string.Equals(_overlays[i].Path, path, StringComparison.OrdinalIgnoreCase))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private async Task<string?> GetStoredPathAsync()
+    {
+        try
+        {
+            return await JS.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task PersistSelectionAsync()
+    {
+        if (CurrentOverlay is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", StorageKey, CurrentOverlay.Path);
+        }
+        catch
+        {
+            // Persistence is best-effort only.
+        }
+    }
+
+    private Task SelectIndexAsync(int index)
+    {
+        _currentIndex = NormalizeIndex(index);
+        return PersistSelectionAsync();
+    }
+
+    private int NormalizeIndex(int index)
+    {
+        if (_overlays.Count == 0)
+        {
+            return 0;
+        }
+
+        if (index < 0)
+        {
+            return _overlays.Count - 1;
+        }
+
+        if (index >= _overlays.Count)
+        {
+            return 0;
+        }
+
+        return index;
+    }
+
+    private async Task NextAsync()
+    {
+        await SelectIndexAsync(_currentIndex + 1);
+    }
+
+    private async Task PreviousAsync()
+    {
+        await SelectIndexAsync(_currentIndex - 1);
+    }
+
+    private void HandlePointerDown(PointerEventArgs args)
+    {
+        _pointerStartX = args.ClientX;
+    }
+
+    private async Task HandlePointerUp(PointerEventArgs args)
+    {
+        if (_pointerStartX is null)
+        {
+            return;
+        }
+
+        var deltaX = args.ClientX - _pointerStartX.Value;
+        _pointerStartX = null;
+
+        const double swipeThreshold = 25;
+
+        if (Math.Abs(deltaX) < swipeThreshold)
+        {
+            return;
+        }
+
+        if (deltaX < 0)
+        {
+            await NextAsync();
+        }
+        else
+        {
+            await PreviousAsync();
+        }
+    }
+
+    private async Task ProceedAsync()
+    {
+        if (CurrentOverlay is null)
+        {
+            return;
+        }
+
+        await PersistSelectionAsync();
+        await OnProceed.InvokeAsync(CurrentOverlay.Path);
+    }
+}
