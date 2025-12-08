@@ -44,8 +44,8 @@ public sealed class ImageMergeService
 
         var placement = CalculatePlacement(focusPoint, targetSize, overlay.Size);
 
-        BlendImage(background, overlay, placement);
-        BlendImage(background, foreground, Point.Empty);
+        BlendImageOntoBackground(background, overlay, placement);
+        BlendImageOntoBackground(background, foreground, Point.Empty);
 
         using var output = new MemoryStream();
         background.Save(output, new PngEncoder());
@@ -124,7 +124,7 @@ public sealed class ImageMergeService
         return new Point(x, y);
     }
 
-    private static void BlendImage(Image<Rgba32> background, Image<Rgba32> overlay, Point placement)
+    private static void BlendImageOntoBackground(Image<Rgba32> background, Image<Rgba32> overlay, Point placement)
     {
         var destinationBounds = new Rectangle(Point.Empty, new Size(background.Width, background.Height));
         var overlayBounds = new Rectangle(placement, overlay.Size());
