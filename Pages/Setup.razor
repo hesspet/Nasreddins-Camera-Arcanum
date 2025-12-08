@@ -28,7 +28,8 @@
                         Step="0.05"
                         Color="Color.Secondary"
                         Variant="Variant.Filled"
-                        ValueLabel="@(_options.SegmentationThreshold.ToString("0.00"))"
+                        ValueLabel="@true"
+                        ValueLabelFormat="0.00"
                         Label="Schwellwert (Personenerkennung)">
             </MudSlider>
             <MudText Typo="Typo.caption">
@@ -41,7 +42,8 @@
                         Step="1"
                         Color="Color.Secondary"
                         Variant="Variant.Filled"
-                        ValueLabel="@(_options.MaskBlurAmount.ToString())"
+                        ValueLabel="@true"
+                        ValueLabelFormat="0"
                         Label="Maskenweichzeichnung (Pixel)">
             </MudSlider>
             <MudText Typo="Typo.caption">
