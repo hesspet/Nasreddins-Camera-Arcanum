@@ -18,8 +18,8 @@
             <MudText Typo="Typo.subtitle1">Modell-Parameter</MudText>
 
             <MudSelect @bind-Value="_options.ModelType" Label="Modellvariante" Variant="Variant.Outlined">
-                <MudSelectItem Value="general">General (empfohlen)</MudSelectItem>
-                <MudSelectItem Value="landscape">Landscape</MudSelectItem>
+                <MudSelectItem Value="@\"general\"">General (empfohlen)</MudSelectItem>
+                <MudSelectItem Value="@\"landscape\"">Landscape</MudSelectItem>
             </MudSelect>
 
             <MudSlider @bind-Value="_options.SegmentationThreshold"
