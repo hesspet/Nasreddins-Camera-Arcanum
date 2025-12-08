@@ -38,6 +38,8 @@
                 </MudButton>
             </MudStack>
 
+            <MudSwitch T="bool" Checked="@_useOriginalBackground" CheckedChanged="HandleBackgroundToggleAsync" Color="Color.Primary" Label="Originalbild als Hintergrund verwenden" />
+
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ProceedAsync">
                 Auswahl bestätigen
             </MudButton>
@@ -50,13 +52,15 @@
 
 @code {
     private const string StorageKey = "merge-overlay-last-selection";
+    private const string BackgroundPreferenceKey = "merge-overlay-background-mode";
 
     private IReadOnlyList<MergeOverlay> _overlays = MergeOverlayCatalog.Overlays;
     private int _currentIndex;
     private double? _pointerStartX;
+    private bool _useOriginalBackground;
 
     [Parameter]
-    public EventCallback<string> OnProceed { get; set; }
+    public EventCallback<OverlayProceedRequest> OnProceed { get; set; }
 
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
@@ -70,6 +74,7 @@
     protected override async Task OnInitializedAsync()
     {
         await RestoreSelectionAsync();
+        await RestoreBackgroundPreferenceAsync();
     }
 
     private async Task RestoreSelectionAsync()
@@ -79,6 +84,11 @@
         var storedPath = await GetStoredPathAsync();
         var storedIndex = FindIndexByPath(storedPath);
         _currentIndex = storedIndex >= 0 ? storedIndex : 0;
+    }
+
+    private async Task RestoreBackgroundPreferenceAsync()
+    {
+        _useOriginalBackground = await GetStoredBackgroundPreferenceAsync();
     }
 
     private int FindIndexByPath(string? path)
@@ -121,6 +131,34 @@
         try
         {
             await JS.InvokeVoidAsync("localStorage.setItem", StorageKey, CurrentOverlay.Path);
+        }
+        catch
+        {
+            // Persistence is best-effort only.
+        }
+    }
+
+    private async Task<bool> GetStoredBackgroundPreferenceAsync()
+    {
+        try
+        {
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", BackgroundPreferenceKey);
+            return string.Equals(stored, "original", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(stored, "true", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task PersistBackgroundPreferenceAsync()
+    {
+        var value = _useOriginalBackground ? "original" : "extracted";
+
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", BackgroundPreferenceKey, value);
         }
         catch
         {
@@ -196,6 +234,12 @@
         }
     }
 
+    private async Task HandleBackgroundToggleAsync(bool useOriginal)
+    {
+        _useOriginalBackground = useOriginal;
+        await PersistBackgroundPreferenceAsync();
+    }
+
     private async Task ProceedAsync()
     {
         if (CurrentOverlay is null)
@@ -204,6 +248,7 @@
         }
 
         await PersistSelectionAsync();
-        await OnProceed.InvokeAsync(CurrentOverlay.Path);
+        await PersistBackgroundPreferenceAsync();
+        await OnProceed.InvokeAsync(new OverlayProceedRequest(CurrentOverlay.Path, _useOriginalBackground));
     }
 }
