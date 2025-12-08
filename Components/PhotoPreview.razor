@@ -95,7 +95,7 @@
         _segmentationError = null;
         _isSegmenting = true;
 
-        _segmentationModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/bodySegmentation.js");
+        _segmentationModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
 
         try
         {
@@ -123,7 +123,7 @@
 
     private async Task<ImageMetrics?> EnsureMetricsAsync()
     {
-        _segmentationModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/bodySegmentation.js");
+        _segmentationModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
         return await _segmentationModule.InvokeAsync<ImageMetrics>("getImageMetrics", _photoRef);
     }
 
