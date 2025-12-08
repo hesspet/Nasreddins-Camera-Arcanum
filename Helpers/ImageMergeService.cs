@@ -31,13 +31,16 @@ public sealed class ImageMergeService
         using var overlay = Image.Load<Rgba32>(overlayBytes);
 
         var targetSize = new Size(background.Width, background.Height);
+        var overlayTargetSize = new Size(
+            Math.Min(targetSize.Width, overlay.Width),
+            Math.Min(targetSize.Height, overlay.Height));
 
         overlay.Mutate(ctx =>
             ctx.Resize(new ResizeOptions
             {
-                Size = targetSize,
+                Size = overlayTargetSize,
                 Mode = ResizeMode.Pad,
-                Sampler = KnownResamplers.Bicubic,
+                Sampler = KnownResamplers.Bilinear,
                 PadColor = Color.Transparent
             }));
 
