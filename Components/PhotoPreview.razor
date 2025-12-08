@@ -27,6 +27,16 @@
     </MudStack>
 
     <SegmentationPreview ForegroundDataUrl="@_foreground" BackgroundDataUrl="@_background" IsBusy="@_isSegmenting" OnRetry="RetrySegmentation" />
+
+    @if (HasSegmentationResult)
+    {
+        <OverlayCarousel OnProceed="HandleOverlayProceed" />
+
+        @if (!string.IsNullOrWhiteSpace(_selectionInfo))
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">@_selectionInfo</MudAlert>
+        }
+    }
 </MudPaper>
 
 @code {
@@ -44,6 +54,7 @@
     private IJSObjectReference? _segmentationModule;
     private SegmentationFocus? _lastFocus;
     private string? _lastPhotoDataUrl;
+    private string? _selectionInfo;
 
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
@@ -52,6 +63,8 @@
     private SegmentationSettings SegmentationSettings { get; set; } = default!;
 
     private string DownloadFileName => "camera_arcanum_photo.png";
+
+    private bool HasSegmentationResult => !string.IsNullOrWhiteSpace(_foreground) && !string.IsNullOrWhiteSpace(_background);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -133,6 +146,7 @@
         _background = null;
         _segmentationError = null;
         _lastFocus = null;
+        _selectionInfo = null;
 
         if (_segmentationModule is not null)
         {
@@ -145,6 +159,13 @@
     {
         await ResetSegmentationAsync();
         await OnRetake.InvokeAsync();
+    }
+
+    private async Task HandleOverlayProceed(string overlayPath)
+    {
+        _selectionInfo = $"Ausgewählte Zwischenschicht: {overlayPath}";
+        await JS.InvokeVoidAsync("console.log", $"Overlay selection confirmed for {overlayPath}");
+        await InvokeAsync(StateHasChanged);
     }
 
     public async ValueTask DisposeAsync()
