@@ -1,6 +1,7 @@
 using System.Net.Http;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -140,11 +141,13 @@ public sealed class ImageMergeService
 
         var backgroundFrame = background.Frames.RootFrame;
         var overlayFrame = overlay.Frames.RootFrame;
+        var backgroundBuffer = backgroundFrame.PixelBuffer;
+        var overlayBuffer = overlayFrame.PixelBuffer;
 
         for (var y = 0; y < targetBounds.Height; y++)
         {
-            var backgroundRow = backgroundFrame.GetPixelRowSpan(targetBounds.Y + y);
-            var overlayRow = overlayFrame.GetPixelRowSpan(overlayOffset.Y + y);
+            var backgroundRow = backgroundBuffer.DangerousGetRowSpan(targetBounds.Y + y);
+            var overlayRow = overlayBuffer.DangerousGetRowSpan(overlayOffset.Y + y);
 
             for (var x = 0; x < targetBounds.Width; x++)
             {
