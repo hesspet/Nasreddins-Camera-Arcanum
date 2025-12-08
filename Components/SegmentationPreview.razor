@@ -1,0 +1,59 @@
+<MudPaper Class="segmentation-preview" Elevation="1">
+    <MudStack Spacing="1">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudIcon Icon="@Icons.Material.Filled.ContentCut" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle1">Body-Segmentation Ergebnis</MudText>
+        </MudStack>
+
+        @if (IsBusy)
+        {
+            <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="1">
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+                <MudText Typo="Typo.body2">Segmentierung läuft …</MudText>
+            </MudStack>
+        }
+        else if (!HasResult)
+        {
+            <MudText Typo="Typo.body2" Color="Color.TextSecondary">
+                Tippe auf das Foto, um die Person vom Hintergrund zu trennen.
+            </MudText>
+        }
+        else
+        {
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="preview-tile" Elevation="0">
+                        <MudText Typo="Typo.subtitle2">Vordergrund</MudText>
+                        <img src="@ForegroundDataUrl" alt="Vordergrund" class="preview-image" />
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="preview-tile" Elevation="0">
+                        <MudText Typo="Typo.subtitle2">Hintergrund</MudText>
+                        <img src="@BackgroundDataUrl" alt="Hintergrund" class="preview-image" />
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+
+            <MudButton Variant="Variant.Text" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Replay" OnClick="() => OnRetry.InvokeAsync()">
+                Segmentierung wiederholen
+            </MudButton>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string? ForegroundDataUrl { get; set; }
+
+    [Parameter]
+    public string? BackgroundDataUrl { get; set; }
+
+    [Parameter]
+    public bool IsBusy { get; set; }
+
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+
+    private bool HasResult => !string.IsNullOrWhiteSpace(ForegroundDataUrl) && !string.IsNullOrWhiteSpace(BackgroundDataUrl);
+}
