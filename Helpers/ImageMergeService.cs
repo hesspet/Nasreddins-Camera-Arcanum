@@ -1,5 +1,6 @@
 using System.Net.Http;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -38,7 +39,7 @@ public sealed class ImageMergeService
             {
                 Size = overlayTargetSize,
                 Mode = ResizeMode.Pad,
-                Sampler = KnownResamplers.Bilinear,
+                Sampler = KnownResamplers.Triangle,
                 PadColor = Color.Transparent
             }));
 
@@ -127,7 +128,7 @@ public sealed class ImageMergeService
     private static void BlendImageOntoBackground(Image<Rgba32> background, Image<Rgba32> overlay, Point placement)
     {
         var destinationBounds = new Rectangle(Point.Empty, new Size(background.Width, background.Height));
-        var overlayBounds = new Rectangle(placement, overlay.Size());
+        var overlayBounds = new Rectangle(placement, overlay.Size);
         var targetBounds = Rectangle.Intersect(destinationBounds, overlayBounds);
 
         if (targetBounds.Width == 0 || targetBounds.Height == 0)
