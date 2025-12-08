@@ -209,14 +209,22 @@
         await OnRetake.InvokeAsync();
     }
 
-    private async Task HandleOverlayProceed(string overlayPath)
+    private async Task HandleOverlayProceed(OverlayProceedRequest request)
     {
-        _selectionInfo = $"Ausgewählte Zwischenschicht: {overlayPath}";
-        await JS.InvokeVoidAsync("console.log", $"Overlay selection confirmed for {overlayPath}");
+        _selectionInfo = request.UseOriginalBackground
+            ? $"Ausgewählte Zwischenschicht: {request.OverlayPath} (Original-Hintergrund)"
+            : $"Ausgewählte Zwischenschicht: {request.OverlayPath} (extrahierter Hintergrund)";
+        await JS.InvokeVoidAsync("console.log", $"Overlay selection confirmed for {request.OverlayPath} with background {(request.UseOriginalBackground ? "original" : "extracted")}");
 
         if (!HasSegmentationResult)
         {
             _mergeError = "Es ist kein Segmentierungsergebnis vorhanden.";
+            return;
+        }
+
+        if (request.UseOriginalBackground && string.IsNullOrWhiteSpace(PhotoDataUrl))
+        {
+            _mergeError = "Das Originalbild steht nicht mehr zur Verfügung.";
             return;
         }
 
@@ -228,9 +236,19 @@
             var focus = _lastFocus is null
                 ? (SixLabors.ImageSharp.PointF?)null
                 : new SixLabors.ImageSharp.PointF((float)_lastFocus.X, (float)_lastFocus.Y);
+            var backgroundSource = request.UseOriginalBackground ? PhotoDataUrl : _background;
+
+            if (string.IsNullOrWhiteSpace(backgroundSource))
+            {
+                _mergeError = "Es steht kein Hintergrundbild zur Verfügung.";
+                _isMerging = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
             _mergedPhoto = await ImageMergeService.MergeAsync(
-                _background!,
-                overlayPath,
+                backgroundSource!,
+                request.OverlayPath,
                 _foreground!,
                 focus);
         }
