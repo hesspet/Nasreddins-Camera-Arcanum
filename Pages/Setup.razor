@@ -71,21 +71,22 @@
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        await Settings.EnsureInitializedAsync();
         CopyFrom(Settings.Options, _options);
     }
 
-    private void ApplySettings()
+    private async Task ApplySettings()
     {
-        Settings.Update(_options);
+        await Settings.UpdateAsync(_options);
         Snackbar.Add("Segmentierungs-Einstellungen aktualisiert", Severity.Success);
     }
 
-    private void ResetDefaults()
+    private async Task ResetDefaults()
     {
         CopyFrom(new SegmentationOptions(), _options);
-        Settings.Update(_options);
+        await Settings.UpdateAsync(_options);
         Snackbar.Add("Standardwerte wiederhergestellt", Severity.Info);
     }
 

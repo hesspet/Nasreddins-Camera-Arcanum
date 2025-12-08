@@ -54,11 +54,19 @@ async function ensureDependencies() {
 
 function buildConfig(options) {
     return {
-        modelType: options?.ModelType === "landscape" ? "landscape" : "general",
-        segmentationThreshold: typeof options?.SegmentationThreshold === "number"
-            ? options.SegmentationThreshold
-            : 0.6,
-        maskBlurAmount: typeof options?.MaskBlurAmount === "number" ? options.MaskBlurAmount : 5,
+        modelType: options?.modelType === "landscape" || options?.ModelType === "landscape"
+            ? "landscape"
+            : "general",
+        segmentationThreshold: typeof options?.segmentationThreshold === "number"
+            ? options.segmentationThreshold
+            : typeof options?.SegmentationThreshold === "number"
+                ? options.SegmentationThreshold
+                : 0.6,
+        maskBlurAmount: typeof options?.maskBlurAmount === "number"
+            ? options.maskBlurAmount
+            : typeof options?.MaskBlurAmount === "number"
+                ? options.MaskBlurAmount
+                : 5,
     };
 }
 

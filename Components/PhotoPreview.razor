@@ -111,6 +111,12 @@
 
     private bool HasSegmentationResult => !string.IsNullOrWhiteSpace(_foreground) && !string.IsNullOrWhiteSpace(_background);
 
+    protected override async Task OnInitializedAsync()
+    {
+        await SegmentationSettings.EnsureInitializedAsync();
+        await base.OnInitializedAsync();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (!string.Equals(PhotoDataUrl, _lastPhotoDataUrl, StringComparison.Ordinal))
