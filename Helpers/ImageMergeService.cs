@@ -1,5 +1,7 @@
 using System.Net.Http;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -31,37 +33,23 @@ public sealed class ImageMergeService
         using var overlay = Image.Load<Rgba32>(overlayBytes);
 
         var targetSize = new Size(background.Width, background.Height);
+        var overlayTargetSize = new Size(
+            Math.Min(targetSize.Width, overlay.Width),
+            Math.Min(targetSize.Height, overlay.Height));
 
         overlay.Mutate(ctx =>
             ctx.Resize(new ResizeOptions
             {
-                Size = targetSize,
+                Size = overlayTargetSize,
                 Mode = ResizeMode.Pad,
-                Sampler = KnownResamplers.Bicubic,
+                Sampler = KnownResamplers.Triangle,
                 PadColor = Color.Transparent
             }));
 
         var placement = CalculatePlacement(focusPoint, targetSize, overlay.Size);
 
-        background.Mutate(ctx =>
-        {
-            ctx.DrawImage(
-                overlay,
-                placement,
-                new GraphicsOptions
-                {
-                    BlendPercentage = 1f,
-                    AlphaCompositionMode = PixelAlphaCompositionMode.SrcOver
-                });
-
-            ctx.DrawImage(
-                foreground,
-                new GraphicsOptions
-                {
-                    BlendPercentage = 1f,
-                    AlphaCompositionMode = PixelAlphaCompositionMode.SrcOver
-                });
-        });
+        BlendImageOntoBackground(background, overlay, placement);
+        BlendImageOntoBackground(background, foreground, Point.Empty);
 
         using var output = new MemoryStream();
         background.Save(output, new PngEncoder());
@@ -84,6 +72,57 @@ public sealed class ImageMergeService
         y = Math.Clamp(y, 0, Math.Max(0, maxY));
 
         return new Point(x, y);
+    }
+
+    private static void BlendImageOntoBackground(Image<Rgba32> background, Image<Rgba32> overlay, Point placement)
+    {
+        var destinationBounds = new Rectangle(Point.Empty, new Size(background.Width, background.Height));
+        var overlayBounds = new Rectangle(placement, overlay.Size);
+        var targetBounds = Rectangle.Intersect(destinationBounds, overlayBounds);
+
+        if (targetBounds.Width == 0 || targetBounds.Height == 0)
+        {
+            return;
+        }
+
+        var overlayOffset = new Point(targetBounds.X - placement.X, targetBounds.Y - placement.Y);
+
+        var backgroundFrame = background.Frames.RootFrame;
+        var overlayFrame = overlay.Frames.RootFrame;
+        var backgroundBuffer = backgroundFrame.PixelBuffer;
+        var overlayBuffer = overlayFrame.PixelBuffer;
+
+        for (var y = 0; y < targetBounds.Height; y++)
+        {
+            var backgroundRow = backgroundBuffer.DangerousGetRowSpan(targetBounds.Y + y);
+            var overlayRow = overlayBuffer.DangerousGetRowSpan(overlayOffset.Y + y);
+
+            for (var x = 0; x < targetBounds.Width; x++)
+            {
+                ref var destinationPixel = ref backgroundRow[targetBounds.X + x];
+                var sourcePixel = overlayRow[overlayOffset.X + x];
+
+                if (sourcePixel.A == 0)
+                {
+                    continue;
+                }
+
+                if (sourcePixel.A == byte.MaxValue)
+                {
+                    destinationPixel = sourcePixel;
+                    continue;
+                }
+
+                var sourceAlpha = sourcePixel.A / 255f;
+                var destinationAlpha = destinationPixel.A / 255f;
+                var outputAlpha = sourceAlpha + destinationAlpha * (1f - sourceAlpha);
+
+                destinationPixel.R = (byte)Math.Round((sourcePixel.R * sourceAlpha + destinationPixel.R * destinationAlpha * (1f - sourceAlpha)) / outputAlpha);
+                destinationPixel.G = (byte)Math.Round((sourcePixel.G * sourceAlpha + destinationPixel.G * destinationAlpha * (1f - sourceAlpha)) / outputAlpha);
+                destinationPixel.B = (byte)Math.Round((sourcePixel.B * sourceAlpha + destinationPixel.B * destinationAlpha * (1f - sourceAlpha)) / outputAlpha);
+                destinationPixel.A = (byte)Math.Round(outputAlpha * 255f);
+            }
+        }
     }
 
     private static byte[] ExtractBytesFromDataUrl(string dataUrl)
