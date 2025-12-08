@@ -18,8 +18,8 @@
             <MudText Typo="Typo.subtitle1">Modell-Parameter</MudText>
 
             <MudSelect @bind-Value="_options.ModelType" Label="Modellvariante" Variant="Variant.Outlined">
-                <MudSelectItem Value="@("general")">General (empfohlen)</MudSelectItem>
-                <MudSelectItem Value="@("landscape")">Landscape</MudSelectItem>
+                <MudSelectItem Value="general">General (empfohlen)</MudSelectItem>
+                <MudSelectItem Value="landscape">Landscape</MudSelectItem>
             </MudSelect>
 
             <MudSlider @bind-Value="_options.SegmentationThreshold"
@@ -28,8 +28,7 @@
                         Step="0.05"
                         Color="Color.Secondary"
                         Variant="Variant.Filled"
-                        ValueLabel="true"
-                        ValueLabelFormat="0.00"
+                        ValueLabel="@(_options.SegmentationThreshold.ToString("0.00"))"
                         Label="Schwellwert (Personenerkennung)">
             </MudSlider>
             <MudText Typo="Typo.caption">
@@ -42,8 +41,7 @@
                         Step="1"
                         Color="Color.Secondary"
                         Variant="Variant.Filled"
-                        ValueLabel="true"
-                        ValueLabelFormat="0"
+                        ValueLabel="@(_options.MaskBlurAmount.ToString())"
                         Label="Maskenweichzeichnung (Pixel)">
             </MudSlider>
             <MudText Typo="Typo.caption">
