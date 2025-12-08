@@ -6,9 +6,9 @@ Ziel: Eine Progressive Web App, die wie eine normale Kamera-App aussieht, ein Fo
 
 - PWA (installierbar auf Android & iOS, soweit Browser-PWA-Fähigkeiten erlauben)
 - Kamera-UI:
-  - Vollbild-Videovorschau (getUserMedia)
-  - Shutter-Button wie in einer 08/15-Kamera-App
-  - Thumbnail des letzten Fotos
+  - Done: ~~Vollbild-Videovorschau (getUserMedia)~~
+  - Done: ~~Shutter-Button wie in einer 08/15-Kamera-App~~
+  - Done: ~~Thumbnail des letzten Fotos (Preview)~~
 - Schritte:
   1. Live-Kamera anzeigen
   2. Foto aufnehmen (Snapshot aus Video auf Canvas)
