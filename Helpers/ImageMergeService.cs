@@ -49,7 +49,13 @@ public sealed class ImageMergeService
         BlendImageOntoBackground(background, foreground, Point.Empty);
 
         using var output = new MemoryStream();
-        background.Save(output, new PngEncoder());
+        var fastPngEncoder = new PngEncoder
+        {
+            CompressionLevel = PngCompressionLevel.NoCompression,
+            FilterMethod = PngFilterMethod.None
+        };
+
+        background.Save(output, fastPngEncoder);
         var base64 = Convert.ToBase64String(output.ToArray());
         return $"data:image/png;base64,{base64}";
     }
