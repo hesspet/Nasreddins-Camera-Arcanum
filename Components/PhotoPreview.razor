@@ -1,4 +1,5 @@
 @implements IAsyncDisposable
+@using SixLabors.ImageSharp
 
 <MudPaper Class="photo-preview" Elevation="2">
     @if (!string.IsNullOrEmpty(PhotoDataUrl))
@@ -36,6 +37,41 @@
         {
             <MudAlert Severity="Severity.Info" Dense="true">@_selectionInfo</MudAlert>
         }
+
+        @if (_isMerging)
+        {
+            <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="1">
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+                <MudText Typo="Typo.body2">Bild wird zusammengeführt …</MudText>
+            </MudStack>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_mergeError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true">@_mergeError</MudAlert>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_mergedPhoto))
+        {
+            <MudPaper Class="photo-preview" Elevation="1">
+                <MudStack Spacing="1">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Layers" Color="Color.Primary" />
+                        <MudText Typo="Typo.subtitle1">Zusammengeführtes Ergebnis</MudText>
+                    </MudStack>
+
+                    <div class="photo-wrapper">
+                        <img src="@_mergedPhoto" alt="Zusammengeführtes Bild" class="photo-image" />
+                    </div>
+
+                    <MudStack Row="true" Spacing="2" JustifyContent="JustifyContent.Center" Class="mt-2">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@_mergedPhoto" Download="@MergedDownloadFileName">
+                            Ergebnis herunterladen
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+        }
     }
 </MudPaper>
 
@@ -55,6 +91,9 @@
     private SegmentationFocus? _lastFocus;
     private string? _lastPhotoDataUrl;
     private string? _selectionInfo;
+    private string? _mergedPhoto;
+    private string? _mergeError;
+    private bool _isMerging;
 
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
@@ -62,7 +101,11 @@
     [Inject]
     private SegmentationSettings SegmentationSettings { get; set; } = default!;
 
+    [Inject]
+    private ImageMergeService ImageMergeService { get; set; } = default!;
+
     private string DownloadFileName => "camera_arcanum_photo.png";
+    private string MergedDownloadFileName => "camera_arcanum_merge.png";
 
     private bool HasSegmentationResult => !string.IsNullOrWhiteSpace(_foreground) && !string.IsNullOrWhiteSpace(_background);
 
@@ -106,6 +149,8 @@
         }
 
         _segmentationError = null;
+        _mergedPhoto = null;
+        _mergeError = null;
         _isSegmenting = true;
 
         _segmentationModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
@@ -147,6 +192,9 @@
         _segmentationError = null;
         _lastFocus = null;
         _selectionInfo = null;
+        _mergedPhoto = null;
+        _mergeError = null;
+        _isMerging = false;
 
         if (_segmentationModule is not null)
         {
@@ -165,7 +213,35 @@
     {
         _selectionInfo = $"Ausgewählte Zwischenschicht: {overlayPath}";
         await JS.InvokeVoidAsync("console.log", $"Overlay selection confirmed for {overlayPath}");
-        await InvokeAsync(StateHasChanged);
+
+        if (!HasSegmentationResult)
+        {
+            _mergeError = "Es ist kein Segmentierungsergebnis vorhanden.";
+            return;
+        }
+
+        _mergeError = null;
+        _isMerging = true;
+
+        try
+        {
+            var focus = _lastFocus is null ? (PointF?)null : new PointF((float)_lastFocus.X, (float)_lastFocus.Y);
+            _mergedPhoto = await ImageMergeService.MergeAsync(
+                _background!,
+                overlayPath,
+                _foreground!,
+                focus);
+        }
+        catch (Exception ex)
+        {
+            _mergeError = $"Zusammenführung fehlgeschlagen: {ex.Message}";
+            _mergedPhoto = null;
+        }
+        finally
+        {
+            _isMerging = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     public async ValueTask DisposeAsync()
