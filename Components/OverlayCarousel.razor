@@ -24,11 +24,11 @@
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" StartIcon="@Icons.Material.Filled.NavigateBefore">
                     Zurück
                 </MudButton>
-                <MudChipSet MultiSelection="false" Class="carousel-bullets">
+                <MudChipSet T="int" MultiSelection="false" Class="carousel-bullets">
                     @for (var i = 0; i < _overlays.Count; i++)
                     {
                         var isActive = i == _currentIndex;
-                        <MudChip Color="@(isActive ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="() => SelectIndexAsync(i)">
+                        <MudChip T="int" Value="@i" Color="@(isActive ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="() => SelectIndexAsync(i)">
                             @(i + 1)
                         </MudChip>
                     }
