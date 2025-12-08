@@ -16,12 +16,12 @@
     }
 
     <MudStack Row="true" Spacing="2" JustifyContent="JustifyContent.Center" Class="mt-2">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Replay" OnClick="HandleRetake">
+        <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.Replay" OnClick="HandleRetake">
             Nochmals aufnehmen
         </MudButton>
         @if (!string.IsNullOrEmpty(PhotoDataUrl))
         {
-            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@PhotoDataUrl" Download="@DownloadFileName">
+            <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@PhotoDataUrl" Download="@DownloadFileName">
                 Foto herunterladen
             </MudButton>
         }
@@ -41,7 +41,7 @@
         @if (_isMerging)
         {
             <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="1">
-                <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+                <MudProgressCircular Indeterminate="true" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large" />
                 <MudText Typo="Typo.body2">Bild wird zusammengeführt …</MudText>
             </MudStack>
         }
@@ -56,7 +56,7 @@
             <MudPaper Class="photo-preview" Elevation="1">
                 <MudStack Spacing="1">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                        <MudIcon Icon="@Icons.Material.Filled.Layers" Color="Color.Primary" />
+                        <MudIcon Icon="@Icons.Material.Filled.Layers" Color="MudBlazor.Color.Primary" />
                         <MudText Typo="Typo.subtitle1">Zusammengeführtes Ergebnis</MudText>
                     </MudStack>
 
@@ -65,7 +65,7 @@
                     </div>
 
                     <MudStack Row="true" Spacing="2" JustifyContent="JustifyContent.Center" Class="mt-2">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@_mergedPhoto" Download="@MergedDownloadFileName">
+                        <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@_mergedPhoto" Download="@MergedDownloadFileName">
                             Ergebnis herunterladen
                         </MudButton>
                     </MudStack>
