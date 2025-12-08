@@ -41,7 +41,7 @@ public sealed class ImageMergeService
                 PadColor = Color.Transparent
             }));
 
-        var placement = CalculatePlacement(focusPoint, targetSize, overlay.Size());
+        var placement = CalculatePlacement(focusPoint, targetSize, overlay.Size);
 
         background.Mutate(ctx =>
         {

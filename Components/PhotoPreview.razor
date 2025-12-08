@@ -225,7 +225,9 @@
 
         try
         {
-            var focus = _lastFocus is null ? (PointF?)null : new PointF((float)_lastFocus.X, (float)_lastFocus.Y);
+            var focus = _lastFocus is null
+                ? (SixLabors.ImageSharp.PointF?)null
+                : new SixLabors.ImageSharp.PointF((float)_lastFocus.X, (float)_lastFocus.Y);
             _mergedPhoto = await ImageMergeService.MergeAsync(
                 _background!,
                 overlayPath,
