@@ -1,10 +1,56 @@
-import * as bodySegmentation from "https://cdn.jsdelivr.net/npm/@tensorflow-models/body-segmentation@1.0.2/dist/body-segmentation.esm.js";
-import * as tf from "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.esm.js";
-import "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.esm.js";
-import "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.esm.js";
+const TF_BUNDLE_URL = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
+const TF_WEBGL_URL = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js";
+const BODY_SEGMENTATION_URL = "https://cdn.jsdelivr.net/npm/@tensorflow-models/body-segmentation@1.0.2/dist/body-segmentation.min.js";
 
+const scriptPromises = new Map();
 let segmenterPromise = null;
 let activeModelKey = "";
+
+function loadScriptOnce(url) {
+    if (scriptPromises.has(url)) {
+        return scriptPromises.get(url);
+    }
+
+    const existing = document.querySelector(`script[src="${url}"]`);
+    if (existing && existing.dataset.loaded === "true") {
+        return Promise.resolve();
+    }
+
+    const promise = new Promise((resolve, reject) => {
+        const script = existing ?? document.createElement("script");
+        script.src = url;
+        script.async = true;
+        script.onload = () => {
+            script.dataset.loaded = "true";
+            resolve();
+        };
+        script.onerror = (err) => reject(err);
+
+        if (!existing) {
+            document.head.appendChild(script);
+        }
+    });
+
+    scriptPromises.set(url, promise);
+    return promise;
+}
+
+async function ensureDependencies() {
+    await loadScriptOnce(TF_BUNDLE_URL);
+    await loadScriptOnce(TF_WEBGL_URL);
+    await loadScriptOnce(BODY_SEGMENTATION_URL);
+
+    if (!globalThis.tf) {
+        throw new Error("TensorFlow.js konnte nicht geladen werden");
+    }
+
+    if (!globalThis.bodySegmentation) {
+        throw new Error("Body-Segmentation-Bibliothek konnte nicht geladen werden");
+    }
+
+    await globalThis.tf.setBackend("webgl");
+    await globalThis.tf.ready();
+}
 
 function buildConfig(options) {
     return {
@@ -20,10 +66,9 @@ async function getSegmenter(config) {
     const requestedKey = `${config.modelType}`;
 
     if (!segmenterPromise || requestedKey !== activeModelKey) {
-        await tf.setBackend("webgl");
-        await tf.ready();
-        segmenterPromise = bodySegmentation.createSegmenter(
-            bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation,
+        await ensureDependencies();
+        segmenterPromise = globalThis.bodySegmentation.createSegmenter(
+            globalThis.bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation,
             {
                 runtime: "tfjs",
                 modelType: config.modelType,
@@ -110,7 +155,8 @@ export async function segmentPhoto(photoDataUrl, focusPoint, options) {
         refineSteps: 3,
     });
 
-    const mask = await bodySegmentation.toBinaryMask(
+    const segmentationApi = globalThis.bodySegmentation;
+    const mask = await segmentationApi.toBinaryMask(
         segmentations,
         { r: 255, g: 255, b: 255, a: 255 },
         { r: 0, g: 0, b: 0, a: 0 },
