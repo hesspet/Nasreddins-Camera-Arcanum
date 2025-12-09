@@ -1,6 +1,8 @@
-using System.Diagnostics;
-using System.Net.Http;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.JSInterop;
 using SixLabors.ImageSharp;
 
@@ -8,11 +10,9 @@ namespace Nasreddins_Camera_Arcanum.Helpers;
 
 public sealed class ImageMergeService : IAsyncDisposable
 {
-    public ImageMergeService(HttpClient httpClient, IJSRuntime jsRuntime)
+    public ImageMergeService(IJSRuntime jsRuntime)
     {
-        _httpClient = httpClient;
-        _mergeModule = new Lazy<Task<IJSObjectReference>>(() =>
-            jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/imageMerge.js").AsTask());
+        _moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/imageMerge.js").AsTask());
     }
 
     public async Task<MergeResult> MergeAsync(
@@ -22,120 +22,27 @@ public sealed class ImageMergeService : IAsyncDisposable
         PointF? focusPoint,
         CancellationToken cancellationToken = default)
     {
-        if (_mergeModule is not null)
-        {
-            try
-            {
-                var module = await _mergeModule.Value;
-                var jsResult = await module.InvokeAsync<MergeResult>(
-                    "mergeWithCanvas",
-                    backgroundDataUrl,
-                    overlayPath,
-                    foregroundDataUrl,
-                    focusPoint is null ? null : new { x = focusPoint.Value.X, y = focusPoint.Value.Y });
+        var module = await _moduleTask.Value;
+        var result = await module.InvokeAsync<JsMergeResult>(
+            "mergeWithCanvas",
+            cancellationToken,
+            backgroundDataUrl,
+            overlayPath,
+            foregroundDataUrl,
+            focusPoint);
 
-                if (!string.IsNullOrWhiteSpace(jsResult?.DataUrl))
-                {
-                    return jsResult with { Pipeline = jsResult.Pipeline ?? "Canvas2D" };
-                }
-            }
-            catch (JSException ex)
-            {
-                Console.Error.WriteLine($"JS merge failed, falling back to ImageSharp: {ex.Message}");
-            }
-        }
+        var timings = result.Timings
+            .Select(t => new MergeStepTiming(t.Step, (long)Math.Round(t.DurationMs), (long)Math.Round(t.ElapsedMs)))
+            .ToList();
 
-        return await MergeWithImageSharpAsync(backgroundDataUrl, overlayPath, foregroundDataUrl, focusPoint, cancellationToken);
+        return new MergeResult(
+            result.DataUrl,
+            timings,
+            (long)Math.Round(result.TotalDurationMs),
+            "Canvas2D");
     }
 
     public async ValueTask DisposeAsync()
-    {
-        if (_mergeModule?.IsValueCreated == true)
-        {
-            var module = await _mergeModule.Value;
-            await module.DisposeAsync();
-        }
-    }
-
-    private async Task<MergeResult> MergeWithImageSharpAsync(
-        string backgroundDataUrl,
-        string overlayPath,
-        string foregroundDataUrl,
-        PointF? focusPoint,
-        CancellationToken cancellationToken)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        var timings = new List<MergeStepTiming>();
-        var lastElapsed = 0L;
-
-        static void TrackStep(List<MergeStepTiming> collector, ref long lastCheckpoint, Stopwatch timer, string label)
-        {
-            var current = timer.ElapsedMilliseconds;
-            collector.Add(new MergeStepTiming(label, current - lastCheckpoint, current));
-            lastCheckpoint = current;
-        }
-
-        var backgroundBytes = ExtractBytesFromDataUrl(backgroundDataUrl);
-        var foregroundBytes = ExtractBytesFromDataUrl(foregroundDataUrl);
-        TrackStep(timings, ref lastElapsed, stopwatch, "Eingaben decodiert");
-
-        var overlayBytes = await _httpClient.GetByteArrayAsync(overlayPath, cancellationToken);
-        TrackStep(timings, ref lastElapsed, stopwatch, "Overlay geladen (HTTP)");
-
-        using var background = Image.Load<Rgba32>(backgroundBytes);
-        using var foreground = Image.Load<Rgba32>(foregroundBytes);
-        using var overlay = Image.Load<Rgba32>(overlayBytes);
-        TrackStep(timings, ref lastElapsed, stopwatch, "PNG dekodiert");
-
-        var targetSize = new Size(background.Width, background.Height);
-        var overlayTargetSize = new Size(
-            Math.Min(targetSize.Width, overlay.Width),
-            Math.Min(targetSize.Height, overlay.Height));
-
-        overlay.Mutate(ctx =>
-            ctx.Resize(new ResizeOptions
-            {
-                Size = overlayTargetSize,
-                Mode = ResizeMode.Pad,
-                // NearestNeighbor keeps resizing fast while avoiding blurry overlays.
-                Sampler = KnownResamplers.NearestNeighbor,
-                PadColor = SixLabors.ImageSharp.Color.Transparent
-            }));
-        TrackStep(timings, ref lastElapsed, stopwatch, "Overlay skaliert");
-
-        var placement = CalculatePlacement(focusPoint, targetSize, overlay.Size);
-
-        background.Mutate(ctx =>
-        {
-            // ImageSharp's DrawImage pipeline is highly optimized and substantially faster than manual per-pixel blending
-            // on WebAssembly. Using it for both overlays reduces merge time dramatically.
-            ctx.DrawImage(overlay, placement, 1f);
-            ctx.DrawImage(foreground, Point.Empty, 1f);
-        });
-        TrackStep(timings, ref lastElapsed, stopwatch, "Komposition abgeschlossen");
-
-        using var output = new MemoryStream();
-        var fastPngEncoder = new PngEncoder
-        {
-            CompressionLevel = PngCompressionLevel.NoCompression,
-            FilterMethod = PngFilterMethod.None
-        };
-
-        background.Save(output, fastPngEncoder);
-        var base64 = Convert.ToBase64String(output.ToArray());
-        TrackStep(timings, ref lastElapsed, stopwatch, "PNG kodiert");
-
-        return new MergeResult(
-            $"data:image/png;base64,{base64}",
-            timings,
-            stopwatch.ElapsedMilliseconds,
-            "ImageSharp.DrawImage");
-    }
-
-    private readonly HttpClient _httpClient;
-    private readonly Lazy<Task<IJSObjectReference>>? _mergeModule;
-
-    private static Point CalculatePlacement(PointF? focusPoint, Size targetSize, Size overlaySize)
     {
         if (_moduleTask.IsValueCreated)
         {
@@ -146,26 +53,70 @@ public sealed class ImageMergeService : IAsyncDisposable
 
     private readonly Lazy<Task<IJSObjectReference>> _moduleTask;
 
-    private sealed record JsMergeResult(string DataUrl, IReadOnlyList<JsMergeTiming> Timings, double TotalDurationMs);
+    private sealed class JsMergeResult
+    {
+        public JsMergeResult(string dataUrl, IReadOnlyList<JsMergeTiming> timings, double totalDurationMs)
+        {
+            DataUrl = dataUrl;
+            Timings = timings;
+            TotalDurationMs = totalDurationMs;
+        }
 
-    private sealed record JsMergeTiming(string Step, double DurationMs, double ElapsedMs);
-}
+        public string DataUrl { get; }
 
-public sealed record MergeResult(
-    string DataUrl,
-    IReadOnlyList<MergeStepTiming> Timings,
-    long TotalDurationMs,
-    string Pipeline);
+        public IReadOnlyList<JsMergeTiming> Timings { get; }
 
-        var base64 = dataUrl[(base64Index + 1)..];
-        return Convert.FromBase64String(base64);
+        public double TotalDurationMs { get; }
+    }
+
+    private sealed class JsMergeTiming
+    {
+        public JsMergeTiming(string step, double durationMs, double elapsedMs)
+        {
+            Step = step;
+            DurationMs = durationMs;
+            ElapsedMs = elapsedMs;
+        }
+
+        public string Step { get; }
+
+        public double DurationMs { get; }
+
+        public double ElapsedMs { get; }
     }
 }
 
-public sealed record MergeResult(
-    string DataUrl,
-    IReadOnlyList<MergeStepTiming> Timings,
-    long TotalDurationMs,
-    string Pipeline);
+public sealed class MergeResult
+{
+    public MergeResult(string dataUrl, IReadOnlyList<MergeStepTiming> timings, long totalDurationMs, string pipeline)
+    {
+        DataUrl = dataUrl;
+        Timings = timings;
+        TotalDurationMs = totalDurationMs;
+        Pipeline = pipeline;
+    }
 
-public sealed record MergeStepTiming(string Step, long DurationMs, long ElapsedMs);
+    public string DataUrl { get; }
+
+    public IReadOnlyList<MergeStepTiming> Timings { get; }
+
+    public long TotalDurationMs { get; }
+
+    public string Pipeline { get; }
+}
+
+public sealed class MergeStepTiming
+{
+    public MergeStepTiming(string step, long durationMs, long elapsedMs)
+    {
+        Step = step;
+        DurationMs = durationMs;
+        ElapsedMs = elapsedMs;
+    }
+
+    public string Step { get; }
+
+    public long DurationMs { get; }
+
+    public long ElapsedMs { get; }
+}
