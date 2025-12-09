@@ -47,9 +47,12 @@ const calculatePlacement = (focusPoint, targetWidth, targetHeight, overlaySize) 
 const bitmapToDataUrl = async (canvas) => {
     if (typeof canvas.convertToBlob === "function") {
         const blob = await canvas.convertToBlob({ type: "image/png" });
-        const arrayBuffer = await blob.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-        return `data:image/png;base64,${base64}`;
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result?.toString());
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
+        });
     }
 
     return canvas.toDataURL("image/png");
