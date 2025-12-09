@@ -5,6 +5,8 @@ const BODY_SEGMENTATION_URL = "https://cdn.jsdelivr.net/npm/@tensorflow-models/b
 const scriptPromises = new Map();
 let segmenterPromise = null;
 let activeModelKey = "";
+const MAX_FEATHER = 40;
+const MAX_BLUR = 25;
 
 function loadScriptOnce(url) {
     if (scriptPromises.has(url)) {
@@ -251,6 +253,88 @@ function refineMask(mask, config, focusPoint) {
     return finalMask;
 }
 
+function analyzeMask(alphaMask, width, height) {
+    const totalPixels = Math.max(1, width * height);
+    let foregroundPixels = 0;
+    let softEdgePixels = 0;
+    let transitionStrength = 0;
+    let transitionCount = 0;
+
+    const border = Math.max(2, Math.floor(Math.min(width, height) * 0.02));
+    let borderActive = 0;
+    let borderPixels = (width * border + height * border - border * border) * 2;
+    borderPixels = Math.max(borderPixels, 1);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const idx = y * width + x;
+            const alpha = alphaMask[idx];
+
+            if (alpha > 5) {
+                foregroundPixels++;
+            }
+
+            if (alpha > 15 && alpha < 240) {
+                softEdgePixels++;
+                const right = alphaMask[idx + 1] ?? alpha;
+                const left = alphaMask[idx - 1] ?? alpha;
+                const up = alphaMask[idx - width] ?? alpha;
+                const down = alphaMask[idx + width] ?? alpha;
+                transitionStrength += Math.abs(alpha - right);
+                transitionStrength += Math.abs(alpha - left);
+                transitionStrength += Math.abs(alpha - up);
+                transitionStrength += Math.abs(alpha - down);
+                transitionCount += 4;
+            }
+
+            if (
+                x < border ||
+                y < border ||
+                x >= width - border ||
+                y >= height - border
+            ) {
+                if (alpha > 15) {
+                    borderActive++;
+                }
+            }
+        }
+    }
+
+    const softEdgeRatio = softEdgePixels / totalPixels;
+    const foregroundRatio = foregroundPixels / totalPixels;
+    const avgEdgeTransition = transitionCount > 0 ? transitionStrength / transitionCount : 0;
+    const borderLeakRatio = borderActive / borderPixels;
+
+    return { softEdgeRatio, foregroundRatio, avgEdgeTransition, borderLeakRatio };
+}
+
+function tuneConfig(baseConfig, stats) {
+    const tuned = { ...baseConfig };
+
+    if (stats.softEdgeRatio > 0.18 || stats.avgEdgeTransition < 45) {
+        tuned.outerFeatherRadius = Math.max(0, Math.min(MAX_FEATHER, baseConfig.outerFeatherRadius - 2));
+        tuned.maskBlurAmount = Math.max(0, Math.min(MAX_BLUR, baseConfig.maskBlurAmount - 1));
+    } else if (stats.softEdgeRatio < 0.08 && stats.avgEdgeTransition > 80) {
+        tuned.outerFeatherRadius = Math.min(MAX_FEATHER, baseConfig.outerFeatherRadius + 1);
+    }
+
+    if (stats.borderLeakRatio > 0.06) {
+        tuned.segmentationThreshold = Math.min(0.95, baseConfig.segmentationThreshold + 0.05);
+        tuned.erosionRadius = Math.min(10, (baseConfig.erosionRadius ?? 0) + 1);
+    }
+
+    if (stats.foregroundRatio < 0.1) {
+        tuned.segmentationThreshold = Math.max(0.4, baseConfig.segmentationThreshold - 0.05);
+        tuned.dilationRadius = Math.min(10, (baseConfig.dilationRadius ?? 0) + 1);
+    }
+
+    if (tuned.innerFeatherRadius > tuned.outerFeatherRadius) {
+        tuned.innerFeatherRadius = tuned.outerFeatherRadius;
+    }
+
+    return tuned;
+}
+
 function applyFocusHint(mask, focus, width, height) {
     if (!focus || !width || !height) {
         return mask;
@@ -336,6 +420,33 @@ export async function segmentPhoto(photoDataUrl, focusPoint, options) {
     return {
         foregroundDataUrl,
         backgroundDataUrl,
+    };
+}
+
+export async function autoCalibrateSegmentation(photoDataUrl, focusPoint, options) {
+    if (!photoDataUrl) {
+        throw new Error("Kein Foto vorhanden");
+    }
+
+    const config = buildConfig(options);
+    const segmenter = await getSegmenter(config);
+    const image = await loadImage(photoDataUrl);
+
+    const segmentations = await segmenter.segmentPeople(image, {
+        multiSegmentation: false,
+        segmentationThreshold: config.segmentationThreshold,
+        refineSteps: 3,
+    });
+
+    const segmentationApi = globalThis.bodySegmentation;
+    const softMask = await getMaskImageData(segmentationApi, segmentations);
+    const refinedAlpha = refineMask(softMask, config, focusPoint);
+    const stats = analyzeMask(refinedAlpha, softMask.width, softMask.height);
+    const tunedConfig = tuneConfig(config, stats);
+
+    return {
+        stats,
+        tunedOptions: tunedConfig,
     };
 }
 
