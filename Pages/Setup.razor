@@ -50,6 +50,62 @@
                 Der Unschärferadius glättet die Kanten zwischen Person und Hintergrund.
             </MudText>
 
+            <MudSlider @bind-Value="_options.DilationRadius"
+                        Min="0"
+                        Max="10"
+                        Step="1"
+                        Color="Color.Secondary"
+                        Variant="Variant.Filled"
+                        ValueLabel="@true"
+                        ValueLabelFormat="0"
+                        Label="Masken-Dilatation (Pixel)">
+            </MudSlider>
+            <MudText Typo="Typo.caption">
+                Erweitert die Maske geringfügig, um kleine Löcher zu schließen.
+            </MudText>
+
+            <MudSlider @bind-Value="_options.ErosionRadius"
+                        Min="0"
+                        Max="10"
+                        Step="1"
+                        Color="Color.Secondary"
+                        Variant="Variant.Filled"
+                        ValueLabel="@true"
+                        ValueLabelFormat="0"
+                        Label="Masken-Erosion (Pixel)">
+            </MudSlider>
+            <MudText Typo="Typo.caption">
+                Verkleinert die Maske leicht, um Rauschen am Rand zu entfernen.
+            </MudText>
+
+            <MudSlider @bind-Value="_options.InnerFeatherRadius"
+                        Min="0"
+                        Max="20"
+                        Step="1"
+                        Color="Color.Secondary"
+                        Variant="Variant.Filled"
+                        ValueLabel="@true"
+                        ValueLabelFormat="0"
+                        Label="Weiche Kante innen (Pixel)">
+            </MudSlider>
+            <MudText Typo="Typo.caption">
+                Weichzeichner für die Innenkante der Person, um Halos zu minimieren.
+            </MudText>
+
+            <MudSlider @bind-Value="_options.OuterFeatherRadius"
+                        Min="0"
+                        Max="30"
+                        Step="1"
+                        Color="Color.Secondary"
+                        Variant="Variant.Filled"
+                        ValueLabel="@true"
+                        ValueLabelFormat="0"
+                        Label="Weiche Kante außen (Pixel)">
+            </MudSlider>
+            <MudText Typo="Typo.caption">
+                Federt die Außenkante ab und steuert die sichtbare Übergangsbreite zum Hintergrund.
+            </MudText>
+
             <MudStack Row="true" Spacing="1">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="ApplySettings">
                     Einstellungen übernehmen
@@ -95,5 +151,9 @@
         target.ModelType = source.ModelType;
         target.SegmentationThreshold = source.SegmentationThreshold;
         target.MaskBlurAmount = source.MaskBlurAmount;
+        target.DilationRadius = source.DilationRadius;
+        target.ErosionRadius = source.ErosionRadius;
+        target.InnerFeatherRadius = source.InnerFeatherRadius;
+        target.OuterFeatherRadius = source.OuterFeatherRadius;
     }
 }

@@ -72,15 +72,19 @@ public class SegmentationSettings
 
     private static SegmentationOptions Normalize(SegmentationOptions source)
     {
-        return new SegmentationOptions
-        {
-            ModelType = string.IsNullOrWhiteSpace(source.ModelType)
-                ? "general"
-                : source.ModelType,
-            SegmentationThreshold = Math.Clamp(source.SegmentationThreshold, 0.01, 0.99),
-            MaskBlurAmount = Math.Max(0, source.MaskBlurAmount),
-        };
-    }
+            return new SegmentationOptions
+            {
+                ModelType = string.IsNullOrWhiteSpace(source.ModelType)
+                    ? "general"
+                    : source.ModelType,
+                SegmentationThreshold = Math.Clamp(source.SegmentationThreshold, 0.01, 0.99),
+                MaskBlurAmount = Math.Max(0, source.MaskBlurAmount),
+                DilationRadius = Math.Max(0, source.DilationRadius),
+                ErosionRadius = Math.Max(0, source.ErosionRadius),
+                InnerFeatherRadius = Math.Max(0, source.InnerFeatherRadius),
+                OuterFeatherRadius = Math.Max(0, source.OuterFeatherRadius),
+            };
+        }
 }
 
 public sealed class SegmentationOptions
@@ -90,4 +94,12 @@ public sealed class SegmentationOptions
     public double SegmentationThreshold { get; set; } = 0.6;
 
     public int MaskBlurAmount { get; set; } = 5;
+
+    public int DilationRadius { get; set; } = 0;
+
+    public int ErosionRadius { get; set; } = 0;
+
+    public int InnerFeatherRadius { get; set; } = 3;
+
+    public int OuterFeatherRadius { get; set; } = 6;
 }
