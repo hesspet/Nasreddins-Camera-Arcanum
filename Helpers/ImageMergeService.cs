@@ -1,4 +1,7 @@
+using System.Diagnostics;
 using System.Net.Http;
+using System.Collections.Generic;
+using Microsoft.JSInterop;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
@@ -7,27 +10,86 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Nasreddins_Camera_Arcanum.Helpers;
 
-public sealed class ImageMergeService
+public sealed class ImageMergeService : IAsyncDisposable
 {
-    public ImageMergeService(HttpClient httpClient)
+    public ImageMergeService(HttpClient httpClient, IJSRuntime jsRuntime)
     {
         _httpClient = httpClient;
+        _mergeModule = new Lazy<Task<IJSObjectReference>>(() =>
+            jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/imageMerge.js").AsTask());
     }
 
-    public async Task<string> MergeAsync(
+    public async Task<MergeResult> MergeAsync(
         string backgroundDataUrl,
         string overlayPath,
         string foregroundDataUrl,
         PointF? focusPoint,
         CancellationToken cancellationToken = default)
     {
+        if (_mergeModule is not null)
+        {
+            try
+            {
+                var module = await _mergeModule.Value;
+                var jsResult = await module.InvokeAsync<MergeResult>(
+                    "mergeWithCanvas",
+                    backgroundDataUrl,
+                    overlayPath,
+                    foregroundDataUrl,
+                    focusPoint is null ? null : new { x = focusPoint.Value.X, y = focusPoint.Value.Y });
+
+                if (!string.IsNullOrWhiteSpace(jsResult?.DataUrl))
+                {
+                    return jsResult with { Pipeline = jsResult.Pipeline ?? "Canvas2D" };
+                }
+            }
+            catch (JSException ex)
+            {
+                Console.Error.WriteLine($"JS merge failed, falling back to ImageSharp: {ex.Message}");
+            }
+        }
+
+        return await MergeWithImageSharpAsync(backgroundDataUrl, overlayPath, foregroundDataUrl, focusPoint, cancellationToken);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_mergeModule?.IsValueCreated == true)
+        {
+            var module = await _mergeModule.Value;
+            await module.DisposeAsync();
+        }
+    }
+
+    private async Task<MergeResult> MergeWithImageSharpAsync(
+        string backgroundDataUrl,
+        string overlayPath,
+        string foregroundDataUrl,
+        PointF? focusPoint,
+        CancellationToken cancellationToken)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        var timings = new List<MergeStepTiming>();
+        var lastElapsed = 0L;
+
+        static void TrackStep(List<MergeStepTiming> collector, ref long lastCheckpoint, Stopwatch timer, string label)
+        {
+            var current = timer.ElapsedMilliseconds;
+            collector.Add(new MergeStepTiming(label, current - lastCheckpoint, current));
+            lastCheckpoint = current;
+        }
+
         var backgroundBytes = ExtractBytesFromDataUrl(backgroundDataUrl);
         var foregroundBytes = ExtractBytesFromDataUrl(foregroundDataUrl);
+        TrackStep(timings, ref lastElapsed, stopwatch, "Eingaben decodiert");
+
         var overlayBytes = await _httpClient.GetByteArrayAsync(overlayPath, cancellationToken);
+        TrackStep(timings, ref lastElapsed, stopwatch, "Overlay geladen (HTTP)");
 
         using var background = Image.Load<Rgba32>(backgroundBytes);
         using var foreground = Image.Load<Rgba32>(foregroundBytes);
         using var overlay = Image.Load<Rgba32>(overlayBytes);
+        TrackStep(timings, ref lastElapsed, stopwatch, "PNG dekodiert");
 
         var targetSize = new Size(background.Width, background.Height);
         var overlayTargetSize = new Size(
@@ -43,6 +105,7 @@ public sealed class ImageMergeService
                 Sampler = KnownResamplers.NearestNeighbor,
                 PadColor = SixLabors.ImageSharp.Color.Transparent
             }));
+        TrackStep(timings, ref lastElapsed, stopwatch, "Overlay skaliert");
 
         var placement = CalculatePlacement(focusPoint, targetSize, overlay.Size);
 
@@ -53,6 +116,7 @@ public sealed class ImageMergeService
             ctx.DrawImage(overlay, placement, 1f);
             ctx.DrawImage(foreground, Point.Empty, 1f);
         });
+        TrackStep(timings, ref lastElapsed, stopwatch, "Komposition abgeschlossen");
 
         using var output = new MemoryStream();
         var fastPngEncoder = new PngEncoder
@@ -63,10 +127,17 @@ public sealed class ImageMergeService
 
         background.Save(output, fastPngEncoder);
         var base64 = Convert.ToBase64String(output.ToArray());
-        return $"data:image/png;base64,{base64}";
+        TrackStep(timings, ref lastElapsed, stopwatch, "PNG kodiert");
+
+        return new MergeResult(
+            $"data:image/png;base64,{base64}",
+            timings,
+            stopwatch.ElapsedMilliseconds,
+            "ImageSharp.DrawImage");
     }
 
     private readonly HttpClient _httpClient;
+    private readonly Lazy<Task<IJSObjectReference>>? _mergeModule;
 
     private static Point CalculatePlacement(PointF? focusPoint, Size targetSize, Size overlaySize)
     {
@@ -97,3 +168,11 @@ public sealed class ImageMergeService
         return Convert.FromBase64String(base64);
     }
 }
+
+public sealed record MergeResult(
+    string DataUrl,
+    IReadOnlyList<MergeStepTiming> Timings,
+    long TotalDurationMs,
+    string Pipeline);
+
+public sealed record MergeStepTiming(string Step, long DurationMs, long ElapsedMs);
