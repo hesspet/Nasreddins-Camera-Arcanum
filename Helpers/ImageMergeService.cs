@@ -40,7 +40,7 @@ public sealed class ImageMergeService
                 Size = overlayTargetSize,
                 Mode = ResizeMode.Pad,
                 Sampler = KnownResamplers.Triangle,
-                PadColor = Color.Transparent
+                PadColor = SixLabors.ImageSharp.Color.Transparent
             }));
 
         var placement = CalculatePlacement(focusPoint, targetSize, overlay.Size);

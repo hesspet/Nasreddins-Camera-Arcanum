@@ -26,6 +26,19 @@ public class SegmentationService : IAsyncDisposable
             options);
     }
 
+    public async Task<SegmentationAutoTuneResult> AutoCalibrateAsync(
+        string photoDataUrl,
+        SegmentationFocus? focus,
+        SegmentationOptions options)
+    {
+        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
+        return await _segmentationModule.InvokeAsync<SegmentationAutoTuneResult>(
+            "autoCalibrateSegmentation",
+            photoDataUrl,
+            focus,
+            options);
+    }
+
     public async Task<ImageMetrics?> GetImageMetricsAsync(ElementReference photoRef)
     {
         _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
@@ -52,3 +65,11 @@ public sealed record SegmentationResult(string ForegroundDataUrl, string Backgro
 public sealed record SegmentationFocus(double X, double Y);
 
 public sealed record ImageMetrics(double ClientWidth, double ClientHeight, double NaturalWidth, double NaturalHeight);
+
+public sealed record SegmentationAutoTuneResult(SegmentationOptions TunedOptions, SegmentationAutoTuneStats Stats);
+
+public sealed record SegmentationAutoTuneStats(
+    double SoftEdgeRatio,
+    double ForegroundRatio,
+    double AvgEdgeTransition,
+    double BorderLeakRatio);

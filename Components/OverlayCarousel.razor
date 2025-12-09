@@ -1,7 +1,7 @@
 <MudPaper Class="overlay-carousel" Elevation="1">
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-            <MudIcon Icon="@Icons.Material.Filled.Collections" Color="Color.Primary" />
+            <MudIcon Icon="@Icons.Material.Filled.Collections" Color="MudBlazor.Color.Primary" />
             <MudText Typo="Typo.subtitle1">Zwischenschicht auswählen</MudText>
         </MudStack>
 
@@ -12,35 +12,35 @@
         else
         {
             <div class="carousel-stage" @onpointerdown="HandlePointerDown" @onpointerup="HandlePointerUp">
-                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" />
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Color="MudBlazor.Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" />
                 <div class="carousel-image-wrapper">
                     <img src="@CurrentOverlay?.Path" alt="@CurrentOverlay?.Title" class="carousel-image" @ondblclick="ProceedAsync" />
                     <div class="carousel-caption">@CurrentOverlay?.Title</div>
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" />
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Color="MudBlazor.Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" />
             </div>
 
             <MudStack Row="true" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Spacing="1">
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" StartIcon="@Icons.Material.Filled.NavigateBefore">
+                <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" StartIcon="@Icons.Material.Filled.NavigateBefore">
                     Zurück
                 </MudButton>
                 <MudChipSet T="int" MultiSelection="false" Class="carousel-bullets">
                     @for (var i = 0; i < _overlays.Count; i++)
                     {
                         var isActive = i == _currentIndex;
-                        <MudChip T="int" Value="@i" Color="@(isActive ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="() => SelectIndexAsync(i)">
+                        <MudChip T="int" Value="@i" Color="@(isActive ? MudBlazor.Color.Primary : MudBlazor.Color.Default)" Variant="Variant.Filled" OnClick="() => SelectIndexAsync(i)">
                             @(i + 1)
                         </MudChip>
                     }
                 </MudChipSet>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" EndIcon="@Icons.Material.Filled.NavigateNext">
+                <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" EndIcon="@Icons.Material.Filled.NavigateNext">
                     Weiter
                 </MudButton>
             </MudStack>
 
-            <MudSwitch T="bool" Checked="@_useOriginalBackground" CheckedChanged="HandleBackgroundToggleAsync" Color="Color.Primary" Label="Originalbild als Hintergrund verwenden" />
+            <MudSwitch T="bool" Checked="@_useOriginalBackground" CheckedChanged="HandleBackgroundToggleAsync" Color="MudBlazor.Color.Primary" Label="Originalbild als Hintergrund verwenden" />
 
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ProceedAsync">
+            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ProceedAsync">
                 Auswahl bestätigen
             </MudButton>
             <MudText Typo="Typo.caption" Class="mud-secondary-text">
