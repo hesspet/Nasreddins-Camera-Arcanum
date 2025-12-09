@@ -1,6 +1,7 @@
 @implements IAsyncDisposable
 @using SixLabors.ImageSharp
 @using System.Globalization
+@using Nasreddins_Camera_Arcanum.Helpers
 
 <MudPaper Class="photo-preview" Elevation="2">
     @if (!string.IsNullOrEmpty(PhotoDataUrl))
@@ -370,11 +371,16 @@
                 return;
             }
 
-            _mergedPhoto = await ImageMergeService.MergeAsync(
+            await JS.InvokeVoidAsync("console.log", $"[Merge] Start {DateTimeOffset.Now:O} | Overlay {request.OverlayPath} | Hintergrund {(request.UseOriginalBackground ? "Original" : "extrahiert")}");
+
+            var mergeResult = await ImageMergeService.MergeAsync(
                 backgroundSource!,
                 request.OverlayPath,
                 _foreground!,
                 focus);
+
+            _mergedPhoto = mergeResult.DataUrl;
+            await LogMergeDiagnosticsAsync(mergeResult);
         }
         catch (Exception ex)
         {
@@ -433,6 +439,22 @@
         next.EnablePerfOverlay = value;
         await SegmentationSettings.UpdateAsync(next);
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LogMergeDiagnosticsAsync(MergeResult mergeResult)
+    {
+        await JS.InvokeVoidAsync(
+            "console.groupCollapsed",
+            $"[Merge] {mergeResult.Pipeline} · Gesamt: {mergeResult.TotalDurationMs} ms");
+
+        foreach (var step in mergeResult.Timings)
+        {
+            await JS.InvokeVoidAsync(
+                "console.log",
+                $"{DateTimeOffset.Now:O} | {step.Step}: +{step.DurationMs} ms (t={step.ElapsedMs} ms)");
+        }
+
+        await JS.InvokeVoidAsync("console.groupEnd");
     }
 
     private SegmentationOptions CloneOptions()
