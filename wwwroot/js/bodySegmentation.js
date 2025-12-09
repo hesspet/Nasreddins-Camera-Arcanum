@@ -327,7 +327,7 @@ export async function segmentPhoto(photoDataUrl, focusPoint, options) {
     });
 
     const segmentationApi = globalThis.bodySegmentation;
-    const softMask = await segmentationApi.toMask(segmentations);
+    const softMask = await getMaskImageData(segmentationApi, segmentations);
 
     const refinedAlpha = refineMask(softMask, config, focusPoint);
     const foregroundDataUrl = createLayer(image, refinedAlpha, false, softMask.width, softMask.height);
@@ -337,4 +337,44 @@ export async function segmentPhoto(photoDataUrl, focusPoint, options) {
         foregroundDataUrl,
         backgroundDataUrl,
     };
+}
+
+async function getMaskImageData(segmentationApi, segmentations) {
+    if (!segmentations?.length) {
+        throw new Error("Keine Segmentierungsergebnisse erhalten");
+    }
+
+    const segmentation = segmentations[0];
+    const mask = segmentation?.mask;
+
+    if (mask?.toImageData) {
+        return await mask.toImageData();
+    }
+
+    if (mask?.toCanvasImageSource) {
+        const source = await mask.toCanvasImageSource();
+        const canvas = document.createElement("canvas");
+        canvas.width = source.width;
+        canvas.height = source.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(source, 0, 0);
+        return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+
+    if (mask instanceof ImageData) {
+        return mask;
+    }
+
+    if (segmentationApi?.toBinaryMask) {
+        return await segmentationApi.toBinaryMask(
+            segmentations,
+            { r: 255, g: 255, b: 255, a: 255 },
+            { r: 0, g: 0, b: 0, a: 0 },
+            false,
+            undefined,
+            [255, 0]
+        );
+    }
+
+    throw new Error("Maskendaten konnten nicht erzeugt werden");
 }
