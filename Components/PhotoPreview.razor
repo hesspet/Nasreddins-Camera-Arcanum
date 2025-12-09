@@ -30,7 +30,7 @@
 
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
         <MudButton Variant="Variant.Outlined"
-                   Color="Color.Primary"
+                   Color="MudBlazor.Color.Primary"
                    Disabled="@(_isSegmenting || _isAutoCalibrating || string.IsNullOrEmpty(PhotoDataUrl))"
                    StartIcon="@Icons.Material.Filled.AutoFixHigh"
                    OnClick="RunAutoCalibrationAsync">
@@ -41,7 +41,7 @@
         </MudText>
         @if (_isAutoCalibrating)
         {
-            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Medium" />
+            <MudProgressCircular Indeterminate="true" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium" />
         }
     </MudStack>
 
