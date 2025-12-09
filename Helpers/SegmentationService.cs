@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -54,6 +55,12 @@ public class SegmentationService : IAsyncDisposable
         }
     }
 
+    public async Task<SegmentationPerformance?> GetPerformanceSnapshotAsync()
+    {
+        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
+        return await _segmentationModule.InvokeAsync<SegmentationPerformance?>("getPerformanceSnapshot");
+    }
+
     public async ValueTask DisposeAsync()
     {
         await ResetAsync();
@@ -73,3 +80,14 @@ public sealed record SegmentationAutoTuneStats(
     double ForegroundRatio,
     double AvgEdgeTransition,
     double BorderLeakRatio);
+
+public sealed record SegmentationPerformance(
+    string? Backend,
+    string? Quality,
+    string? Resolution,
+    double Total,
+    Dictionary<string, double>? Steps,
+    double? Width,
+    double? Height,
+    string? DynamicQuality,
+    IReadOnlyList<double>? History);

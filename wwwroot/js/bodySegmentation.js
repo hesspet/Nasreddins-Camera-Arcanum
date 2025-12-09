@@ -1,12 +1,23 @@
 const TF_BUNDLE_URL = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
 const TF_WEBGL_URL = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js";
 const BODY_SEGMENTATION_URL = "https://cdn.jsdelivr.net/npm/@tensorflow-models/body-segmentation@1.0.2/dist/body-segmentation.min.js";
+const ONNX_RUNTIME_URL = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/ort.min.js";
+const ONNX_MODEL_URL =
+    "https://huggingface.co/onnx-community/modnet/resolve/main/modnet.onnx?download=1";
 
 const scriptPromises = new Map();
 let segmenterPromise = null;
+let onnxSessionPromise = null;
 let activeModelKey = "";
 const MAX_FEATHER = 40;
 const MAX_BLUR = 25;
+const DEFAULT_TARGET_HEIGHT = 720;
+const MAX_TEMPORAL_HISTORY = 12;
+const PERF_WINDOW = 8;
+
+let temporalState = null;
+let lastPerformanceSummary = null;
+let dynamicQuality = "medium";
 
 function loadScriptOnce(url) {
     if (scriptPromises.has(url)) {
@@ -37,7 +48,7 @@ function loadScriptOnce(url) {
     return promise;
 }
 
-async function ensureDependencies() {
+async function ensureTensorflowDependencies(preferWebGpu) {
     await loadScriptOnce(TF_BUNDLE_URL);
     await loadScriptOnce(TF_WEBGL_URL);
     await loadScriptOnce(BODY_SEGMENTATION_URL);
@@ -50,8 +61,28 @@ async function ensureDependencies() {
         throw new Error("Body-Segmentation-Bibliothek konnte nicht geladen werden");
     }
 
-    await globalThis.tf.setBackend("webgl");
+    const availableBackends = globalThis.tf?.engine()?.registryFactory ?? {};
+    const canUseWebGpu = preferWebGpu && typeof globalThis.navigator?.gpu !== "undefined";
+    if (canUseWebGpu && availableBackends["webgpu"]) {
+        await globalThis.tf.setBackend("webgpu");
+    } else {
+        await globalThis.tf.setBackend("webgl");
+    }
+
     await globalThis.tf.ready();
+}
+
+async function ensureOnnxRuntime(preferWebGpu) {
+    await loadScriptOnce(ONNX_RUNTIME_URL);
+
+    if (!globalThis.ort) {
+        throw new Error("ONNX Runtime Web konnte nicht geladen werden");
+    }
+
+    if (preferWebGpu && globalThis.navigator?.gpu) {
+        globalThis.ort.env.webgpu ??= {};
+        globalThis.ort.env.webgpu.powerPreference = "high-performance";
+    }
 }
 
 function buildConfig(options) {
@@ -89,14 +120,101 @@ function buildConfig(options) {
             : typeof options?.OuterFeatherRadius === "number"
                 ? options.OuterFeatherRadius
                 : 6,
+        quality: (options?.quality ?? options?.Quality ?? "medium").toLowerCase(),
+        backendPreference: (options?.backendPreference ?? options?.BackendPreference ?? "auto").toLowerCase(),
+        temporalSmoothing: options?.temporalSmoothing ?? options?.TemporalSmoothing ?? true,
+        temporalSmoothingAlpha: typeof options?.temporalSmoothingAlpha === "number"
+            ? options.temporalSmoothingAlpha
+            : typeof options?.TemporalSmoothingAlpha === "number"
+                ? options.TemporalSmoothingAlpha
+                : 0.7,
+        enableEdgeRefinement: options?.enableEdgeRefinement ?? options?.EnableEdgeRefinement ?? true,
+        enableSharpening: options?.enableSharpening ?? options?.EnableSharpening ?? true,
+        enablePerfOverlay: options?.enablePerfOverlay ?? options?.EnablePerfOverlay ?? false,
     };
 }
 
+function resolveQualityPreset(requestedQuality) {
+    const normalized = (requestedQuality || "medium").toLowerCase();
+    const quality = normalized === "auto" ? dynamicQuality : normalized;
+
+    switch (quality) {
+        case "high":
+            return { height: 900, label: "high" };
+        case "low":
+            return { height: 540, label: "low" };
+        case "medium":
+        default:
+            return { height: DEFAULT_TARGET_HEIGHT, label: "medium" };
+    }
+}
+
+function updateDynamicQuality(lastInferenceMs, requestedQuality) {
+    if ((requestedQuality || "auto").toLowerCase() !== "auto") {
+        return;
+    }
+
+    const target = 33;
+    const history = (lastPerformanceSummary?.history ?? []).slice(-PERF_WINDOW);
+    history.push(lastInferenceMs);
+
+    const avg = history.reduce((sum, val) => sum + val, 0) / Math.max(history.length, 1);
+
+    if (avg > target * 1.15) {
+        dynamicQuality = "low";
+    } else if (avg < target * 0.85) {
+        dynamicQuality = "high";
+    } else {
+        dynamicQuality = "medium";
+    }
+
+    lastPerformanceSummary = {
+        ...(lastPerformanceSummary ?? {}),
+        history,
+        dynamicQuality,
+    };
+}
+
+function updatePerformanceOverlay(summary, enableOverlay) {
+    summary.history = lastPerformanceSummary?.history ?? summary.history ?? [];
+    summary.dynamicQuality = dynamicQuality;
+    lastPerformanceSummary = summary;
+
+    if (!enableOverlay) {
+        const overlay = document.getElementById("segmentation-profiler");
+        overlay?.remove();
+        return;
+    }
+
+    let overlay = document.getElementById("segmentation-profiler");
+    if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.id = "segmentation-profiler";
+        overlay.style.position = "fixed";
+        overlay.style.bottom = "0.5rem";
+        overlay.style.right = "0.5rem";
+        overlay.style.zIndex = "9999";
+        overlay.style.background = "rgba(0,0,0,0.65)";
+        overlay.style.color = "white";
+        overlay.style.fontSize = "12px";
+        overlay.style.padding = "0.5rem 0.75rem";
+        overlay.style.borderRadius = "8px";
+        overlay.style.pointerEvents = "none";
+        document.body.appendChild(overlay);
+    }
+
+    overlay.textContent =
+        `Backend: ${summary.backend} | Qualität: ${summary.quality} | ` +
+        `Inference: ${summary.steps.inference?.toFixed(1) ?? "-"}ms | ` +
+        `Gesamt: ${summary.total.toFixed(1)}ms | ${summary.resolution}`;
+}
+
 async function getSegmenter(config) {
-    const requestedKey = `${config.modelType}`;
+    const requestedKey = `${config.modelType}-${config.backendPreference}`;
 
     if (!segmenterPromise || requestedKey !== activeModelKey) {
-        await ensureDependencies();
+        const preferWebGpu = config.backendPreference === "webgpu" || config.backendPreference === "auto";
+        await ensureTensorflowDependencies(preferWebGpu);
         segmenterPromise = globalThis.bodySegmentation.createSegmenter(
             globalThis.bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation,
             {
@@ -108,6 +226,93 @@ async function getSegmenter(config) {
     }
 
     return segmenterPromise;
+}
+
+async function getOnnxSession(config) {
+    if (onnxSessionPromise) {
+        return onnxSessionPromise;
+    }
+
+    const preferWebGpu = config.backendPreference === "webgpu" || config.backendPreference === "auto";
+    await ensureOnnxRuntime(preferWebGpu);
+
+    const executionProviders = [];
+    if (preferWebGpu && globalThis.navigator?.gpu) {
+        executionProviders.push("webgpu");
+    }
+    executionProviders.push("webgl", "wasm");
+
+    onnxSessionPromise = globalThis.ort.InferenceSession.create(ONNX_MODEL_URL, {
+        executionProviders,
+        graphOptimizationLevel: "all",
+    });
+
+    return onnxSessionPromise;
+}
+
+function imageToNchwTensor(canvas) {
+    const ctx = canvas.getContext("2d");
+    const { width, height } = canvas;
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    const floatData = new Float32Array(1 * 3 * width * height);
+
+    for (let i = 0; i < width * height; i++) {
+        const r = data[i * 4] / 255;
+        const g = data[i * 4 + 1] / 255;
+        const b = data[i * 4 + 2] / 255;
+
+        floatData[i] = (r - 0.485) / 0.229;
+        floatData[width * height + i] = (g - 0.456) / 0.224;
+        floatData[width * height * 2 + i] = (b - 0.406) / 0.225;
+    }
+
+    return floatData;
+}
+
+async function runOnnxSegmentation(canvas, config, perf) {
+    const session = await getOnnxSession(config);
+    const inputName = session.inputNames?.[0] ?? "input";
+
+    const inferenceStart = performance.now();
+    const input = new globalThis.ort.Tensor("float32", imageToNchwTensor(canvas), [
+        1,
+        3,
+        canvas.height,
+        canvas.width,
+    ]);
+
+    const outputs = await session.run({ [inputName]: input });
+    const outputName = session.outputNames?.[0];
+    const output = outputs[outputName ?? Object.keys(outputs)[0]];
+    const inferenceMs = performance.now() - inferenceStart;
+
+    const width = output.dims?.[3] ?? canvas.width;
+    const height = output.dims?.[2] ?? canvas.height;
+    const alphaMask = new Float32Array(width * height);
+    for (let i = 0; i < alphaMask.length; i++) {
+        const value = output.data[i] ?? 0;
+        alphaMask[i] = Math.max(0, Math.min(255, value * 255));
+    }
+
+    perf.steps.inference = inferenceMs;
+    return { alphaMask, width, height, backend: "onnx" };
+}
+
+async function runTensorflowSegmentation(image, config, perf) {
+    const segmenter = await getSegmenter(config);
+    const inferenceStart = performance.now();
+    const segmentations = await segmenter.segmentPeople(image, {
+        multiSegmentation: false,
+        segmentationThreshold: config.segmentationThreshold,
+        refineSteps: 3,
+    });
+    const inferenceMs = performance.now() - inferenceStart;
+
+    const segmentationApi = globalThis.bodySegmentation;
+    const softMask = await getMaskImageData(segmentationApi, segmentations);
+    perf.steps.inference = inferenceMs;
+    return { alphaMask: cloneAlphaFromMask(softMask), width: softMask.width, height: softMask.height, backend: "tfjs" };
 }
 
 function loadImage(dataUrl) {
@@ -125,6 +330,55 @@ function cloneAlphaFromMask(mask) {
         alpha[i / 4] = mask.data[i + 3];
     }
     return alpha;
+}
+
+function scaleImageToHeight(image, targetHeight) {
+    const aspect = image.naturalWidth / image.naturalHeight;
+    const width = Math.round(targetHeight * aspect);
+    const height = Math.round(targetHeight);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(image, 0, 0, width, height);
+
+    return { canvas, width, height };
+}
+
+function maskToCanvas(alphaMask, width, height) {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    const imageData = ctx.createImageData(width, height);
+    for (let i = 0; i < alphaMask.length; i++) {
+        imageData.data[i * 4 + 3] = alphaMask[i];
+    }
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+}
+
+function upscaleMask(alphaMask, sourceWidth, sourceHeight, targetWidth, targetHeight) {
+    if (sourceWidth === targetWidth && sourceHeight === targetHeight) {
+        return alphaMask;
+    }
+
+    const maskCanvas = maskToCanvas(alphaMask, sourceWidth, sourceHeight);
+    const targetCanvas = document.createElement("canvas");
+    targetCanvas.width = targetWidth;
+    targetCanvas.height = targetHeight;
+    const targetCtx = targetCanvas.getContext("2d");
+    targetCtx.imageSmoothingEnabled = true;
+    targetCtx.imageSmoothingQuality = "high";
+    targetCtx.drawImage(maskCanvas, 0, 0, targetWidth, targetHeight);
+
+    const scaled = targetCtx.getImageData(0, 0, targetWidth, targetHeight);
+    const result = new Float32Array(targetWidth * targetHeight);
+    for (let i = 0; i < result.length; i++) {
+        result[i] = scaled.data[i * 4 + 3];
+    }
+    return result;
 }
 
 function applyBlurToAlpha(alphaMask, width, height, blurRadius) {
@@ -157,6 +411,29 @@ function applyBlurToAlpha(alphaMask, width, height, blurRadius) {
         result[i] = blurred.data[i * 4 + 3];
     }
 
+    return result;
+}
+
+function applyTemporalSmoothing(alphaMask, width, height, factor, enabled) {
+    if (!enabled) {
+        temporalState = { mask: alphaMask, width, height, history: [alphaMask] };
+        return alphaMask;
+    }
+
+    if (!temporalState || temporalState.width !== width || temporalState.height !== height) {
+        temporalState = { mask: alphaMask, width, height, history: [alphaMask] };
+        return alphaMask;
+    }
+
+    const result = new Float32Array(alphaMask.length);
+    for (let i = 0; i < alphaMask.length; i++) {
+        const prev = temporalState.mask[i] ?? 0;
+        result[i] = prev * factor + alphaMask[i] * (1 - factor);
+    }
+
+    temporalState.mask = result;
+    temporalState.history = (temporalState.history ?? []).slice(-(MAX_TEMPORAL_HISTORY - 1));
+    temporalState.history.push(result);
     return result;
 }
 
@@ -224,6 +501,13 @@ function refineMask(mask, config, focusPoint) {
     }
 
     let alphaMask = cloneAlphaFromMask(mask);
+    if (!config.enableEdgeRefinement) {
+        const direct = new Uint8ClampedArray(alphaMask.length);
+        for (let i = 0; i < alphaMask.length; i++) {
+            direct[i] = Math.max(0, Math.min(255, Math.round(alphaMask[i])));
+        }
+        return direct;
+    }
     alphaMask = dilateAlpha(alphaMask, mask.width, mask.height, config.dilationRadius);
     alphaMask = erodeAlpha(alphaMask, mask.width, mask.height, config.erosionRadius);
 
@@ -395,59 +679,125 @@ export function getImageMetrics(imgElement) {
     };
 }
 
-export async function segmentPhoto(photoDataUrl, focusPoint, options) {
+async function runSegmentationPipeline(photoDataUrl, focusPoint, options, { calibrateOnly = false } = {}) {
     if (!photoDataUrl) {
         throw new Error("Kein Foto vorhanden");
     }
 
     const config = buildConfig(options);
-    const segmenter = await getSegmenter(config);
+    const qualityPreset = resolveQualityPreset(config.quality);
+    const summary = {
+        backend: "",
+        quality: qualityPreset.label,
+        resolution: "",
+        steps: {},
+        total: 0,
+    };
+
+    const totalStart = performance.now();
     const image = await loadImage(photoDataUrl);
+    const prepStart = performance.now();
+    const working = scaleImageToHeight(image, qualityPreset.height);
+    summary.steps.preprocess = performance.now() - prepStart;
+    summary.resolution = `${working.width}x${working.height}`;
 
-    const segmentations = await segmenter.segmentPeople(image, {
-        multiSegmentation: false,
-        segmentationThreshold: config.segmentationThreshold,
-        refineSteps: 3,
-    });
+    let engineResult = null;
+    if (config.backendPreference !== "tfjs") {
+        try {
+            engineResult = await runOnnxSegmentation(working.canvas, config, summary);
+        } catch (error) {
+            console.warn("ONNX Runtime ist fehlgeschlagen, fallback auf TFJS", error);
+        }
+    }
 
-    const segmentationApi = globalThis.bodySegmentation;
-    const softMask = await getMaskImageData(segmentationApi, segmentations);
+    if (!engineResult) {
+        engineResult = await runTensorflowSegmentation(working.canvas, config, summary);
+    }
 
+    summary.backend = engineResult.backend;
+    updateDynamicQuality(summary.steps.inference ?? 0, config.quality);
+
+    const temporalStart = performance.now();
+    const temporallyStable = applyTemporalSmoothing(
+        engineResult.alphaMask,
+        engineResult.width,
+        engineResult.height,
+        config.temporalSmoothingAlpha,
+        config.temporalSmoothing
+    );
+    summary.steps.temporal = performance.now() - temporalStart;
+
+    const softMask = new ImageData(engineResult.width, engineResult.height);
+    for (let i = 0; i < temporallyStable.length; i++) {
+        softMask.data[i * 4 + 3] = temporallyStable[i];
+    }
+
+    const refineStart = performance.now();
     const refinedAlpha = refineMask(softMask, config, focusPoint);
-    const foregroundDataUrl = createLayer(image, refinedAlpha, false, softMask.width, softMask.height);
-    const backgroundDataUrl = createLayer(image, refinedAlpha, true, softMask.width, softMask.height);
+    summary.steps.refine = performance.now() - refineStart;
+
+    const upscaleStart = performance.now();
+    const scaledAlpha = upscaleMask(
+        refinedAlpha,
+        engineResult.width,
+        engineResult.height,
+        image.naturalWidth || image.width,
+        image.naturalHeight || image.height
+    );
+    summary.steps.upscale = performance.now() - upscaleStart;
+    summary.width = image.naturalWidth || image.width;
+    summary.height = image.naturalHeight || image.height;
+
+    summary.total = performance.now() - totalStart;
+    updatePerformanceOverlay(summary, config.enablePerfOverlay);
+
+    if (calibrateOnly) {
+        return { alphaMask: scaledAlpha, summary };
+    }
+
+    const foregroundDataUrl = createLayer(
+        image,
+        scaledAlpha,
+        false,
+        image.naturalWidth || image.width,
+        image.naturalHeight || image.height
+    );
+    const backgroundDataUrl = createLayer(
+        image,
+        scaledAlpha,
+        true,
+        image.naturalWidth || image.width,
+        image.naturalHeight || image.height
+    );
 
     return {
         foregroundDataUrl,
         backgroundDataUrl,
+        alphaMask: scaledAlpha,
+        width: summary.width,
+        height: summary.height,
+        summary,
     };
 }
 
+export async function segmentPhoto(photoDataUrl, focusPoint, options) {
+    const result = await runSegmentationPipeline(photoDataUrl, focusPoint, options);
+    return { foregroundDataUrl: result.foregroundDataUrl, backgroundDataUrl: result.backgroundDataUrl };
+}
+
 export async function autoCalibrateSegmentation(photoDataUrl, focusPoint, options) {
-    if (!photoDataUrl) {
-        throw new Error("Kein Foto vorhanden");
-    }
-
-    const config = buildConfig(options);
-    const segmenter = await getSegmenter(config);
-    const image = await loadImage(photoDataUrl);
-
-    const segmentations = await segmenter.segmentPeople(image, {
-        multiSegmentation: false,
-        segmentationThreshold: config.segmentationThreshold,
-        refineSteps: 3,
-    });
-
-    const segmentationApi = globalThis.bodySegmentation;
-    const softMask = await getMaskImageData(segmentationApi, segmentations);
-    const refinedAlpha = refineMask(softMask, config, focusPoint);
-    const stats = analyzeMask(refinedAlpha, softMask.width, softMask.height);
-    const tunedConfig = tuneConfig(config, stats);
+    const result = await runSegmentationPipeline(photoDataUrl, focusPoint, options, { calibrateOnly: true });
+    const stats = analyzeMask(result.alphaMask, result.width ?? 0, result.height ?? 0);
+    const tunedConfig = tuneConfig(buildConfig(options), stats);
 
     return {
         stats,
         tunedOptions: tunedConfig,
     };
+}
+
+export function getPerformanceSnapshot() {
+    return lastPerformanceSummary;
 }
 
 async function getMaskImageData(segmentationApi, segmentations) {
