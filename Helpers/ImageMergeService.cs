@@ -39,14 +39,20 @@ public sealed class ImageMergeService
             {
                 Size = overlayTargetSize,
                 Mode = ResizeMode.Pad,
-                Sampler = KnownResamplers.Triangle,
+                // NearestNeighbor keeps resizing fast while avoiding blurry overlays.
+                Sampler = KnownResamplers.NearestNeighbor,
                 PadColor = SixLabors.ImageSharp.Color.Transparent
             }));
 
         var placement = CalculatePlacement(focusPoint, targetSize, overlay.Size);
 
-        BlendImageOntoBackground(background, overlay, placement);
-        BlendImageOntoBackground(background, foreground, Point.Empty);
+        background.Mutate(ctx =>
+        {
+            // ImageSharp's DrawImage pipeline is highly optimized and substantially faster than manual per-pixel blending
+            // on WebAssembly. Using it for both overlays reduces merge time dramatically.
+            ctx.DrawImage(overlay, placement, 1f);
+            ctx.DrawImage(foreground, Point.Empty, 1f);
+        });
 
         using var output = new MemoryStream();
         var fastPngEncoder = new PngEncoder
@@ -77,57 +83,6 @@ public sealed class ImageMergeService
         y = Math.Clamp(y, 0, Math.Max(0, maxY));
 
         return new Point(x, y);
-    }
-
-    private static void BlendImageOntoBackground(Image<Rgba32> background, Image<Rgba32> overlay, Point placement)
-    {
-        var destinationBounds = new Rectangle(Point.Empty, new Size(background.Width, background.Height));
-        var overlayBounds = new Rectangle(placement, overlay.Size);
-        var targetBounds = Rectangle.Intersect(destinationBounds, overlayBounds);
-
-        if (targetBounds.Width == 0 || targetBounds.Height == 0)
-        {
-            return;
-        }
-
-        var overlayOffset = new Point(targetBounds.X - placement.X, targetBounds.Y - placement.Y);
-
-        var backgroundFrame = background.Frames.RootFrame;
-        var overlayFrame = overlay.Frames.RootFrame;
-        var backgroundBuffer = backgroundFrame.PixelBuffer;
-        var overlayBuffer = overlayFrame.PixelBuffer;
-
-        for (var y = 0; y < targetBounds.Height; y++)
-        {
-            var backgroundRow = backgroundBuffer.DangerousGetRowSpan(targetBounds.Y + y);
-            var overlayRow = overlayBuffer.DangerousGetRowSpan(overlayOffset.Y + y);
-
-            for (var x = 0; x < targetBounds.Width; x++)
-            {
-                ref var destinationPixel = ref backgroundRow[targetBounds.X + x];
-                var sourcePixel = overlayRow[overlayOffset.X + x];
-
-                if (sourcePixel.A == 0)
-                {
-                    continue;
-                }
-
-                if (sourcePixel.A == byte.MaxValue)
-                {
-                    destinationPixel = sourcePixel;
-                    continue;
-                }
-
-                var sourceAlpha = sourcePixel.A / 255f;
-                var destinationAlpha = destinationPixel.A / 255f;
-                var outputAlpha = sourceAlpha + destinationAlpha * (1f - sourceAlpha);
-
-                destinationPixel.R = (byte)Math.Round((sourcePixel.R * sourceAlpha + destinationPixel.R * destinationAlpha * (1f - sourceAlpha)) / outputAlpha);
-                destinationPixel.G = (byte)Math.Round((sourcePixel.G * sourceAlpha + destinationPixel.G * destinationAlpha * (1f - sourceAlpha)) / outputAlpha);
-                destinationPixel.B = (byte)Math.Round((sourcePixel.B * sourceAlpha + destinationPixel.B * destinationAlpha * (1f - sourceAlpha)) / outputAlpha);
-                destinationPixel.A = (byte)Math.Round(outputAlpha * 255f);
-            }
-        }
     }
 
     private static byte[] ExtractBytesFromDataUrl(string dataUrl)
