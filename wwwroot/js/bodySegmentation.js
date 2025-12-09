@@ -86,6 +86,10 @@ async function ensureOnnxRuntime(preferWebGpu) {
 }
 
 function buildConfig(options) {
+    const rawBackendPreference = options?.backendPreference ?? options?.BackendPreference;
+    const backendPreference = normalizeBackendPreference(rawBackendPreference);
+    const preferWebGpu = shouldPreferWebGpu(rawBackendPreference);
+
     return {
         modelType: options?.modelType === "landscape" || options?.ModelType === "landscape"
             ? "landscape"
@@ -121,7 +125,8 @@ function buildConfig(options) {
                 ? options.OuterFeatherRadius
                 : 6,
         quality: (options?.quality ?? options?.Quality ?? "medium").toLowerCase(),
-        backendPreference: (options?.backendPreference ?? options?.BackendPreference ?? "auto").toLowerCase(),
+        backendPreference,
+        preferWebGpu,
         temporalSmoothing: options?.temporalSmoothing ?? options?.TemporalSmoothing ?? true,
         temporalSmoothingAlpha: typeof options?.temporalSmoothingAlpha === "number"
             ? options.temporalSmoothingAlpha
@@ -213,8 +218,7 @@ async function getSegmenter(config) {
     const requestedKey = `${config.modelType}-${config.backendPreference}`;
 
     if (!segmenterPromise || requestedKey !== activeModelKey) {
-        const preferWebGpu = config.backendPreference === "webgpu" || config.backendPreference === "auto";
-        await ensureTensorflowDependencies(preferWebGpu);
+        await ensureTensorflowDependencies(config.preferWebGpu);
         segmenterPromise = globalThis.bodySegmentation.createSegmenter(
             globalThis.bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation,
             {
@@ -228,16 +232,34 @@ async function getSegmenter(config) {
     return segmenterPromise;
 }
 
+function normalizeBackendPreference(preference) {
+    const normalized = (preference ?? "tfjs").toLowerCase();
+
+    if (["onnx", "tfjs"].includes(normalized)) {
+        return normalized;
+    }
+
+    if (["auto", "webgpu"].includes(normalized)) {
+        return "tfjs";
+    }
+
+    return "tfjs";
+}
+
+function shouldPreferWebGpu(preference) {
+    const normalized = (preference ?? "").toLowerCase();
+    return normalized === "webgpu" || normalized === "auto";
+}
+
 async function getOnnxSession(config) {
     if (onnxSessionPromise) {
         return onnxSessionPromise;
     }
 
-    const preferWebGpu = config.backendPreference === "webgpu" || config.backendPreference === "auto";
-    await ensureOnnxRuntime(preferWebGpu);
+    await ensureOnnxRuntime(config.preferWebGpu);
 
     const executionProviders = [];
-    if (preferWebGpu && globalThis.navigator?.gpu) {
+    if (config.preferWebGpu && globalThis.navigator?.gpu) {
         executionProviders.push("webgpu");
     }
     executionProviders.push("webgl", "wasm");
@@ -702,7 +724,7 @@ async function runSegmentationPipeline(photoDataUrl, focusPoint, options, { cali
     summary.resolution = `${working.width}x${working.height}`;
 
     let engineResult = null;
-    if (config.backendPreference !== "tfjs") {
+    if (config.backendPreference === "onnx") {
         try {
             engineResult = await runOnnxSegmentation(working.canvas, config, summary);
         } catch (error) {
