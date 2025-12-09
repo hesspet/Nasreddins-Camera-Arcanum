@@ -32,6 +32,15 @@ Ziel: Eine Progressive Web App, die wie eine normale Kamera-App aussieht, ein Fo
   - `manifest.webmanifest`
   - `service-worker.js` (offline für UI und Model, sofern möglich)
 
+## Performance- und Qualitätsstufen
+
+- Die Segmentierung nutzt bevorzugt ONNX Runtime Web (WebGPU → WebGL → WASM) mit einem leichten MODNet-Matting-Modell. Falls das Backend oder das Modell nicht verfügbar ist, fällt der Code automatisch auf das bisherige TensorFlow.js MediaPipe Selfie Segmentation Modell zurück.
+- Qualitätsprofile:
+  - **Auto** (Standard): 720p-Zielauflösung mit dynamischem Wechsel auf 540p/900p, wenn die gemessene Inference-Zeit dauerhaft über/unter ~33 ms liegt.
+  - **High/Medium/Low**: fixe Zielhöhen 900p/720p/540p für Geräte mit mehr oder weniger GPU-Leistung.
+- Temporale Glättung der Alpha-Maske (EMA) sorgt für stabile Ränder auf Smartphones. Ein optionaler Performance-Overlay (umschaltbar) zeigt Backend, Auflösung und Latenzen live an.
+- Alle Optionen sind über die neue "Performance & Qualität"-Sektion in der Foto-Preview umschaltbar und werden in `localStorage` persistiert.
+
 ## iOS / PWA Besonderheiten
 
 - `getUserMedia` nur in einer Kameraview verwenden (keine Routenwechsel während Kamera aktiv)

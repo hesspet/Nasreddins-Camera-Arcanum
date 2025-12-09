@@ -83,6 +83,17 @@ public class SegmentationSettings
             ErosionRadius = Math.Clamp(source.ErosionRadius, 0, 15),
             InnerFeatherRadius = Math.Clamp(source.InnerFeatherRadius, 0, 40),
             OuterFeatherRadius = Math.Clamp(source.OuterFeatherRadius, 0, 40),
+            Quality = string.IsNullOrWhiteSpace(source.Quality)
+                ? "auto"
+                : source.Quality.ToLowerInvariant(),
+            BackendPreference = string.IsNullOrWhiteSpace(source.BackendPreference)
+                ? "auto"
+                : source.BackendPreference.ToLowerInvariant(),
+            TemporalSmoothing = source.TemporalSmoothing,
+            TemporalSmoothingAlpha = Math.Clamp(source.TemporalSmoothingAlpha, 0.25, 0.9),
+            EnableEdgeRefinement = source.EnableEdgeRefinement,
+            EnableSharpening = source.EnableSharpening,
+            EnablePerfOverlay = source.EnablePerfOverlay,
         };
     }
 }
@@ -102,4 +113,18 @@ public sealed class SegmentationOptions
     public int InnerFeatherRadius { get; set; } = 3;
 
     public int OuterFeatherRadius { get; set; } = 6;
+
+    public string Quality { get; set; } = "auto";
+
+    public string BackendPreference { get; set; } = "auto";
+
+    public bool TemporalSmoothing { get; set; } = true;
+
+    public double TemporalSmoothingAlpha { get; set; } = 0.7;
+
+    public bool EnableEdgeRefinement { get; set; } = true;
+
+    public bool EnableSharpening { get; set; } = true;
+
+    public bool EnablePerfOverlay { get; set; } = false;
 }
