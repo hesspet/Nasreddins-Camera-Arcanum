@@ -3,10 +3,6 @@ using System.Net.Http;
 using System.Collections.Generic;
 using Microsoft.JSInterop;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Nasreddins_Camera_Arcanum.Helpers;
 
@@ -141,28 +137,25 @@ public sealed class ImageMergeService : IAsyncDisposable
 
     private static Point CalculatePlacement(PointF? focusPoint, Size targetSize, Size overlaySize)
     {
-        var defaultPoint = new PointF(targetSize.Width / 2f, targetSize.Height / 2f);
-        var anchor = focusPoint ?? defaultPoint;
-
-        var x = (int)Math.Round(anchor.X - overlaySize.Width / 2f);
-        var y = (int)Math.Round(anchor.Y - overlaySize.Height / 2f);
-
-        var maxX = targetSize.Width - overlaySize.Width;
-        var maxY = targetSize.Height - overlaySize.Height;
-
-        x = Math.Clamp(x, 0, Math.Max(0, maxX));
-        y = Math.Clamp(y, 0, Math.Max(0, maxY));
-
-        return new Point(x, y);
+        if (_moduleTask.IsValueCreated)
+        {
+            var module = await _moduleTask.Value;
+            await module.DisposeAsync();
+        }
     }
 
-    private static byte[] ExtractBytesFromDataUrl(string dataUrl)
-    {
-        var base64Index = dataUrl.IndexOf(',', StringComparison.Ordinal);
-        if (base64Index < 0)
-        {
-            throw new InvalidOperationException("Ungültiges Bildformat: Kein Base64-Inhalt gefunden.");
-        }
+    private readonly Lazy<Task<IJSObjectReference>> _moduleTask;
+
+    private sealed record JsMergeResult(string DataUrl, IReadOnlyList<JsMergeTiming> Timings, double TotalDurationMs);
+
+    private sealed record JsMergeTiming(string Step, double DurationMs, double ElapsedMs);
+}
+
+public sealed record MergeResult(
+    string DataUrl,
+    IReadOnlyList<MergeStepTiming> Timings,
+    long TotalDurationMs,
+    string Pipeline);
 
         var base64 = dataUrl[(base64Index + 1)..];
         return Convert.FromBase64String(base64);
