@@ -1,5 +1,6 @@
 @implements IAsyncDisposable
 @using SixLabors.ImageSharp
+@using System.Globalization
 
 <MudPaper Class="photo-preview" Elevation="2">
     @if (!string.IsNullOrEmpty(PhotoDataUrl))
@@ -26,6 +27,28 @@
             </MudButton>
         }
     </MudStack>
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Disabled="@(_isSegmenting || _isAutoCalibrating || string.IsNullOrEmpty(PhotoDataUrl))"
+                   StartIcon="@Icons.Material.Filled.AutoFixHigh"
+                   OnClick="RunAutoCalibrationAsync">
+            Halo-Auto-Kalibrierung
+        </MudButton>
+        <MudText Typo="Typo.caption" Class="mud-secondary-text">
+            Passt Schwellenwert und Kantenglättung anhand des aktuellen Motivs an.
+        </MudText>
+        @if (_isAutoCalibrating)
+        {
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Medium" />
+        }
+    </MudStack>
+
+    @if (!string.IsNullOrWhiteSpace(_autoTuneInfo))
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">@_autoTuneInfo</MudAlert>
+    }
 
     <SegmentationPreview ForegroundDataUrl="@_foreground" BackgroundDataUrl="@_background" IsBusy="@_isSegmenting" OnRetry="RetrySegmentation" />
 
@@ -93,6 +116,8 @@
     private string? _mergedPhoto;
     private string? _mergeError;
     private bool _isMerging;
+    private bool _isAutoCalibrating;
+    private string? _autoTuneInfo;
 
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
@@ -105,6 +130,9 @@
 
     [Inject]
     private SegmentationService SegmentationService { get; set; } = default!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = default!;
 
     private string DownloadFileName => "camera_arcanum_photo.png";
     private string MergedDownloadFileName => "camera_arcanum_merge.png";
@@ -147,6 +175,45 @@
     private async Task RetrySegmentation()
     {
         await RunSegmentationAsync();
+    }
+
+    private async Task RunAutoCalibrationAsync()
+    {
+        if (PhotoDataUrl is null || _isAutoCalibrating)
+        {
+            return;
+        }
+
+        _segmentationError = null;
+        _autoTuneInfo = null;
+        _isAutoCalibrating = true;
+
+        try
+        {
+            var result = await SegmentationService.AutoCalibrateAsync(
+                PhotoDataUrl,
+                _lastFocus,
+                SegmentationSettings.Options);
+
+            await SegmentationSettings.UpdateAsync(result.TunedOptions);
+
+            _autoTuneInfo =
+                $"Auto-Kalibrierung aktiv: weiche Kante {result.Stats.SoftEdgeRatio.ToString("P0", CultureInfo.InvariantCulture)}, " +
+                $"Übergang {result.Stats.AvgEdgeTransition:F0}, Randleck {result.Stats.BorderLeakRatio.ToString("P1", CultureInfo.InvariantCulture)}. Neue Werte wurden übernommen.";
+
+            Snackbar.Add("Segmentierungs-Parameter automatisch angepasst", Severity.Success);
+
+            await RunSegmentationAsync();
+        }
+        catch (JSException ex)
+        {
+            _segmentationError = $"Auto-Kalibrierung fehlgeschlagen: {ex.Message}";
+        }
+        finally
+        {
+            _isAutoCalibrating = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task RunSegmentationAsync()
@@ -199,6 +266,8 @@
         _mergedPhoto = null;
         _mergeError = null;
         _isMerging = false;
+        _autoTuneInfo = null;
+        _isAutoCalibrating = false;
 
         await SegmentationService.ResetAsync();
     }
