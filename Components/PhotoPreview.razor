@@ -50,6 +50,55 @@
         <MudAlert Severity="Severity.Info" Dense="true">@_autoTuneInfo</MudAlert>
     }
 
+    <MudPaper Class="pa-3 mt-2" Elevation="1">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.subtitle2">Performance &amp; Qualität</MudText>
+            <MudStack Row="true" Spacing="1">
+                <MudSelect T="string"
+                           Value="@SegmentationSettings.Options.Quality"
+                           ValueChanged="UpdateQualityAsync"
+                           Dense="true"
+                           Label="Qualität">
+                    <MudSelectItem Value="auto">Auto (720p Ziel, dynamisch)</MudSelectItem>
+                    <MudSelectItem Value="high">High (900p, beste Kanten)</MudSelectItem>
+                    <MudSelectItem Value="medium">Medium (720p, Standard)</MudSelectItem>
+                    <MudSelectItem Value="low">Low (540p, Akku-schonend)</MudSelectItem>
+                </MudSelect>
+
+                <MudSelect T="string"
+                           Value="@SegmentationSettings.Options.BackendPreference"
+                           ValueChanged="UpdateBackendAsync"
+                           Dense="true"
+                           Label="Backend">
+                    <MudSelectItem Value="auto">Auto (WebGPU/WebGL → TFJS)</MudSelectItem>
+                    <MudSelectItem Value="onnx">ONNX Runtime (GPU bevorzugt)</MudSelectItem>
+                    <MudSelectItem Value="tfjs">MediaPipe TFJS Fallback</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudSwitch Color="MudBlazor.Color.Primary"
+                           Checked="@SegmentationSettings.Options.TemporalSmoothing"
+                           CheckedChanged="ToggleTemporalSmoothingAsync">
+                    Temporale Glättung
+                </MudSwitch>
+                <MudSwitch Color="MudBlazor.Color.Secondary"
+                           Checked="@SegmentationSettings.Options.EnablePerfOverlay"
+                           CheckedChanged="TogglePerfOverlayAsync">
+                    Live-Profiler-Overlay
+                </MudSwitch>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    @if (_perfSummary is not null)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">
+            Backend: @_perfSummary.Backend ?? "?" | Qualität: @_perfSummary.Quality (dynamisch: @_perfSummary.DynamicQuality)
+            | Auflösung: @_perfSummary.Resolution | Gesamt: @_perfSummary.Total.ToString("F1", CultureInfo.InvariantCulture) ms
+        </MudAlert>
+    }
+
     <SegmentationPreview ForegroundDataUrl="@_foreground" BackgroundDataUrl="@_background" IsBusy="@_isSegmenting" OnRetry="RetrySegmentation" />
 
     @if (HasSegmentationResult)
@@ -118,6 +167,7 @@
     private bool _isMerging;
     private bool _isAutoCalibrating;
     private string? _autoTuneInfo;
+    private SegmentationPerformance? _perfSummary;
 
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
@@ -237,12 +287,14 @@
 
             _foreground = result.ForegroundDataUrl;
             _background = result.BackgroundDataUrl;
+            _perfSummary = await SegmentationService.GetPerformanceSnapshotAsync();
         }
         catch (JSException ex)
         {
             _segmentationError = $"Segmentierung fehlgeschlagen: {ex.Message}";
             _foreground = null;
             _background = null;
+            _perfSummary = null;
         }
         finally
         {
@@ -268,6 +320,7 @@
         _isMerging = false;
         _autoTuneInfo = null;
         _isAutoCalibrating = false;
+        _perfSummary = null;
 
         await SegmentationService.ResetAsync();
     }
@@ -336,5 +389,69 @@
     public async ValueTask DisposeAsync()
     {
         await SegmentationService.DisposeAsync();
+    }
+
+    private async Task UpdateQualityAsync(string? quality)
+    {
+        if (string.IsNullOrWhiteSpace(quality))
+        {
+            return;
+        }
+
+        var next = CloneOptions();
+        next.Quality = quality;
+        await SegmentationSettings.UpdateAsync(next);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateBackendAsync(string? backend)
+    {
+        if (string.IsNullOrWhiteSpace(backend))
+        {
+            return;
+        }
+
+        var next = CloneOptions();
+        next.BackendPreference = backend;
+        await SegmentationSettings.UpdateAsync(next);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleTemporalSmoothingAsync(bool value)
+    {
+        var next = CloneOptions();
+        next.TemporalSmoothing = value;
+        await SegmentationSettings.UpdateAsync(next);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task TogglePerfOverlayAsync(bool value)
+    {
+        var next = CloneOptions();
+        next.EnablePerfOverlay = value;
+        await SegmentationSettings.UpdateAsync(next);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private SegmentationOptions CloneOptions()
+    {
+        var current = SegmentationSettings.Options;
+        return new SegmentationOptions
+        {
+            ModelType = current.ModelType,
+            SegmentationThreshold = current.SegmentationThreshold,
+            MaskBlurAmount = current.MaskBlurAmount,
+            DilationRadius = current.DilationRadius,
+            ErosionRadius = current.ErosionRadius,
+            InnerFeatherRadius = current.InnerFeatherRadius,
+            OuterFeatherRadius = current.OuterFeatherRadius,
+            Quality = current.Quality,
+            BackendPreference = current.BackendPreference,
+            TemporalSmoothing = current.TemporalSmoothing,
+            TemporalSmoothingAlpha = current.TemporalSmoothingAlpha,
+            EnableEdgeRefinement = current.EnableEdgeRefinement,
+            EnableSharpening = current.EnableSharpening,
+            EnablePerfOverlay = current.EnablePerfOverlay,
+        };
     }
 }
