@@ -59,10 +59,10 @@
                            ValueChanged="UpdateQualityAsync"
                            Dense="true"
                            Label="Qualität">
-                    <MudSelectItem Value="auto">Auto (720p Ziel, dynamisch)</MudSelectItem>
-                    <MudSelectItem Value="high">High (900p, beste Kanten)</MudSelectItem>
-                    <MudSelectItem Value="medium">Medium (720p, Standard)</MudSelectItem>
-                    <MudSelectItem Value="low">Low (540p, Akku-schonend)</MudSelectItem>
+                    <MudSelectItem Value="@("auto")">Auto (720p Ziel, dynamisch)</MudSelectItem>
+                    <MudSelectItem Value="@("high")">High (900p, beste Kanten)</MudSelectItem>
+                    <MudSelectItem Value="@("medium")">Medium (720p, Standard)</MudSelectItem>
+                    <MudSelectItem Value="@("low")">Low (540p, Akku-schonend)</MudSelectItem>
                 </MudSelect>
 
                 <MudSelect T="string"
@@ -70,19 +70,21 @@
                            ValueChanged="UpdateBackendAsync"
                            Dense="true"
                            Label="Backend">
-                    <MudSelectItem Value="auto">Auto (WebGPU/WebGL → TFJS)</MudSelectItem>
-                    <MudSelectItem Value="onnx">ONNX Runtime (GPU bevorzugt)</MudSelectItem>
-                    <MudSelectItem Value="tfjs">MediaPipe TFJS Fallback</MudSelectItem>
+                    <MudSelectItem Value="@("auto")">Auto (WebGPU/WebGL → TFJS)</MudSelectItem>
+                    <MudSelectItem Value="@("onnx")">ONNX Runtime (GPU bevorzugt)</MudSelectItem>
+                    <MudSelectItem Value="@("tfjs")">MediaPipe TFJS Fallback</MudSelectItem>
                 </MudSelect>
             </MudStack>
 
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudSwitch Color="MudBlazor.Color.Primary"
+                <MudSwitch T="bool"
+                           Color="MudBlazor.Color.Primary"
                            Checked="@SegmentationSettings.Options.TemporalSmoothing"
                            CheckedChanged="ToggleTemporalSmoothingAsync">
                     Temporale Glättung
                 </MudSwitch>
-                <MudSwitch Color="MudBlazor.Color.Secondary"
+                <MudSwitch T="bool"
+                           Color="MudBlazor.Color.Secondary"
                            Checked="@SegmentationSettings.Options.EnablePerfOverlay"
                            CheckedChanged="TogglePerfOverlayAsync">
                     Live-Profiler-Overlay
