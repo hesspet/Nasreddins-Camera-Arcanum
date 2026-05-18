@@ -16,6 +16,7 @@ Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die
 - Overlay-Auswahl mit Flügel-, Geist-, Skelett- und Schädelmotiven.
 - Merge-Schritt mit Auswahl zwischen Originalbild und extrahiertem Hintergrund.
 - Merge-Schritt mit einstellbarer Zwischenschicht-Deckkraft, damit der Hintergrund durch Geisterbilder und andere Effekte durchscheinen kann.
+- Vorbereitete Alpha-Kanten für Zwischenschichtbilder, damit harte dunkle Übergänge weicher in den Hintergrund laufen.
 - Canvas-basierte Zusammenführung und Ergebnisdownload.
 - PWA-Grundstruktur mit Manifest und Service Worker.
 
@@ -31,9 +32,10 @@ Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die
 - `Helpers/ImageMergeService.cs`: .NET-Interop zur Bildzusammenführung.
 - `Helpers/OverlayProceedRequest.cs`: Transportmodell für Overlay-Pfad, Hintergrundmodus und Zwischenschicht-Deckkraft.
 - `wwwroot/js/bodySegmentation.js`: Segmentierungs-Pipeline mit Nachbearbeitung der Alpha-Maske.
-- `wwwroot/js/imageMerge.js`: Canvas-Komposition aus Hintergrund, Zwischenschicht und Vordergrund.
-- `wwwroot/images/merge/zwischenbilder/`: ausgelieferte Effekt-/Zwischenschichtbilder und `katalog.json`.
+- `wwwroot/js/imageMerge.js`: Canvas-Komposition aus Hintergrund, Zwischenschicht und Vordergrund mit Transparenz-Erkennung.
+- `wwwroot/images/merge/zwischenbilder/`: ausgelieferte Effekt-/Zwischenschichtbilder mit vorberechneten Alpha-Kanten und `katalog.json`.
 - `wwwroot/js/mergeOverlays.js`: lädt den Zwischenschicht-Katalog und benennt die Buttons nach den Dateinamen ohne Endung.
+- `Tools/OverlayAlphaOptimizer`: ImageSharp-Tool zum wiederholbaren Erzeugen weicher Alpha-Masken für Zwischenschichten.
 - `Testbilder/Personen`: Personenbilder für Upload-, Segmentierungs-, Overlay- und Download-Tests.
 - `PROJEKTUEBERSICHT.md`: ausführlicher Projektkontext für neue Chats.
 
@@ -70,5 +72,6 @@ Der wichtigste Smoke-Test ist:
 - Deutsche Umlaute sollen direkt verwendet werden.
 - Datumsangaben sollen im Format `DD.MM.YYYY` erscheinen.
 - Variablen- und Methodennamen sollen keine unnötigen Abkürzungen verwenden.
+- Neue oder ersetzte Zwischenschichtbilder sollten mit `dotnet run --project Tools\OverlayAlphaOptimizer\OverlayAlphaOptimizer.csproj` optimiert werden, bevor sie in den Katalog aufgenommen werden.
 - Die ONNX-Option lädt das MODNet-Modell derzeit extern von Hugging Face. Für stabile PWA-Offline-Fähigkeit sollte das Modell lokal versioniert oder der Online-Charakter bewusst dokumentiert werden.
 - Die Smartphone-Optimierung ist als eigener Arbeitsstrang in `Tasks/SmartphoneBackgroundReplacement.md` beschrieben.

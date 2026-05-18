@@ -69,7 +69,25 @@ const bitmapToDataUrl = async (canvas) => {
     return canvas.toDataURL("image/png");
 };
 
-const createTransparentOverlay = (overlayBitmap) => {
+const hasUsefulTransparency = (data) => {
+    const pixelCount = data.length / 4;
+    const requiredTransparentPixels = Math.max(1, Math.floor(pixelCount * 0.001));
+    let transparentPixels = 0;
+
+    for (let index = 3; index < data.length; index += 4) {
+        if (data[index] < 250) {
+            transparentPixels++;
+
+            if (transparentPixels >= requiredTransparentPixels) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+};
+
+const prepareOverlayForMerge = (overlayBitmap) => {
     const canvas = createCanvas(overlayBitmap.width, overlayBitmap.height);
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) {
@@ -80,6 +98,11 @@ const createTransparentOverlay = (overlayBitmap) => {
 
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
+
+    if (hasUsefulTransparency(data)) {
+        return { canvas, usedExistingTransparency: true };
+    }
+
     const transparentThreshold = 10;
     const solidThreshold = 70;
     const featherRange = solidThreshold - transparentThreshold;
@@ -102,7 +125,7 @@ const createTransparentOverlay = (overlayBitmap) => {
     }
 
     context.putImageData(imageData, 0, 0);
-    return canvas;
+    return { canvas, usedExistingTransparency: false };
 };
 
 export async function mergeWithCanvas(backgroundDataUrl, overlayPath, foregroundDataUrl, focusPoint, overlayOpacityPercent = 100) {
@@ -127,8 +150,11 @@ export async function mergeWithCanvas(backgroundDataUrl, overlayPath, foreground
     const overlayBitmap = await createImageBitmap(overlayBlob);
     trackStep(timings, start, "PNG dekodiert");
 
-    const transparentOverlay = createTransparentOverlay(overlayBitmap);
-    trackStep(timings, start, "Overlay-Hintergrund freigestellt");
+    const preparedOverlay = prepareOverlayForMerge(overlayBitmap);
+    trackStep(
+        timings,
+        start,
+        preparedOverlay.usedExistingTransparency ? "Overlay-Transparenz übernommen" : "Overlay-Hintergrund freigestellt");
 
     const canvas = createCanvas(backgroundBitmap.width, backgroundBitmap.height);
 
@@ -142,7 +168,7 @@ export async function mergeWithCanvas(backgroundDataUrl, overlayPath, foreground
 
     ctx.drawImage(backgroundBitmap, 0, 0, backgroundBitmap.width, backgroundBitmap.height);
     ctx.globalAlpha = overlayOpacity;
-    ctx.drawImage(transparentOverlay, placement.x, placement.y, overlaySize.width, overlaySize.height);
+    ctx.drawImage(preparedOverlay.canvas, placement.x, placement.y, overlaySize.width, overlaySize.height);
     ctx.globalAlpha = 1;
     ctx.drawImage(foregroundBitmap, 0, 0, backgroundBitmap.width, backgroundBitmap.height);
     trackStep(timings, start, "Komposition abgeschlossen");

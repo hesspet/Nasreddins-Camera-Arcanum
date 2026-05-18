@@ -101,7 +101,9 @@ Wichtig: `Originalbild als Hintergrund verwenden` auf Aus bedeutet nicht „kein
 
 ## Aktuelle Merge-Korrekturen
 
-Die gelieferten Zwischenschicht-PNGs haben zwar RGBA, enthalten aber oft deckende schwarze Hintergrundflächen. Damit diese Flächen das Originalbild nicht überdecken, entfernt `wwwroot/js/imageMerge.js` vor dem Zeichnen nahezu schwarze Pixel aus der Zwischenschicht. Dadurch bleiben Geist-, Flügel- und ähnliche Effekte sichtbar, ohne den Hintergrund vollflächig schwarz zu machen.
+Die ausgelieferten Zwischenschicht-PNGs werden mit `Tools/OverlayAlphaOptimizer` vorbearbeitet. Das Tool erzeugt echte Alpha-Masken aus den ursprünglich deckenden schwarzen Hintergrundflächen, blendet dunkle Randbereiche weich aus und zeichnet die Alpha-Maske nach innen weich. Dadurch gehen Flügel-, Geist- und ähnliche Effekte weicher in den Hintergrund über.
+
+`wwwroot/js/imageMerge.js` respektiert vorhandene PNG-Transparenz. Falls später ein altes oder neues Overlay ohne nutzbare Transparenz eingebunden wird, greift weiterhin ein Fallback, der nahezu schwarze Pixel beim Merge transparent macht.
 
 Zusätzlich gibt es im Merge-Schritt einen Regler `Zwischenschicht-Deckkraft`. Dieser steuert nur die Deckkraft der Zwischenschicht, nicht die Deckkraft des Hintergrundbilds. Der Hintergrund bleibt voll sichtbar, damit er bei geisterhaften Effekten durchscheinen kann. Der Vordergrund mit der Person wird danach wieder voll deckend darüber gezeichnet.
 
@@ -122,8 +124,9 @@ Zusätzlich gibt es im Merge-Schritt einen Regler `Zwischenschicht-Deckkraft`. D
 - `Helpers/SegmentationSettings.cs`: lädt, normalisiert und speichert Segmentierungsoptionen.
 - `Helpers/OverlayProceedRequest.cs`: Datenmodell für den Merge-Schritt.
 - `wwwroot/js/bodySegmentation.js`: Segmentierungs-Pipeline und Masken-Nachbearbeitung.
-- `wwwroot/js/imageMerge.js`: Canvas-basierte Zusammenführung.
-- `wwwroot/images/merge/zwischenbilder/`: Effekt-/Zwischenschichtbilder.
+- `wwwroot/js/imageMerge.js`: Canvas-basierte Zusammenführung mit Transparenz-Erkennung für Zwischenschichten.
+- `wwwroot/images/merge/zwischenbilder/`: Effekt-/Zwischenschichtbilder mit vorberechneten Alpha-Kanten.
+- `Tools/OverlayAlphaOptimizer`: wiederholbares ImageSharp-Tool zur Optimierung der Zwischenschicht-Transparenz.
 - `Testbilder/Personen`: lokale Testbilder.
 - `Tools/Start-Lokaler-Test.ps1`: bevorzugter lokaler Teststart mit ngrok-Unterstützung.
 
