@@ -55,6 +55,29 @@
 
             <MudSwitch T="bool" Value="@_useOriginalBackground" ValueChanged="HandleBackgroundToggleAsync" Color="MudBlazor.Color.Primary" Label="Originalbild als Hintergrund verwenden" />
 
+            <MudPaper Class="merge-control-block" Elevation="0">
+                <MudStack Spacing="1">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                        <MudText Typo="Typo.subtitle2">Zwischenschicht-Deckkraft</MudText>
+                        <MudButton Variant="Variant.Text"
+                                   Color="MudBlazor.Color.Primary"
+                                   Size="MudBlazor.Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="ProceedAsync">
+                            Aktualisieren
+                        </MudButton>
+                    </MudStack>
+                    <MudSlider @bind-Value="_overlayOpacityPercent"
+                               Min="0"
+                               Max="100"
+                               Step="5"
+                               Color="MudBlazor.Color.Secondary"
+                               Variant="Variant.Filled"
+                               ValueLabel="@true"
+                               ValueLabelFormat="0' %'" />
+                </MudStack>
+            </MudPaper>
+
             <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ProceedAsync">
                 Auswahl bestätigen
             </MudButton>
@@ -68,11 +91,13 @@
 @code {
     private const string StorageKey = "merge-overlay-last-selection";
     private const string BackgroundPreferenceKey = "merge-overlay-background-mode";
+    private const string OverlayOpacityKey = "merge-overlay-opacity";
 
     private IReadOnlyList<MergeOverlay> _overlays = Array.Empty<MergeOverlay>();
     private int _currentIndex;
     private double? _pointerStartX;
     private bool _useOriginalBackground;
+    private int _overlayOpacityPercent = 100;
     private bool _isLoading = true;
     private IJSObjectReference? _overlayModule;
 
@@ -93,6 +118,7 @@
         _overlays = await LoadOverlaysAsync();
         await RestoreSelectionAsync();
         await RestoreBackgroundPreferenceAsync();
+        await RestoreOverlayOpacityAsync();
         _isLoading = false;
     }
 
@@ -183,6 +209,35 @@
         }
     }
 
+    private async Task RestoreOverlayOpacityAsync()
+    {
+        try
+        {
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", OverlayOpacityKey);
+            _overlayOpacityPercent = int.TryParse(stored, out var opacityPercent)
+                ? Math.Clamp(opacityPercent, 0, 100)
+                : 100;
+        }
+        catch
+        {
+            _overlayOpacityPercent = 100;
+        }
+    }
+
+    private async Task PersistOverlayOpacityAsync()
+    {
+        _overlayOpacityPercent = Math.Clamp(_overlayOpacityPercent, 0, 100);
+
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", OverlayOpacityKey, _overlayOpacityPercent.ToString());
+        }
+        catch
+        {
+            // Persistence is best-effort only.
+        }
+    }
+
     private Task SelectIndexAsync(int index)
     {
         _currentIndex = NormalizeIndex(index);
@@ -266,7 +321,8 @@
 
         await PersistSelectionAsync();
         await PersistBackgroundPreferenceAsync();
-        await OnProceed.InvokeAsync(new OverlayProceedRequest(CurrentOverlay.Path, _useOriginalBackground));
+        await PersistOverlayOpacityAsync();
+        await OnProceed.InvokeAsync(new OverlayProceedRequest(CurrentOverlay.Path, _useOriginalBackground, _overlayOpacityPercent));
     }
 
     private async Task<IReadOnlyList<MergeOverlay>> LoadOverlaysAsync()

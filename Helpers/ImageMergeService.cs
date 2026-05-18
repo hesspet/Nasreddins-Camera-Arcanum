@@ -20,6 +20,7 @@ public sealed class ImageMergeService : IAsyncDisposable
         string overlayPath,
         string foregroundDataUrl,
         PointF? focusPoint,
+        int overlayOpacityPercent,
         CancellationToken cancellationToken = default)
     {
         var module = await _moduleTask.Value;
@@ -29,7 +30,8 @@ public sealed class ImageMergeService : IAsyncDisposable
             backgroundDataUrl,
             overlayPath,
             foregroundDataUrl,
-            focusPoint);
+            focusPoint,
+            overlayOpacityPercent);
 
         var timings = result.Timings
             .Select(t => new MergeStepTiming(t.Step, (long)Math.Round(t.DurationMs), (long)Math.Round(t.ElapsedMs)))

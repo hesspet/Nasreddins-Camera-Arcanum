@@ -4,177 +4,182 @@ Stand: 18.05.2026
 
 ## Zweck
 
-Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die App soll wie eine einfache Kamera-App funktionieren: Ein Foto wird aufgenommen oder hochgeladen, eine Person wird per Body-Segmentation vom Hintergrund getrennt, danach wird ein dekoratives Overlay wie Flügel, Geist, Skelett oder Schädel zwischen Hintergrund und Person gelegt. Das Ergebnis kann anschließend heruntergeladen werden.
+Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die App funktioniert wie eine einfache Effektkamera: Ein Foto wird aufgenommen oder hochgeladen, eine Person wird per Body-Segmentation vom Hintergrund getrennt, danach wird eine dekorative Zwischenschicht wie Flügel, Geist, Skelett oder Schädel zwischen Hintergrund und Person gelegt. Das Ergebnis kann heruntergeladen werden.
 
-Der aktuelle Projektstand ist ein Blazor-WebAssembly-Prototyp auf .NET 9 mit MudBlazor, JavaScript-Interop, lokaler Kamera-Anbindung, Segmentierungslogik und Canvas-basierter Bildzusammenführung.
+Diese Datei stellt den Projektkontext für neue Chats her. Neue Arbeiten sollten zuerst diese Datei, `README.md`, `Tasks/SmartphoneBackgroundReplacement.md` und die relevanten Dateien unter `Components`, `Helpers` und `wwwroot/js` lesen.
 
-## Aktueller technischer Rahmen
+## Projektregeln
 
-- Plattform: Blazor WebAssembly
-- Ziel-Framework: `net9.0`
-- UI-Bibliothek: MudBlazor `7.9.0`
-- Bildverarbeitung in .NET: SixLabors.ImageSharp `3.1.12`
-- Browser-Logik: JavaScript-Module unter `wwwroot/js`
-- PWA-Grundlagen: `manifest.webmanifest`, Service Worker, App-Icons
-- Segmentierung:
-  - Standardpfad: TensorFlow.js mit MediaPipe Selfie Segmentation
-  - Optionaler Pfad: ONNX Runtime Web mit MODNet-Modell
-  - Fallback: Wenn ONNX fehlschlägt, wird auf TensorFlow.js zurückgefallen
+- Alle User-facing Strings müssen lokalisiert sein.
+- Deutsche Umlaute sollen direkt verwendet werden.
+- Datumsformate müssen der EU-Norm entsprechen: `DD.MM.YYYY`.
+- Variablen- und Methodennamen sollen keine unnötigen Abkürzungen verwenden.
+- In Codex-Sitzungen soll für dieses Projekt kein lokaler Testserver automatisch gestartet werden. Der manuelle Testpfad nutzt das Startup-Skript mit ngrok.
+
+## Technischer Rahmen
+
+- Plattform: Blazor WebAssembly.
+- Ziel-Framework: .NET 9.
+- UI-Bibliothek: MudBlazor.
+- Bildverarbeitung in .NET: SixLabors.ImageSharp.
+- Browser-Logik: JavaScript-Module unter `wwwroot/js`.
+- PWA-Grundlagen: `manifest.webmanifest`, Service Worker und App-Icons.
 - Persistenz:
-  - Fotos werden im Browser in `sessionStorage` zwischengespeichert
-  - Segmentierungsoptionen und Overlay-Auswahl werden in `localStorage` gespeichert
+  - Fotos werden im Browser in `sessionStorage` zwischengespeichert.
+  - Segmentierungsoptionen, Overlay-Auswahl, Hintergrundmodus und Zwischenschicht-Deckkraft werden in `localStorage` gespeichert.
 
-## Wichtige Dateien und Bereiche
+## Segmentierung
 
-- `Program.cs`: Registriert MudBlazor, HTTP-Client und die Services `FotoStorage`, `SegmentationSettings`, `SegmentationService` und `ImageMergeService`.
+Die Segmentierung läuft über `Helpers/SegmentationService.cs` und `wwwroot/js/bodySegmentation.js`.
+
+Vorhandene Funktionen:
+
+- TensorFlow.js MediaPipe Selfie Segmentation als stabiler Standardpfad.
+- Experimenteller ONNX Runtime Web Pfad mit MODNet-Modell.
+- Fallback von ONNX auf TensorFlow.js, wenn ONNX fehlschlägt.
+- Qualitätsprofile Auto, High, Medium und Low.
+- Backend-Auswahl Auto, ONNX und TensorFlow.js.
+- Temporale Glättung.
+- Performance-Overlay.
+- Auto-Kalibrierung.
+- Nachbearbeitung der Alpha-Maske mit Schwellwert, Dilatation, Erosion, Innen-Feather, Außen-Feather und zusätzlicher Maskenweichzeichnung.
+
+Wichtig für Halo-Probleme:
+
+- `SegmentationThreshold` bestimmt, wie streng unsichere Pixel als Person akzeptiert werden.
+- `DilationRadius` erweitert die Maske und kann Halos vergrößern.
+- `ErosionRadius` verkleinert die Maske und hilft gegen Hintergrundreste am Rand.
+- `MaskBlurAmount`, `InnerFeatherRadius` und `OuterFeatherRadius` machen Übergänge weicher, können aber sichtbare Halos stark verbreitern.
+- Temporale Glättung kann bei Einzelbildern träge Ränder erzeugen und sollte bei Debugging testweise deaktiviert werden.
+
+## Inline-Feinjustierung
+
+Die Segmentierungsregler sind zusätzlich zur Setup-Seite direkt im Bearbeitungsworkflow eingebaut.
+
+Relevante Dateien:
+
+- `Components/PhotoPreview.razor`: enthält die Arbeitsfläche neben der Segmentierungs-Ausgabe.
+- `Components/PhotoPreview.razor.css`: responsives Layout für Vorschau und Regler.
+- `Pages/Setup.razor`: bleibt als separate Einstellungsseite erhalten.
+
+Reglerblöcke im Workflow:
+
+- Motiverkennung:
+  - Schwellwert.
+- Maskenform:
+  - Dilatation.
+  - Erosion.
+- Kanten:
+  - Maskenweichzeichnung.
+  - Weiche Kante innen.
+  - Weiche Kante außen.
+
+Jeder Block hat einen `Aktualisieren`-Button. Der Button übernimmt die aktuellen Werte, speichert sie und berechnet die Segmentierung für das aktuelle Bild neu. Dadurch können operative Werte direkt am Bild bewertet werden.
+
+## Overlay- und Merge-Workflow
+
+Die Overlay-Auswahl läuft über `Components/OverlayCarousel.razor` und `wwwroot/js/mergeOverlays.js`. Der Katalog liegt unter `wwwroot/images/merge/zwischenbilder/katalog.json`.
+
+Der Merge läuft über:
+
+- `Helpers/OverlayProceedRequest.cs`.
+- `Helpers/ImageMergeService.cs`.
+- `wwwroot/js/imageMerge.js`.
+
+Die Kompositionsreihenfolge ist:
+
+1. Hintergrund.
+2. Freigestellte Zwischenschicht.
+3. Freigestellte Person.
+
+Der Hintergrund kann aus zwei Quellen kommen:
+
+- Originalbild als Hintergrund.
+- Extrahierter Hintergrund aus der Segmentierung.
+
+Wichtig: `Originalbild als Hintergrund verwenden` auf Aus bedeutet nicht „kein Hintergrund“. Es bedeutet, dass der extrahierte Hintergrund aus der Segmentierung genutzt wird.
+
+## Aktuelle Merge-Korrekturen
+
+Die gelieferten Zwischenschicht-PNGs haben zwar RGBA, enthalten aber oft deckende schwarze Hintergrundflächen. Damit diese Flächen das Originalbild nicht überdecken, entfernt `wwwroot/js/imageMerge.js` vor dem Zeichnen nahezu schwarze Pixel aus der Zwischenschicht. Dadurch bleiben Geist-, Flügel- und ähnliche Effekte sichtbar, ohne den Hintergrund vollflächig schwarz zu machen.
+
+Zusätzlich gibt es im Merge-Schritt einen Regler `Zwischenschicht-Deckkraft`. Dieser steuert nur die Deckkraft der Zwischenschicht, nicht die Deckkraft des Hintergrundbilds. Der Hintergrund bleibt voll sichtbar, damit er bei geisterhaften Effekten durchscheinen kann. Der Vordergrund mit der Person wird danach wieder voll deckend darüber gezeichnet.
+
+## Wichtige Dateien
+
+- `Program.cs`: registriert MudBlazor, HTTP-Client, `FotoStorage`, `SegmentationSettings`, `SegmentationService` und `ImageMergeService`.
 - `App.razor`: MudBlazor-Provider, Theme und Routing.
-- `Layout/MainLayout.razor`: App-Layout mit Drawer-Navigation zu Home, Kamera und Setup.
-- `Pages/Home.razor`: Startseite mit kurzer App-Einführung.
-- `Pages/CameraArcanum.razor`: Hauptworkflow für Live-Kamera, Datei-Upload, Foto-Speicherung und Vorschau.
-- `Pages/Setup.razor`: Einstellungsseite für Segmentierungsparameter.
-- `Components/CameraView.razor`: Startet die Kamera per `getUserMedia` und erzeugt Snapshots aus dem Video.
-- `Components/PhotoPreview.razor`: Zentrale Nachbearbeitung mit Segmentierung, Auto-Kalibrierung, Qualitätsoptionen, Overlay-Auswahl und Ergebnisdownload.
-- `Components/OverlayCarousel.razor`: Auswahl der verfügbaren Zwischenschichten und Hintergrundmodus.
-- `Components/SegmentationPreview.razor`: Anzeige von Vordergrund und Hintergrund nach der Segmentierung.
+- `Layout/MainLayout.razor`: App-Layout mit Navigation.
+- `Pages/Home.razor`: Startseite.
+- `Pages/CameraArcanum.razor`: Hauptworkflow für Kamera, Upload, Foto-Speicherung und Vorschau.
+- `Pages/Setup.razor`: separate Einstellungsseite für Segmentierungsparameter.
+- `Components/CameraView.razor`: Kamera-Vorschau und Snapshot-Erzeugung.
+- `Components/PhotoPreview.razor`: zentrale Nachbearbeitung, Segmentierung, Inline-Regler, Overlay-Auswahl und Ergebnisdownload.
+- `Components/OverlayCarousel.razor`: Zwischenschicht-Auswahl, Hintergrundmodus und Zwischenschicht-Deckkraft.
+- `Components/SegmentationPreview.razor`: Anzeige von Vordergrund und Hintergrund.
 - `Helpers/SegmentationService.cs`: .NET-Brücke zum JavaScript-Modul `bodySegmentation.js`.
 - `Helpers/ImageMergeService.cs`: .NET-Brücke zum JavaScript-Modul `imageMerge.js`.
-- `Helpers/SegmentationSettings.cs`: Lädt, normalisiert und speichert Segmentierungseinstellungen.
-- `Helpers/MergeOverlayCatalog.cs`: Datenmodell für die generierte Zwischenschichtliste.
-- `wwwroot/js/bodySegmentation.js`: Segmentierungs-Pipeline, Qualitätsstufen, Auto-Modus, temporale Glättung, Kantenverfeinerung, Performance-Overlay und Auto-Kalibrierung.
-- `wwwroot/js/imageMerge.js`: Canvas-basierte Zusammenführung von Hintergrund, Overlay und Vordergrund.
-- `wwwroot/images/merge/zwischenbilder/`: Ausgelieferte Effekt-/Zwischenschichtbilder und `katalog.json` für die Auswahl in der App.
-- `wwwroot/js/mergeOverlays.js`: Lädt den Zwischenschicht-Katalog und benennt die Buttons nach den Dateinamen ohne Endung.
-- `Testbilder/Personen`: Lokale Personenbilder für Upload-, Segmentierungs-, Overlay- und Download-Tests.
-- `Tools/Start-Lokaler-Test.bat` und `Tools/Start-Lokaler-Test.ps1`: Starten die App lokal auf Port `5030`, öffnen den Browser und nutzen ngrok für Smartphone-Tests, wenn `ngrok` installiert ist.
-- `Tasks/SmartphoneBackgroundReplacement.md`: Geplanter Arbeitsstrang zur Smartphone-Optimierung der Segmentierung.
+- `Helpers/SegmentationSettings.cs`: lädt, normalisiert und speichert Segmentierungsoptionen.
+- `Helpers/OverlayProceedRequest.cs`: Datenmodell für den Merge-Schritt.
+- `wwwroot/js/bodySegmentation.js`: Segmentierungs-Pipeline und Masken-Nachbearbeitung.
+- `wwwroot/js/imageMerge.js`: Canvas-basierte Zusammenführung.
+- `wwwroot/images/merge/zwischenbilder/`: Effekt-/Zwischenschichtbilder.
+- `Testbilder/Personen`: lokale Testbilder.
+- `Tools/Start-Lokaler-Test.ps1`: bevorzugter lokaler Teststart mit ngrok-Unterstützung.
 
-## Aktueller Funktionsstand
+## Lokaler Testpfad
 
-Bereits vorhanden:
+Für manuelle Tests soll das Startup-Skript verwendet werden:
 
-- Live-Kamera-Vorschau über `getUserMedia`
-- Fotoaufnahme aus dem Videostream
-- Upload vorhandener Bilddateien
-- Browser-Zwischenspeicherung des aufgenommenen oder hochgeladenen Fotos
-- Segmentierung in Vordergrund und Hintergrund
-- Anzeige der getrennten Ebenen
-- Manuelle Segmentierungsauslösung per Tippen auf das Foto
-- Auto-Kalibrierung für Halo- und Randparameter
-- Qualitätsauswahl für Segmentierung: Auto, High, Medium, Low
-- Backend-Auswahl: Auto, ONNX Runtime, TensorFlow.js
-- Temporale Glättung und Performance-Overlay als Optionen
-- Overlay-Karussell mit Flügel-, Geist-, Skelett- und Schädelmotiven
-- Overlay-Auswahl lädt `wwwroot/images/merge/zwischenbilder/katalog.json`; die Buttons heißen wie die Bilddateien ohne Dateiendung.
-- Wahl zwischen Originalbild und extrahiertem Hintergrund
-- Canvas-basierte Zusammenführung und Download des Ergebnisses
-- PWA-Manifest und Service-Worker-Grundstruktur
-- Lokale Testbilder unter `Testbilder/Personen`
+```powershell
+Tools\Start-Lokaler-Test.ps1
+```
 
-## Verifizierter Zustand
+Das Skript startet die App auf `http://localhost:5030` und nutzt ngrok, wenn verfügbar. Codex soll diesen Port nicht durch eigene `dotnet run`-Prozesse blockieren.
 
-- Git-Zweig: `main`
-- Git-Status vor Erstellung dieser Datei: sauber, `main` war mit `origin/main` synchron.
-- Letzte sichtbare Commits betreffen lokale Vendor-Bundles für TensorFlow/body-segmentation und Korrekturen am Backend-Fallback.
-- `dotnet build --no-restore` wurde am 18.05.2026 erfolgreich ausgeführt, nachdem der Build außerhalb der Sandbox laufen durfte.
-- Die frühere Sicherheitswarnung zu SixLabors.ImageSharp `3.1.9` wurde durch das Update auf `3.1.12` adressiert.
-- Der erste Build innerhalb der Sandbox scheiterte an einem lokalen Zugriffsproblem im Verzeichnis `obj\Debug\net9.0\webcil`; außerhalb der Sandbox war der Build erfolgreich.
+Für reine Codeprüfung reicht:
 
-## Auffälligkeiten und Risiken
+```powershell
+dotnet build --no-restore
+```
 
-- Die sichtbaren Standardtexte wurden bereinigt: `wwwroot/index.html` nutzt `lang="de"`, die Blazor-Fehlertexte sind deutsch und die README beschreibt den aktuellen Blazor-WebAssembly-Stand.
-- Der ONNX-Pfad lädt das MODNet-Modell aktuell direkt von Hugging Face. Das kann auf Smartphones Ladezeit, Datenschutz, CORS, Offline-Fähigkeit und Ausfallsicherheit beeinträchtigen. Für eine PWA sollte das Modell lokal versioniert oder bewusst als Online-Abhängigkeit dokumentiert werden.
-- `normalizeBackendPreference` behandelt `auto` derzeit faktisch als TensorFlow.js-Pfad. ONNX wird nur genutzt, wenn explizit `onnx` gewählt wird.
-- Der Service Worker ist im Entwicklungsmodus leer. Für echte PWA-Offline-Fähigkeit braucht es eine veröffentlichte Cache-Strategie für App-Dateien, Vendor-Bundles, Assets und gegebenenfalls Modelle.
-- Die Download-Dateinamen sind derzeit eher technisch (`camera_arcanum_photo.png`, `camera_arcanum_merge.png`) und entsprechen noch nicht dem ursprünglichen Kamera-Dateinamenziel.
-- Es gibt keine sichtbare automatisierte Teststruktur. Die Hauptqualität hängt momentan an manuellem Smoke-Testing im Browser und auf echten Smartphones.
-- Die bekannten MudBlazor-Analyzer-Warnungen zu veralteten oder falschen Parametern wurden bereinigt.
+## Aktueller manueller Smoke-Test
 
-## Empfohlener weiterer Projektverlauf
+1. App über `Tools\Start-Lokaler-Test.ps1` starten.
+2. In der App auf `Kamera` wechseln.
+3. Ein Bild aus `Testbilder/Personen` hochladen.
+4. Auf das Motiv tippen, um die Segmentierung zu starten.
+5. Vordergrund und Hintergrund prüfen.
+6. Inline-Regler verändern und mit `Aktualisieren` neu berechnen.
+7. Halo und abgeschnittene Personenteile beurteilen.
+8. Zwischenschicht auswählen.
+9. `Originalbild als Hintergrund verwenden` ein und aus testen.
+10. `Zwischenschicht-Deckkraft` mit 100 %, 75 %, 50 % und 25 % testen.
+11. Ergebnis herunterladen.
 
-### 1. Projekt wieder stabil lesbar machen
+## Bekannte Risiken
 
-Zuerst sollten alle falsch codierten deutschen Texte repariert werden. Das ist ein kleiner, aber wichtiger Schritt, weil sonst unklar bleibt, welche UI-Texte wirklich gewollt sind. Dabei sollten auch `index.html`, Fehlermeldungen, README und sichtbare UI-Labels vollständig deutsch sein.
+- Die ONNX-Option lädt das MODNet-Modell aktuell direkt von Hugging Face. Das kann Ladezeit, Datenschutz, CORS, Offline-Fähigkeit und Ausfallsicherheit beeinträchtigen.
+- `auto` beim Backend läuft faktisch auf TensorFlow.js hinaus. ONNX wird nur bei expliziter Auswahl genutzt.
+- Die Qualität der Segmentierung hängt stark vom Motiv, der Kleidung, dem Hintergrund und den Nachbearbeitungsparametern ab.
+- Zu hohe Feather- oder Blur-Werte erzeugen sichtbare Halos.
+- Zu hohe Erosion oder zu hoher Schwellwert kann Haare, Hände und Kleidung abschneiden.
+- Die PWA-Offline-Fähigkeit ist noch nicht final ausgearbeitet.
+- Es gibt keine umfassende automatisierte Teststruktur. Qualität hängt derzeit stark an manuellen Smoke-Tests.
 
-Ergebnis dieses Schritts:
+## Empfohlene nächste Schritte
 
-- Alle User-facing Strings sind deutsch und korrekt codiert.
-- `html lang="de"` ist gesetzt.
-- README und Projektübersicht widersprechen sich nicht mehr.
+1. Mehrere Testbilder mit den neuen Inline-Reglern kalibrieren.
+2. Gute Standardwerte für enge Segmentierung ohne harte Abrisse festlegen.
+3. Smartphone-Test über ngrok durchführen.
+4. Messergebnisse für Segmentierung und Merge dokumentieren.
+5. Entscheiden, ob ONNX lokal eingebunden, als experimentell markiert oder entfernt wird.
+6. Download-Dateinamen und Exportformat prüfen.
+7. Service-Worker-Strategie für echte PWA-Nutzung definieren.
 
-### 2. Technische Schulden mit hohem Hebel beheben
+## Aktueller Build-Status
 
-Danach sollte das Projekt wieder auf eine saubere technische Basis gebracht werden:
+`dotnet build --no-restore` wurde am 18.05.2026 nach den letzten Änderungen erfolgreich ausgeführt:
 
-- ImageSharp aktualisieren oder die Sicherheitswarnung bewusst bewerten.
-- MudBlazor-Warnungen bereinigen.
-- Download-Dateinamen auf Kamera-Format umstellen.
-- Unnötige Projektordner-Einträge wie `wwwroot\i\` und `wwwroot\NewFolder\` prüfen und entfernen, falls sie nicht gebraucht werden.
-- Prüfen, ob `bin`, `obj` und `.vs` lokal sauber ignoriert bleiben.
-
-### 3. Kernworkflow auf Desktop absichern
-
-Bevor weiter optimiert wird, sollte der vorhandene Kernworkflow bewusst getestet und dokumentiert werden:
-
-- App starten.
-- Bild aus `Testbilder/Personen` hochladen.
-- Segmentierung auslösen.
-- Auto-Kalibrierung testen.
-- Overlay wählen.
-- Original- und extrahierten Hintergrund testen.
-- Ergebnis herunterladen.
-- Kameraaufnahme im Browser testen, soweit die lokale Umgebung Kamera und HTTPS erlaubt.
-
-Für diesen Schritt reicht zunächst eine kurze manuelle Checkliste. Danach können Playwright-Tests oder einfache Komponenten-/Service-Tests folgen.
-
-### 4. Smartphone-Zielbild konkretisieren
-
-Das Projektziel ist stark smartphone-lastig. Deshalb sollte als Nächstes festgelegt werden, welche Geräte und Browser als Ziel gelten:
-
-- Ein Android-Mittelklassegerät
-- Ein aktuelles iPhone
-- Optional ein Desktop-Browser als Entwicklungsreferenz
-
-Danach sollten echte Messwerte erhoben werden: Ladezeit, Segmentierungsdauer, Gesamtzeit bis Ergebnis, Speicherverhalten und subjektive Randqualität.
-
-### 5. Segmentierungsstrategie entscheiden
-
-Erst nach den Messwerten sollte entschieden werden, ob ONNX/MODNet der Hauptpfad werden soll. Falls ja, sollte das Modell lokal eingebunden und versioniert werden. Falls nein, sollte der TensorFlow.js-Pfad als Hauptpfad vereinfacht und die ONNX-Option entfernt oder klar als experimentell markiert werden.
-
-Empfehlung: Kurzfristig TensorFlow.js als stabilen Standard behalten, ONNX als experimentelle Option kennzeichnen und erst nach Smartphone-Benchmarks zum Standard machen.
-
-### 6. PWA-Reife herstellen
-
-Wenn der Kernworkflow stabil ist, sollte die PWA-Reife folgen:
-
-- Service Worker für Release-Build prüfen.
-- Offline-Verhalten definieren.
-- App-Icons, Manifest-Namen und Theme-Farben finalisieren.
-- Verhalten auf iOS und Android dokumentieren.
-- Web Share API für Ergebnisbilder prüfen.
-
-### 7. Produktidee schärfen
-
-Die App hat zwei mögliche Richtungen:
-
-- Spaßkamera mit schnellen, dramatischen Overlays.
-- Technischer Segmentierungsprototyp mit Einstellmöglichkeiten.
-
-Für die Weiterentwicklung sollte eine Richtung priorisiert werden. Meine Empfehlung ist: zuerst Spaßkamera. Die Einstellmöglichkeiten können in einem Setup-/Expertenbereich bleiben, aber der Hauptflow sollte möglichst einfach sein: Foto aufnehmen, Effekt wählen, Ergebnis speichern.
-
-## Konkreter nächster Sprint
-
-Empfohlene Reihenfolge für die nächsten Arbeitsschritte:
-
-1. Download-Dateinamen auf ein bewusst gewähltes kameraähnliches Format umstellen.
-2. Eine manuelle Smoke-Test-Checkliste in `Tasks` ergänzen.
-3. Desktop-Smoke-Test durchführen.
-4. Smartphone-Test auf mindestens einem Android-Gerät durchführen.
-5. Danach entscheiden, ob ONNX lokal eingebunden, vereinfacht oder entfernt wird.
-
-## Arbeitsnotizen für neue Chats
-
-- Die Projektregel verlangt lokalisierte User-facing Strings mit deutschen Umlauten.
-- Datumsangaben sollen im Format `DD.MM.YYYY` erscheinen.
-- Variablen- und Methodennamen sollen keine unnötigen Abkürzungen verwenden.
-- Diese Datei dient dazu, neuen Chats schnell den Projektkontext zu geben.
-- Wenn am Projekt weitergearbeitet wird, zuerst diese Datei, `README.md`, `Tasks/SmartphoneBackgroundReplacement.md` und die Hauptdateien unter `Pages`, `Components`, `Helpers` und `wwwroot/js` lesen.
+- 0 Warnungen.
+- 0 Fehler.

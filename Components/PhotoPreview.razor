@@ -102,7 +102,133 @@
         </MudAlert>
     }
 
-    <SegmentationPreview ForegroundDataUrl="@_foreground" BackgroundDataUrl="@_background" IsBusy="@_isSegmenting" OnRetry="RetrySegmentation" />
+    <div class="segmentation-workbench">
+        <SegmentationPreview ForegroundDataUrl="@_foreground" BackgroundDataUrl="@_background" IsBusy="@_isSegmenting" OnRetry="RetrySegmentation" />
+
+        <MudPaper Class="segmentation-controls" Elevation="1">
+            <MudStack Spacing="2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Tune" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.subtitle1">Segmentierung feinjustieren</MudText>
+                    </MudStack>
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                   Color="MudBlazor.Color.Primary"
+                                   title="Aktualisieren"
+                                   Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
+                                   OnClick="ApplyInlineSegmentationSettingsAsync" />
+                </MudStack>
+
+                <MudPaper Class="segmentation-control-block" Elevation="0">
+                    <MudStack Spacing="1">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                            <MudText Typo="Typo.subtitle2">Motiverkennung</MudText>
+                            <MudButton Variant="Variant.Text"
+                                       Color="MudBlazor.Color.Primary"
+                                       Size="MudBlazor.Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Refresh"
+                                       Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
+                                       OnClick="ApplyInlineSegmentationSettingsAsync">
+                                Aktualisieren
+                            </MudButton>
+                        </MudStack>
+
+                        <MudText Typo="Typo.caption">Schwellwert</MudText>
+                        <MudSlider @bind-Value="_inlineSegmentationOptions.SegmentationThreshold"
+                                   Min="0.05"
+                                   Max="0.95"
+                                   Step="0.05"
+                                   Color="MudBlazor.Color.Secondary"
+                                   Variant="Variant.Filled"
+                                   ValueLabel="@true"
+                                   ValueLabelFormat="0.00" />
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Class="segmentation-control-block" Elevation="0">
+                    <MudStack Spacing="1">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                            <MudText Typo="Typo.subtitle2">Maskenform</MudText>
+                            <MudButton Variant="Variant.Text"
+                                       Color="MudBlazor.Color.Primary"
+                                       Size="MudBlazor.Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Refresh"
+                                       Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
+                                       OnClick="ApplyInlineSegmentationSettingsAsync">
+                                Aktualisieren
+                            </MudButton>
+                        </MudStack>
+
+                        <MudText Typo="Typo.caption">Dilatation</MudText>
+                        <MudSlider @bind-Value="_inlineSegmentationOptions.DilationRadius"
+                                   Min="0"
+                                   Max="10"
+                                   Step="1"
+                                   Color="MudBlazor.Color.Secondary"
+                                   Variant="Variant.Filled"
+                                   ValueLabel="@true"
+                                   ValueLabelFormat="0" />
+
+                        <MudText Typo="Typo.caption">Erosion</MudText>
+                        <MudSlider @bind-Value="_inlineSegmentationOptions.ErosionRadius"
+                                   Min="0"
+                                   Max="10"
+                                   Step="1"
+                                   Color="MudBlazor.Color.Secondary"
+                                   Variant="Variant.Filled"
+                                   ValueLabel="@true"
+                                   ValueLabelFormat="0" />
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Class="segmentation-control-block" Elevation="0">
+                    <MudStack Spacing="1">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                            <MudText Typo="Typo.subtitle2">Kanten</MudText>
+                            <MudButton Variant="Variant.Text"
+                                       Color="MudBlazor.Color.Primary"
+                                       Size="MudBlazor.Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Refresh"
+                                       Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
+                                       OnClick="ApplyInlineSegmentationSettingsAsync">
+                                Aktualisieren
+                            </MudButton>
+                        </MudStack>
+
+                        <MudText Typo="Typo.caption">Maskenweichzeichnung</MudText>
+                        <MudSlider @bind-Value="_inlineSegmentationOptions.MaskBlurAmount"
+                                   Min="0"
+                                   Max="20"
+                                   Step="1"
+                                   Color="MudBlazor.Color.Secondary"
+                                   Variant="Variant.Filled"
+                                   ValueLabel="@true"
+                                   ValueLabelFormat="0" />
+
+                        <MudText Typo="Typo.caption">Weiche Kante innen</MudText>
+                        <MudSlider @bind-Value="_inlineSegmentationOptions.InnerFeatherRadius"
+                                   Min="0"
+                                   Max="20"
+                                   Step="1"
+                                   Color="MudBlazor.Color.Secondary"
+                                   Variant="Variant.Filled"
+                                   ValueLabel="@true"
+                                   ValueLabelFormat="0" />
+
+                        <MudText Typo="Typo.caption">Weiche Kante außen</MudText>
+                        <MudSlider @bind-Value="_inlineSegmentationOptions.OuterFeatherRadius"
+                                   Min="0"
+                                   Max="30"
+                                   Step="1"
+                                   Color="MudBlazor.Color.Secondary"
+                                   Variant="Variant.Filled"
+                                   ValueLabel="@true"
+                                   ValueLabelFormat="0" />
+                    </MudStack>
+                </MudPaper>
+            </MudStack>
+        </MudPaper>
+    </div>
 
     @if (HasSegmentationResult)
     {
@@ -171,6 +297,7 @@
     private bool _isAutoCalibrating;
     private string? _autoTuneInfo;
     private SegmentationPerformance? _perfSummary;
+    private readonly SegmentationOptions _inlineSegmentationOptions = new();
 
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
@@ -195,6 +322,7 @@
     protected override async Task OnInitializedAsync()
     {
         await SegmentationSettings.EnsureInitializedAsync();
+        CopyFrom(SegmentationSettings.Options, _inlineSegmentationOptions);
         await base.OnInitializedAsync();
     }
 
@@ -249,6 +377,7 @@
                 SegmentationSettings.Options);
 
             await SegmentationSettings.UpdateAsync(result.TunedOptions);
+            CopyFrom(SegmentationSettings.Options, _inlineSegmentationOptions);
 
             _autoTuneInfo =
                 $"Auto-Kalibrierung aktiv: weiche Kante {result.Stats.SoftEdgeRatio.ToString("P0", CultureInfo.InvariantCulture)}, " +
@@ -336,10 +465,11 @@
 
     private async Task HandleOverlayProceed(OverlayProceedRequest request)
     {
+        var overlayOpacityPercent = Math.Clamp(request.OverlayOpacityPercent, 0, 100);
         _selectionInfo = request.UseOriginalBackground
-            ? $"Ausgewählte Zwischenschicht: {request.OverlayPath} (Original-Hintergrund)"
-            : $"Ausgewählte Zwischenschicht: {request.OverlayPath} (extrahierter Hintergrund)";
-        await JS.InvokeVoidAsync("console.log", $"Overlay selection confirmed for {request.OverlayPath} with background {(request.UseOriginalBackground ? "original" : "extracted")}");
+            ? $"Ausgewählte Zwischenschicht: {request.OverlayPath} (Original-Hintergrund, Zwischenschicht {overlayOpacityPercent} %)"
+            : $"Ausgewählte Zwischenschicht: {request.OverlayPath} (extrahierter Hintergrund, Zwischenschicht {overlayOpacityPercent} %)";
+        await JS.InvokeVoidAsync("console.log", $"Overlay selection confirmed for {request.OverlayPath} with background {(request.UseOriginalBackground ? "original" : "extracted")} and overlay opacity {overlayOpacityPercent}%");
 
         if (!HasSegmentationResult)
         {
@@ -377,7 +507,8 @@
                 backgroundSource!,
                 request.OverlayPath,
                 _foreground!,
-                focus);
+                focus,
+                overlayOpacityPercent);
 
             _mergedPhoto = mergeResult.DataUrl;
             await LogMergeDiagnosticsAsync(mergeResult);
@@ -409,6 +540,7 @@
         var next = CloneOptions();
         next.Quality = quality;
         await SegmentationSettings.UpdateAsync(next);
+        CopyFrom(SegmentationSettings.Options, _inlineSegmentationOptions);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -422,6 +554,7 @@
         var next = CloneOptions();
         next.BackendPreference = backend;
         await SegmentationSettings.UpdateAsync(next);
+        CopyFrom(SegmentationSettings.Options, _inlineSegmentationOptions);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -430,6 +563,7 @@
         var next = CloneOptions();
         next.TemporalSmoothing = value;
         await SegmentationSettings.UpdateAsync(next);
+        CopyFrom(SegmentationSettings.Options, _inlineSegmentationOptions);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -438,7 +572,29 @@
         var next = CloneOptions();
         next.EnablePerfOverlay = value;
         await SegmentationSettings.UpdateAsync(next);
+        CopyFrom(SegmentationSettings.Options, _inlineSegmentationOptions);
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ApplyInlineSegmentationSettingsAsync()
+    {
+        if (_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))
+        {
+            return;
+        }
+
+        await SegmentationSettings.UpdateAsync(CloneOptions(_inlineSegmentationOptions));
+        CopyFrom(SegmentationSettings.Options, _inlineSegmentationOptions);
+
+        if (!string.IsNullOrWhiteSpace(_foreground) || !string.IsNullOrWhiteSpace(_background))
+        {
+            await RunSegmentationAsync();
+        }
+        else
+        {
+            Snackbar.Add("Segmentierungs-Einstellungen aktualisiert", Severity.Success);
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task LogMergeDiagnosticsAsync(MergeResult mergeResult)
@@ -460,6 +616,11 @@
     private SegmentationOptions CloneOptions()
     {
         var current = SegmentationSettings.Options;
+        return CloneOptions(current);
+    }
+
+    private static SegmentationOptions CloneOptions(SegmentationOptions current)
+    {
         return new SegmentationOptions
         {
             ModelType = current.ModelType,
@@ -477,5 +638,23 @@
             EnableSharpening = current.EnableSharpening,
             EnablePerfOverlay = current.EnablePerfOverlay,
         };
+    }
+
+    private static void CopyFrom(SegmentationOptions source, SegmentationOptions target)
+    {
+        target.ModelType = source.ModelType;
+        target.SegmentationThreshold = source.SegmentationThreshold;
+        target.MaskBlurAmount = source.MaskBlurAmount;
+        target.DilationRadius = source.DilationRadius;
+        target.ErosionRadius = source.ErosionRadius;
+        target.InnerFeatherRadius = source.InnerFeatherRadius;
+        target.OuterFeatherRadius = source.OuterFeatherRadius;
+        target.Quality = source.Quality;
+        target.BackendPreference = source.BackendPreference;
+        target.TemporalSmoothing = source.TemporalSmoothing;
+        target.TemporalSmoothingAlpha = source.TemporalSmoothingAlpha;
+        target.EnableEdgeRefinement = source.EnableEdgeRefinement;
+        target.EnableSharpening = source.EnableSharpening;
+        target.EnablePerfOverlay = source.EnablePerfOverlay;
     }
 }

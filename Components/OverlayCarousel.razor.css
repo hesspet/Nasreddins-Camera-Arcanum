@@ -55,6 +55,13 @@
     max-width: 160px;
 }
 
+.merge-control-block {
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    background: #fafafa;
+}
+
 @media (max-width: 600px) {
     .carousel-stage {
         grid-template-columns: 1fr;

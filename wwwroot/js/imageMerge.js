@@ -22,6 +22,17 @@ const trackStep = (collector, start, label) => {
     collector.push({ step: label, durationMs, elapsedMs });
 };
 
+const createCanvas = (width, height) => {
+    if (typeof OffscreenCanvas !== "undefined") {
+        return new OffscreenCanvas(width, height);
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    return canvas;
+};
+
 const scaleToFit = (bitmap, targetWidth, targetHeight) => {
     const ratio = Math.min(targetWidth / bitmap.width, targetHeight / bitmap.height, 1);
     return {
@@ -58,9 +69,46 @@ const bitmapToDataUrl = async (canvas) => {
     return canvas.toDataURL("image/png");
 };
 
-export async function mergeWithCanvas(backgroundDataUrl, overlayPath, foregroundDataUrl, focusPoint) {
+const createTransparentOverlay = (overlayBitmap) => {
+    const canvas = createCanvas(overlayBitmap.width, overlayBitmap.height);
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) {
+        throw new Error("Overlay-Canvas konnte nicht erstellt werden.");
+    }
+
+    context.drawImage(overlayBitmap, 0, 0);
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const transparentThreshold = 10;
+    const solidThreshold = 70;
+    const featherRange = solidThreshold - transparentThreshold;
+
+    for (let index = 0; index < data.length; index += 4) {
+        const red = data[index];
+        const green = data[index + 1];
+        const blue = data[index + 2];
+        const alpha = data[index + 3];
+        const brightness = Math.max(red, green, blue);
+
+        if (brightness <= transparentThreshold) {
+            data[index + 3] = 0;
+            continue;
+        }
+
+        if (brightness < solidThreshold) {
+            data[index + 3] = Math.round(alpha * ((brightness - transparentThreshold) / featherRange));
+        }
+    }
+
+    context.putImageData(imageData, 0, 0);
+    return canvas;
+};
+
+export async function mergeWithCanvas(backgroundDataUrl, overlayPath, foregroundDataUrl, focusPoint, overlayOpacityPercent = 100) {
     const start = performance.now();
     const timings = [];
+    const overlayOpacity = Math.max(0, Math.min(1, Number(overlayOpacityPercent) / 100));
 
     const [backgroundBitmap, foregroundBitmap] = await Promise.all([
         dataUrlToBlob(backgroundDataUrl).then(toBitmap),
@@ -79,14 +127,10 @@ export async function mergeWithCanvas(backgroundDataUrl, overlayPath, foreground
     const overlayBitmap = await createImageBitmap(overlayBlob);
     trackStep(timings, start, "PNG dekodiert");
 
-    const canvas = typeof OffscreenCanvas !== "undefined"
-        ? new OffscreenCanvas(backgroundBitmap.width, backgroundBitmap.height)
-        : (() => {
-            const c = document.createElement("canvas");
-            c.width = backgroundBitmap.width;
-            c.height = backgroundBitmap.height;
-            return c;
-        })();
+    const transparentOverlay = createTransparentOverlay(overlayBitmap);
+    trackStep(timings, start, "Overlay-Hintergrund freigestellt");
+
+    const canvas = createCanvas(backgroundBitmap.width, backgroundBitmap.height);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) {
@@ -97,7 +141,9 @@ export async function mergeWithCanvas(backgroundDataUrl, overlayPath, foreground
     const placement = calculatePlacement(focusPoint, backgroundBitmap.width, backgroundBitmap.height, overlaySize);
 
     ctx.drawImage(backgroundBitmap, 0, 0, backgroundBitmap.width, backgroundBitmap.height);
-    ctx.drawImage(overlayBitmap, placement.x, placement.y, overlaySize.width, overlaySize.height);
+    ctx.globalAlpha = overlayOpacity;
+    ctx.drawImage(transparentOverlay, placement.x, placement.y, overlaySize.width, overlaySize.height);
+    ctx.globalAlpha = 1;
     ctx.drawImage(foregroundBitmap, 0, 0, backgroundBitmap.width, backgroundBitmap.height);
     trackStep(timings, start, "Komposition abgeschlossen");
 
