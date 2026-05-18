@@ -17,13 +17,13 @@
         <MudAlert Severity="Severity.Error" Dense="true">@_segmentationError</MudAlert>
     }
 
-    <MudStack Row="true" Spacing="2" JustifyContent="JustifyContent.Center" Class="mt-2">
+    <MudStack Row="true" Spacing="2" Justify="Justify.Center" Class="mt-2">
         <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.Replay" OnClick="HandleRetake">
             Nochmals aufnehmen
         </MudButton>
         @if (!string.IsNullOrEmpty(PhotoDataUrl))
         {
-            <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@PhotoDataUrl" Download="@DownloadFileName">
+            <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@PhotoDataUrl" download="@DownloadFileName">
                 Foto herunterladen
             </MudButton>
         }
@@ -80,14 +80,14 @@
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 <MudSwitch T="bool"
                            Color="MudBlazor.Color.Primary"
-                           Checked="@SegmentationSettings.Options.TemporalSmoothing"
-                           CheckedChanged="ToggleTemporalSmoothingAsync">
+                           Value="@SegmentationSettings.Options.TemporalSmoothing"
+                           ValueChanged="ToggleTemporalSmoothingAsync">
                     Temporale Glättung
                 </MudSwitch>
                 <MudSwitch T="bool"
                            Color="MudBlazor.Color.Secondary"
-                           Checked="@SegmentationSettings.Options.EnablePerfOverlay"
-                           CheckedChanged="TogglePerfOverlayAsync">
+                           Value="@SegmentationSettings.Options.EnablePerfOverlay"
+                           ValueChanged="TogglePerfOverlayAsync">
                     Live-Profiler-Overlay
                 </MudSwitch>
             </MudStack>
@@ -139,8 +139,8 @@
                         <img src="@_mergedPhoto" alt="Zusammengeführtes Bild" class="photo-image" />
                     </div>
 
-                    <MudStack Row="true" Spacing="2" JustifyContent="JustifyContent.Center" Class="mt-2">
-                        <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@_mergedPhoto" Download="@MergedDownloadFileName">
+                    <MudStack Row="true" Spacing="2" Justify="Justify.Center" Class="mt-2">
+                        <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@_mergedPhoto" download="@MergedDownloadFileName">
                             Ergebnis herunterladen
                         </MudButton>
                     </MudStack>

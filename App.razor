@@ -1,7 +1,7 @@
 <MudThemeProvider Theme="@_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
-<MudSnackbarProvider MaxDisplayedSnackbars="2" PreventDuplicates="true" />
+<MudSnackbarProvider />
 
 <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
@@ -9,11 +9,11 @@
         <FocusOnNavigate RouteData="@routeData" Selector="main" />
     </Found>
     <NotFound>
-        <PageTitle>Not found</PageTitle>
+        <PageTitle>Nicht gefunden</PageTitle>
         <LayoutView Layout="@typeof(MainLayout)">
             <MudPaper Class="pa-4" Elevation="1">
-                <MudText Typo="Typo.h6" Color="MudBlazor.Color.Error">Sorry, there's nothing at this address.</MudText>
-                <MudText Typo="Typo.body2">Use the menu to return to the Home page.</MudText>
+                <MudText Typo="Typo.h6" Color="MudBlazor.Color.Error">Unter dieser Adresse wurde keine Seite gefunden.</MudText>
+                <MudText Typo="Typo.body2">Nutze das Menü, um zur Startseite zurückzukehren.</MudText>
             </MudPaper>
         </LayoutView>
     </NotFound>

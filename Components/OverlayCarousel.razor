@@ -20,11 +20,11 @@
                 <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Color="MudBlazor.Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" />
             </div>
 
-            <MudStack Row="true" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Spacing="1">
+            <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1">
                 <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" StartIcon="@Icons.Material.Filled.NavigateBefore">
                     Zurück
                 </MudButton>
-                <MudChipSet T="int" MultiSelection="false" Class="carousel-bullets">
+                <MudChipSet T="int" SelectionMode="SelectionMode.SingleSelection" Class="carousel-bullets">
                     @for (var i = 0; i < _overlays.Count; i++)
                     {
                         var isActive = i == _currentIndex;
@@ -38,13 +38,13 @@
                 </MudButton>
             </MudStack>
 
-            <MudSwitch T="bool" Checked="@_useOriginalBackground" CheckedChanged="HandleBackgroundToggleAsync" Color="MudBlazor.Color.Primary" Label="Originalbild als Hintergrund verwenden" />
+            <MudSwitch T="bool" Value="@_useOriginalBackground" ValueChanged="HandleBackgroundToggleAsync" Color="MudBlazor.Color.Primary" Label="Originalbild als Hintergrund verwenden" />
 
             <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ProceedAsync">
                 Auswahl bestätigen
             </MudButton>
             <MudText Typo="Typo.caption" Class="mud-secondary-text">
-                Tipp: Doppelklick auf das Bild oder den Button startet den nächsten Schritt (Dummy).
+                Tipp: Doppelklick auf das Bild oder den Button bestätigt die Auswahl.
             </MudText>
         }
     </MudStack>

@@ -1,6 +1,6 @@
 @page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Startseite</PageTitle>
 
 <MudStack Spacing="2">
     <MudPaper Class="pa-4 home-hero" Elevation="1">
@@ -9,18 +9,18 @@
             <MudText Typo="Typo.body1">
                 Eine mobilefreundliche Oberfläche, die blitzschnell auf Touch reagiert und deine Kamera-Workflows in den Mittelpunkt stellt.
             </MudText>
-            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                 <MudChip T="string" Color="MudBlazor.Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Bolt">Reaktiv</MudChip>
-                <MudChip T="string" Color="MudBlazor.Color.Secondary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.PhoneIphone">Smartphone Ready</MudChip>
+                <MudChip T="string" Color="MudBlazor.Color.Secondary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.PhoneIphone">Smartphone-bereit</MudChip>
                 <MudChip T="string" Color="MudBlazor.Color.Info" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Explore">Entdecken</MudChip>
             </MudStack>
-            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Class="mt-2" FullWidth="true">
+            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Class="mt-2" FullWidth="true" Href="/camera-arcanum">
                 Jetzt starten
             </MudButton>
         </MudStack>
     </MudPaper>
 
-    <MudGrid GutterSize="2">
+    <MudGrid Spacing="2">
         <MudItem xs="12" sm="6">
             <MudPaper Class="pa-3" Elevation="1">
                 <MudStack Spacing="1">

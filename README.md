@@ -1,50 +1,48 @@
-# AngelCam PWA – Body-Segmentation Kamera
+# Nasreddin's Camera Arcanum
 
-Ziel: Eine Progressive Web App, die wie eine normale Kamera-App aussieht, ein Foto aufnimmt und anschließend mit Hilfe von **TensorFlow.js Body Segmentation** (MediaPipe Selfie-Modell) die Person im Bild freistellt. Hinter der Person werden **Flügel / Geister / andere Overlays** gerendert, inklusive Glow-/Soft-Effekten. Das Resultat wird als neues JPEG erzeugt und mit einem typischen Kamera-Dateinamen (z.B. `IMG_YYYYMMDD_HHMMSS.jpg`) zum Download/Teilen angeboten.
+Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die App nimmt ein Foto auf oder verarbeitet ein hochgeladenes Bild, trennt die Person per Body-Segmentation vom Hintergrund und setzt ein dekoratives Overlay zwischen Hintergrund und Vordergrund. Das Ergebnis kann anschließend heruntergeladen werden.
 
-## Anforderungen (Kurzfassung)
+## Aktueller Stand
 
-- PWA (installierbar auf Android & iOS, soweit Browser-PWA-Fähigkeiten erlauben)
-- Kamera-UI:
-  - Done: ~~Vollbild-Videovorschau (getUserMedia)~~
-  - Done: ~~Shutter-Button wie in einer 08/15-Kamera-App~~
-  - Done: ~~Thumbnail des letzten Fotos (Preview)~~
-- Schritte:
-  1. Live-Kamera anzeigen
-  2. Foto aufnehmen (Snapshot aus Video auf Canvas)
-  3. Body-Segmentation mit `@tensorflow-models/body-segmentation`
-  4. Aus Segmentierung Person-Maske erzeugen (Vordergrund / Hintergrund)
-  5. User tippt auf das Bild, um ungefähre Position für Flügel/Geist festzulegen
-  6. Overlay (Flügel/Geist) wird im Hintergrund hinter die Person gerendert
-  7. Glow-/Weichzeichnungseffekte am Overlay (ähnlich MS Teams Hintergrundeffekte)
-  8. Neues JPEG erzeugen, Dateiname wie Kamera-Foto (IMG_...)
-  9. Bild per Download oder Web Share API anbieten
+- Blazor WebAssembly auf .NET 9
+- MudBlazor für Layout und Bedienelemente
+- Kameraaufnahme per `getUserMedia`
+- Datei-Upload als Fallback und Testpfad
+- Body-Segmentation über TensorFlow.js MediaPipe Selfie Segmentation
+- Experimenteller ONNX-Runtime-Pfad mit MODNet-Modell
+- Qualitätsprofile: Auto, High, Medium und Low
+- Temporale Glättung, Kantenverfeinerung und Auto-Kalibrierung
+- Overlay-Auswahl mit Flügel-, Geist-, Skelett- und Schädelmotiven
+- Canvas-basierte Zusammenführung und Ergebnisdownload
+- PWA-Grundstruktur mit Manifest und Service Worker
 
-## Technischer Rahmen
+## Projektstruktur
 
-- Frontend:
-  - TypeScript, HTML, CSS
-  - Kein schweres Framework nötig (Vanilla TS/JS reicht)
-- ML:
-  - TensorFlow.js (WebGL Backend)
-  - `@tensorflow-models/body-segmentation` mit MediaPipe Selfie Segmentation Modell
-- PWA:
-  - `manifest.webmanifest`
-  - `service-worker.js` (offline für UI und Model, sofern möglich)
+- `Pages/CameraArcanum.razor`: Hauptworkflow für Kamera, Upload und Foto-Vorschau
+- `Pages/Setup.razor`: Einstellungen für die Segmentierung
+- `Components/CameraView.razor`: Live-Kamera und Auslöser
+- `Components/PhotoPreview.razor`: Segmentierung, Qualitätsoptionen, Overlay-Auswahl und Ergebnis
+- `Components/OverlayCarousel.razor`: Auswahl der Zwischenschicht
+- `Helpers/SegmentationService.cs`: .NET-Interop zur Segmentierungslogik
+- `Helpers/ImageMergeService.cs`: .NET-Interop zur Bildzusammenführung
+- `wwwroot/js/bodySegmentation.js`: Segmentierungs-Pipeline
+- `wwwroot/js/imageMerge.js`: Canvas-Komposition
+- `PROJEKTUEBERSICHT.md`: Ausführlicher Projektkontext für neue Chats
 
-## Performance- und Qualitätsstufen
+## Lokale Ausführung
 
-- Die Segmentierung nutzt bevorzugt ONNX Runtime Web (WebGPU → WebGL → WASM) mit einem leichten MODNet-Matting-Modell. Falls das Backend oder das Modell nicht verfügbar ist, fällt der Code automatisch auf das bisherige TensorFlow.js MediaPipe Selfie Segmentation Modell zurück.
-- Qualitätsprofile:
-  - **Auto** (Standard): 720p-Zielauflösung mit dynamischem Wechsel auf 540p/900p, wenn die gemessene Inference-Zeit dauerhaft über/unter ~33 ms liegt.
-  - **High/Medium/Low**: fixe Zielhöhen 900p/720p/540p für Geräte mit mehr oder weniger GPU-Leistung.
-- Temporale Glättung der Alpha-Maske (EMA) sorgt für stabile Ränder auf Smartphones. Ein optionaler Performance-Overlay (umschaltbar) zeigt Backend, Auflösung und Latenzen live an.
-- Alle Optionen sind über die neue "Performance & Qualität"-Sektion in der Foto-Preview umschaltbar und werden in `localStorage` persistiert.
+```powershell
+dotnet restore
+dotnet run
+```
 
-## iOS / PWA Besonderheiten
+Die Entwicklungsprofile verwenden standardmäßig `http://localhost:5030` und `https://localhost:7193`.
 
-- `getUserMedia` nur in einer Kameraview verwenden (keine Routenwechsel während Kamera aktiv)
-- Fallback: `<input type="file" accept="image/*" capture="environment">`, falls Kamera nicht verfügbar
-- Speichern in System-Galerie ist aus PWA heraus nicht direkt möglich:
-  - Stattdessen Download mit Dateinamen
-  - oder Web Share API mit `files`-Attachment
+Für Kamera-Zugriff verlangen viele Browser HTTPS oder `localhost`. Auf Smartphones muss die App über eine vertrauenswürdige HTTPS-Adresse erreichbar sein.
+
+## Wichtige Hinweise
+
+- Alle sichtbaren Texte sollen deutsch lokalisiert sein.
+- Datumsangaben sollen im Format `DD.MM.YYYY` erscheinen.
+- Die ONNX-Option lädt das MODNet-Modell derzeit extern von Hugging Face. Für stabile PWA-Offline-Fähigkeit sollte das Modell lokal versioniert oder der Online-Charakter bewusst dokumentiert werden.
+- Die Smartphone-Optimierung ist als eigener Arbeitsstrang in `Tasks/SmartphoneBackgroundReplacement.md` beschrieben.

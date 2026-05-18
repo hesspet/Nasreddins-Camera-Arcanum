@@ -1,11 +1,11 @@
 @page "/setup"
 
-<PageTitle>Body Segmentation Setup</PageTitle>
+<PageTitle>Segmentierungs-Einstellungen</PageTitle>
 
 <MudStack Spacing="2">
     <MudPaper Class="pa-4" Elevation="1">
         <MudStack Spacing="1">
-            <MudText Typo="Typo.h5">Body-Segmentation Setup</MudText>
+            <MudText Typo="Typo.h5">Body-Segmentation einrichten</MudText>
             <MudText Typo="Typo.body2">
                 Wähle hier die Parameter für das MediaPipe Selfie Segmentierungsmodell. Die Einstellungen wirken sich direkt auf
                 die Vorschau und die erzeugten Vorder-/Hintergrund-Bilder aus.
@@ -22,6 +22,7 @@
                 <MudSelectItem Value="@("landscape")">Landscape</MudSelectItem>
             </MudSelect>
 
+            <MudText Typo="Typo.subtitle2">Schwellwert (Personenerkennung)</MudText>
             <MudSlider @bind-Value="_options.SegmentationThreshold"
                         Min="0.05"
                         Max="0.95"
@@ -29,13 +30,13 @@
                         Color="MudBlazor.Color.Secondary"
                         Variant="Variant.Filled"
                         ValueLabel="@true"
-                        ValueLabelFormat="0.00"
-                        Label="Schwellwert (Personenerkennung)">
+                        ValueLabelFormat="0.00">
             </MudSlider>
             <MudText Typo="Typo.caption">
                 Höhere Werte bevorzugen klarere Silhouetten, niedrigere Werte fangen mehr Umgebung ein.
             </MudText>
 
+            <MudText Typo="Typo.subtitle2">Maskenweichzeichnung (Pixel)</MudText>
             <MudSlider @bind-Value="_options.MaskBlurAmount"
                         Min="0"
                         Max="20"
@@ -43,13 +44,13 @@
                         Color="MudBlazor.Color.Secondary"
                         Variant="Variant.Filled"
                         ValueLabel="@true"
-                        ValueLabelFormat="0"
-                        Label="Maskenweichzeichnung (Pixel)">
+                        ValueLabelFormat="0">
             </MudSlider>
             <MudText Typo="Typo.caption">
                 Der Unschärferadius glättet die Kanten zwischen Person und Hintergrund.
             </MudText>
 
+            <MudText Typo="Typo.subtitle2">Masken-Dilatation (Pixel)</MudText>
             <MudSlider @bind-Value="_options.DilationRadius"
                         Min="0"
                         Max="10"
@@ -57,13 +58,13 @@
                         Color="MudBlazor.Color.Secondary"
                         Variant="Variant.Filled"
                         ValueLabel="@true"
-                        ValueLabelFormat="0"
-                        Label="Masken-Dilatation (Pixel)">
+                        ValueLabelFormat="0">
             </MudSlider>
             <MudText Typo="Typo.caption">
                 Erweitert die Maske geringfügig, um kleine Löcher zu schließen.
             </MudText>
 
+            <MudText Typo="Typo.subtitle2">Masken-Erosion (Pixel)</MudText>
             <MudSlider @bind-Value="_options.ErosionRadius"
                         Min="0"
                         Max="10"
@@ -71,13 +72,13 @@
                         Color="MudBlazor.Color.Secondary"
                         Variant="Variant.Filled"
                         ValueLabel="@true"
-                        ValueLabelFormat="0"
-                        Label="Masken-Erosion (Pixel)">
+                        ValueLabelFormat="0">
             </MudSlider>
             <MudText Typo="Typo.caption">
                 Verkleinert die Maske leicht, um Rauschen am Rand zu entfernen.
             </MudText>
 
+            <MudText Typo="Typo.subtitle2">Weiche Kante innen (Pixel)</MudText>
             <MudSlider @bind-Value="_options.InnerFeatherRadius"
                         Min="0"
                         Max="20"
@@ -85,13 +86,13 @@
                         Color="MudBlazor.Color.Secondary"
                         Variant="Variant.Filled"
                         ValueLabel="@true"
-                        ValueLabelFormat="0"
-                        Label="Weiche Kante innen (Pixel)">
+                        ValueLabelFormat="0">
             </MudSlider>
             <MudText Typo="Typo.caption">
                 Weichzeichner für die Innenkante der Person, um Halos zu minimieren.
             </MudText>
 
+            <MudText Typo="Typo.subtitle2">Weiche Kante außen (Pixel)</MudText>
             <MudSlider @bind-Value="_options.OuterFeatherRadius"
                         Min="0"
                         Max="30"
@@ -99,8 +100,7 @@
                         Color="MudBlazor.Color.Secondary"
                         Variant="Variant.Filled"
                         ValueLabel="@true"
-                        ValueLabelFormat="0"
-                        Label="Weiche Kante außen (Pixel)">
+                        ValueLabelFormat="0">
             </MudSlider>
             <MudText Typo="Typo.caption">
                 Federt die Außenkante ab und steuert die sichtbare Übergangsbreite zum Hintergrund.
