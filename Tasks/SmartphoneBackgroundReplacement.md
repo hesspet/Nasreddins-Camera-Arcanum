@@ -51,3 +51,4 @@ Ziel ist es, den bestehenden PWA-Flow (Live-Kamera, Foto-Shot, Body-Segmentation
 - Auf einem Midrange-Android: >=24 FPS bei 720p (Medium), stabile Kanten ohne starke Halos; Shutter/Export funktionieren.
 - Auf einem aktuellen iPhone: ~30 FPS bei 720p (Medium/High), minimale Flacker-Artefakte dank temporaler Glättung.
 - Fallback (Low) hält UI responsiv auch bei schwächerer Hardware.
+
