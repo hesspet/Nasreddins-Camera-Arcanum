@@ -42,8 +42,17 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-.carousel-bullets {
-    max-width: 320px;
+.overlay-choice-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    max-width: 560px;
+}
+
+.overlay-choice-button {
+    min-width: 88px;
+    max-width: 160px;
 }
 
 @media (max-width: 600px) {
@@ -56,8 +65,12 @@
         min-height: 180px;
     }
 
-    .carousel-bullets {
+    .overlay-choice-list {
         width: 100%;
         justify-content: center;
+    }
+
+    .overlay-choice-button {
+        flex: 1 1 44%;
     }
 }

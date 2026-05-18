@@ -46,11 +46,81 @@
         <MudItem xs="12">
             <MudPaper Class="pa-3" Elevation="1">
                 <MudStack Spacing="1">
-                    <MudText Typo="Typo.subtitle1">Live-Status</MudText>
-                    <MudProgressLinear Color="MudBlazor.Color.Success" Value="72" Rounded="true" Class="mt-1" />
-                    <MudText Typo="Typo.caption">Projektstatus: Synchronisation fast abgeschlossen.</MudText>
+                    <MudText Typo="Typo.subtitle1">Aktueller Teststatus</MudText>
+                    <MudAlert Severity="Severity.Success" Dense="true" Icon="@Icons.Material.Filled.CheckCircle">
+                        Bereit für Kamera- und Upload-Tests.
+                    </MudAlert>
+
+                    @if (IsNgrokTunnel)
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true" Icon="@Icons.Material.Filled.Https">
+                            Ngrok-Tunnel aktiv: Smartphone-Kameratests sind über diese HTTPS-Adresse möglich.
+                        </MudAlert>
+                    }
+                    else if (IsLocalHost)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-secondary-text">
+                            Lokaler PC-Test über localhost. Für Smartphone-Kameratests wird eine vertrauenswürdige HTTPS-Adresse benötigt.
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-secondary-text">
+                            Webserver-Betrieb erkannt.
+                        </MudText>
+                    }
                 </MudStack>
             </MudPaper>
         </MudItem>
     </MudGrid>
 </MudStack>
+
+@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    private RuntimeEnvironment CurrentRuntimeEnvironment { get; set; } = RuntimeEnvironment.Unknown;
+
+    private bool IsNgrokTunnel => CurrentRuntimeEnvironment == RuntimeEnvironment.NgrokTunnel;
+
+    private bool IsLocalHost => CurrentRuntimeEnvironment == RuntimeEnvironment.LocalHost;
+
+    protected override void OnInitialized()
+    {
+        CurrentRuntimeEnvironment = DetectRuntimeEnvironment(NavigationManager.Uri);
+    }
+
+    private static RuntimeEnvironment DetectRuntimeEnvironment(string currentUri)
+    {
+        if (!Uri.TryCreate(currentUri, UriKind.Absolute, out var uri))
+        {
+            return RuntimeEnvironment.Unknown;
+        }
+
+        var host = uri.Host.ToLowerInvariant();
+
+        if (host is "localhost" or "127.0.0.1" or "::1")
+        {
+            return RuntimeEnvironment.LocalHost;
+        }
+
+        if (host.Contains(".ngrok-free.", StringComparison.Ordinal)
+            || host.EndsWith(".ngrok-free.app", StringComparison.Ordinal)
+            || host.EndsWith(".ngrok-free.dev", StringComparison.Ordinal)
+            || host.EndsWith(".ngrok.app", StringComparison.Ordinal)
+            || host.EndsWith(".ngrok.io", StringComparison.Ordinal))
+        {
+            return RuntimeEnvironment.NgrokTunnel;
+        }
+
+        return RuntimeEnvironment.WebServer;
+    }
+
+    private enum RuntimeEnvironment
+    {
+        Unknown,
+        LocalHost,
+        NgrokTunnel,
+        WebServer
+    }
+}

@@ -1,3 +1,5 @@
+@implements IAsyncDisposable
+
 <MudPaper Class="overlay-carousel" Elevation="1">
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
@@ -5,9 +7,16 @@
             <MudText Typo="Typo.subtitle1">Zwischenschicht auswählen</MudText>
         </MudStack>
 
-        @if (_overlays.Count == 0)
+        @if (_isLoading)
         {
-            <MudText Typo="Typo.body2" Class="mud-secondary-text">Keine Overlays gefunden.</MudText>
+            <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="1">
+                <MudProgressCircular Indeterminate="true" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium" />
+                <MudText Typo="Typo.body2">Zwischenschichten werden geladen.</MudText>
+            </MudStack>
+        }
+        else if (_overlays.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-secondary-text">Keine Zwischenschichten gefunden.</MudText>
         }
         else
         {
@@ -24,15 +33,21 @@
                 <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" StartIcon="@Icons.Material.Filled.NavigateBefore">
                     Zurück
                 </MudButton>
-                <MudChipSet T="int" SelectionMode="SelectionMode.SingleSelection" Class="carousel-bullets">
+                <div class="overlay-choice-list">
                     @for (var i = 0; i < _overlays.Count; i++)
                     {
+                        var overlayIndex = i;
+                        var overlay = _overlays[overlayIndex];
                         var isActive = i == _currentIndex;
-                        <MudChip T="int" Value="@i" Color="@(isActive ? MudBlazor.Color.Primary : MudBlazor.Color.Default)" Variant="Variant.Filled" OnClick="() => SelectIndexAsync(i)">
-                            @(i + 1)
-                        </MudChip>
+                        <MudButton Variant="@(isActive ? Variant.Filled : Variant.Outlined)"
+                                   Color="@(isActive ? MudBlazor.Color.Primary : MudBlazor.Color.Default)"
+                                   Size="MudBlazor.Size.Small"
+                                   Class="overlay-choice-button"
+                                   OnClick="@(() => SelectIndexAsync(overlayIndex))">
+                            @overlay.Title
+                        </MudButton>
                     }
-                </MudChipSet>
+                </div>
                 <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" EndIcon="@Icons.Material.Filled.NavigateNext">
                     Weiter
                 </MudButton>
@@ -54,10 +69,12 @@
     private const string StorageKey = "merge-overlay-last-selection";
     private const string BackgroundPreferenceKey = "merge-overlay-background-mode";
 
-    private IReadOnlyList<MergeOverlay> _overlays = MergeOverlayCatalog.Overlays;
+    private IReadOnlyList<MergeOverlay> _overlays = Array.Empty<MergeOverlay>();
     private int _currentIndex;
     private double? _pointerStartX;
     private bool _useOriginalBackground;
+    private bool _isLoading = true;
+    private IJSObjectReference? _overlayModule;
 
     [Parameter]
     public EventCallback<OverlayProceedRequest> OnProceed { get; set; }
@@ -73,14 +90,14 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _overlays = await LoadOverlaysAsync();
         await RestoreSelectionAsync();
         await RestoreBackgroundPreferenceAsync();
+        _isLoading = false;
     }
 
     private async Task RestoreSelectionAsync()
     {
-        _overlays = MergeOverlayCatalog.Overlays;
-
         var storedPath = await GetStoredPathAsync();
         var storedIndex = FindIndexByPath(storedPath);
         _currentIndex = storedIndex >= 0 ? storedIndex : 0;
@@ -250,5 +267,36 @@
         await PersistSelectionAsync();
         await PersistBackgroundPreferenceAsync();
         await OnProceed.InvokeAsync(new OverlayProceedRequest(CurrentOverlay.Path, _useOriginalBackground));
+    }
+
+    private async Task<IReadOnlyList<MergeOverlay>> LoadOverlaysAsync()
+    {
+        try
+        {
+            _overlayModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/mergeOverlays.js");
+            var overlays = await _overlayModule.InvokeAsync<MergeOverlay[]>("getMergeOverlays");
+            return overlays
+                .Where(overlay => !string.IsNullOrWhiteSpace(overlay.Path) && !string.IsNullOrWhiteSpace(overlay.Title))
+                .ToList();
+        }
+        catch
+        {
+            return Array.Empty<MergeOverlay>();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_overlayModule is not null)
+        {
+            try
+            {
+                await _overlayModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Ignored because the JS runtime is no longer available.
+            }
+        }
     }
 }

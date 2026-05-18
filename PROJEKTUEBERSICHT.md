@@ -34,15 +34,18 @@ Der aktuelle Projektstand ist ein Blazor-WebAssembly-Prototyp auf .NET 9 mit Mud
 - `Pages/Setup.razor`: Einstellungsseite für Segmentierungsparameter.
 - `Components/CameraView.razor`: Startet die Kamera per `getUserMedia` und erzeugt Snapshots aus dem Video.
 - `Components/PhotoPreview.razor`: Zentrale Nachbearbeitung mit Segmentierung, Auto-Kalibrierung, Qualitätsoptionen, Overlay-Auswahl und Ergebnisdownload.
-- `Components/OverlayCarousel.razor`: Auswahl der verfügbaren Overlays und Hintergrundmodus.
+- `Components/OverlayCarousel.razor`: Auswahl der verfügbaren Zwischenschichten und Hintergrundmodus.
 - `Components/SegmentationPreview.razor`: Anzeige von Vordergrund und Hintergrund nach der Segmentierung.
 - `Helpers/SegmentationService.cs`: .NET-Brücke zum JavaScript-Modul `bodySegmentation.js`.
 - `Helpers/ImageMergeService.cs`: .NET-Brücke zum JavaScript-Modul `imageMerge.js`.
 - `Helpers/SegmentationSettings.cs`: Lädt, normalisiert und speichert Segmentierungseinstellungen.
-- `Helpers/MergeOverlayCatalog.cs`: Katalog der verfügbaren Overlay-Bilder.
+- `Helpers/MergeOverlayCatalog.cs`: Datenmodell für die generierte Zwischenschichtliste.
 - `wwwroot/js/bodySegmentation.js`: Segmentierungs-Pipeline, Qualitätsstufen, Auto-Modus, temporale Glättung, Kantenverfeinerung, Performance-Overlay und Auto-Kalibrierung.
 - `wwwroot/js/imageMerge.js`: Canvas-basierte Zusammenführung von Hintergrund, Overlay und Vordergrund.
-- `wwwroot/images/merge`: Overlay-Assets für Haunted- und Heaven-Motive.
+- `wwwroot/images/merge/zwischenbilder/`: Ausgelieferte Effekt-/Zwischenschichtbilder und `katalog.json` für die Auswahl in der App.
+- `wwwroot/js/mergeOverlays.js`: Lädt den Zwischenschicht-Katalog und benennt die Buttons nach den Dateinamen ohne Endung.
+- `Testbilder/Personen`: Lokale Personenbilder für Upload-, Segmentierungs-, Overlay- und Download-Tests.
+- `Tools/Start-Lokaler-Test.bat` und `Tools/Start-Lokaler-Test.ps1`: Starten die App lokal auf Port `5030`, öffnen den Browser und nutzen ngrok für Smartphone-Tests, wenn `ngrok` installiert ist.
 - `Tasks/SmartphoneBackgroundReplacement.md`: Geplanter Arbeitsstrang zur Smartphone-Optimierung der Segmentierung.
 
 ## Aktueller Funktionsstand
@@ -61,9 +64,11 @@ Bereits vorhanden:
 - Backend-Auswahl: Auto, ONNX Runtime, TensorFlow.js
 - Temporale Glättung und Performance-Overlay als Optionen
 - Overlay-Karussell mit Flügel-, Geist-, Skelett- und Schädelmotiven
+- Overlay-Auswahl lädt `wwwroot/images/merge/zwischenbilder/katalog.json`; die Buttons heißen wie die Bilddateien ohne Dateiendung.
 - Wahl zwischen Originalbild und extrahiertem Hintergrund
 - Canvas-basierte Zusammenführung und Download des Ergebnisses
 - PWA-Manifest und Service-Worker-Grundstruktur
+- Lokale Testbilder unter `Testbilder/Personen`
 
 ## Verifizierter Zustand
 
@@ -111,7 +116,7 @@ Danach sollte das Projekt wieder auf eine saubere technische Basis gebracht werd
 Bevor weiter optimiert wird, sollte der vorhandene Kernworkflow bewusst getestet und dokumentiert werden:
 
 - App starten.
-- Bild hochladen.
+- Bild aus `Testbilder/Personen` hochladen.
 - Segmentierung auslösen.
 - Auto-Kalibrierung testen.
 - Overlay wählen.
