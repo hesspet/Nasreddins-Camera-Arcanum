@@ -5,7 +5,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <Version>1.2</Version>
   </PropertyGroup>
+
+  <Target Name="GenerateBuildInfo" BeforeTargets="BeforeBuild">
+    <Exec Command="powershell -NoProfile -File &quot;$(MSBuildProjectDirectory)\Tools\GenerateBuildInfo.ps1&quot; -OutputFile &quot;$(MSBuildProjectDirectory)\Helpers\BuildInfo.g.cs&quot; -Version &quot;$(Version)&quot;" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.7" />

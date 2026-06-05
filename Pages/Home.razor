@@ -1,4 +1,5 @@
 @page "/"
+@using NasreddinsCameraArcanum
 
 <PageTitle>Startseite</PageTitle>
 
@@ -7,7 +8,7 @@
         <MudStack Spacing="1">
             <MudText Typo="Typo.h5">Willkommen bei Nasreddin's Camera Arcanum</MudText>
             <MudText Typo="Typo.body1">
-                Eine mobilefreundliche Oberfläche, die blitzschnell auf Touch reagiert und deine Kamera-Workflows in den Mittelpunkt stellt.
+                Version @BuildInfo.BuildVersion - @BuildInfo.BuildDate @BuildInfo.BuildTime Uhr
             </MudText>
             <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                 <MudChip T="string" Color="MudBlazor.Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Bolt">Reaktiv</MudChip>
