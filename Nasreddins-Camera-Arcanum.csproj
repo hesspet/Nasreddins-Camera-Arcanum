@@ -10,8 +10,11 @@
     <BuildInfoPowerShellExecutable Condition="'$(OS)' != 'Windows_NT'">pwsh</BuildInfoPowerShellExecutable>
   </PropertyGroup>
 
-  <Target Name="GenerateBuildInfo" BeforeTargets="BeforeBuild">
+  <Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile">
     <Exec Command="&quot;$(BuildInfoPowerShellExecutable)&quot; -NoProfile -File &quot;$(MSBuildProjectDirectory)/Tools/GenerateBuildInfo.ps1&quot; -OutputFile &quot;$(MSBuildProjectDirectory)/Helpers/BuildInfo.g.cs&quot; -Version &quot;$(Version)&quot;" />
+    <ItemGroup>
+      <Compile Include="Helpers/BuildInfo.g.cs" />
+    </ItemGroup>
   </Target>
 
   <ItemGroup>
@@ -22,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Helpers/BuildInfo.g.cs" />
     <Compile Remove="Tools\**\*.cs" />
     <Content Remove="Tools\**" />
     <None Remove="Tools\**" />
