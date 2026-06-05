@@ -1,6 +1,6 @@
 # Projektübersicht: Nasreddin's Camera Arcanum
 
-Stand: 18.05.2026
+Stand: 06.06.2026
 
 ## Zweck
 
@@ -146,6 +146,54 @@ Für reine Codeprüfung reicht:
 dotnet build --no-restore
 ```
 
+## GitHub Pages Releasebuild
+
+Der Releasebuild für GitHub Pages ist über `.github/workflows/github-pages.yml` vorbereitet. Der Workflow läuft bei Pushes auf `main` oder `master` und zusätzlich manuell über `workflow_dispatch`.
+
+Der aktuelle lokale Branch heißt `main`; damit greift der automatische Deploy-Trigger. Wenn der Default-Branch später anders heißt, muss die Branch-Liste im Workflow angepasst werden.
+
+Der Workflow nutzt `Tools/Build-GitHubPagesRelease.ps1` und führt aus:
+
+1. Repository auschecken.
+2. .NET 9 einrichten.
+3. NuGet-Abhängigkeiten wiederherstellen.
+4. `dotnet publish` mit `Release`-Konfiguration erzeugen.
+5. `<base href>` im veröffentlichten `index.html` auf `/<Repository-Name>/` setzen.
+6. `404.html` als SPA-Fallback anlegen.
+7. `.nojekyll` anlegen, damit GitHub Pages Blazor-Dateien wie `_framework` unverändert ausliefert.
+8. `release/wwwroot` als Pages-Artefakt hochladen und veröffentlichen.
+
+Für eine lokale Kontrolle kann der vollständige GitHub-Pages-Releasebuild so erzeugt werden:
+
+```powershell
+Tools\Build-GitHubPagesRelease.ps1
+```
+
+Der statische Pages-Output liegt danach unter:
+
+```text
+bin\Release\github-pages\wwwroot
+```
+
+Wichtig: Der Repository-Name wird im Skript nur für den veröffentlichten `<base href>` verwendet. Wenn lokal für ein anders benanntes Repository gebaut werden soll, muss der Repository-Name explizit übergeben werden:
+
+```powershell
+Tools\Build-GitHubPagesRelease.ps1 -RepositoryName "Neuer-Repository-Name"
+```
+
+## GitHub Pages Einstellungen
+
+Damit die Anwendung über GitHub Pages nutzbar ist, muss im GitHub-Repository Folgendes eingestellt werden:
+
+1. `Settings` öffnen.
+2. `Pages` öffnen.
+3. Unter `Build and deployment` bei `Source` den Wert `GitHub Actions` auswählen.
+4. Keine Branch- oder `docs`-Quelle auswählen; der Workflow veröffentlicht das Artefakt direkt.
+5. Falls die Organisation restriktive Actions-Vorgaben nutzt, müssen GitHub Actions und Deployments in das Environment `github-pages` erlaubt sein.
+6. Nach dem ersten erfolgreichen Workflowlauf ist die Anwendung unter `https://<Benutzer-oder-Organisation>.github.io/Nasreddins-Camera-Arcanum/` erreichbar.
+
+Optional kann in den Pages-Einstellungen eine eigene Domain gesetzt werden. Dann sollte `Enforce HTTPS` aktiviert bleiben. Bei einer eigenen Domain muss zusätzlich geprüft werden, ob der GitHub-Pages-Basispfad weiterhin passt oder ob die App am Domain-Root ausgeliefert wird.
+
 ## Aktueller manueller Smoke-Test
 
 1. App über `Tools\Start-Lokaler-Test.ps1` starten.
@@ -182,7 +230,13 @@ dotnet build --no-restore
 
 ## Aktueller Build-Status
 
-`dotnet build --no-restore` wurde am 18.05.2026 nach den letzten Änderungen erfolgreich ausgeführt:
+`Tools\Build-GitHubPagesRelease.ps1` wurde am 06.06.2026 erfolgreich ausgeführt.
 
-- 0 Warnungen.
-- 0 Fehler.
+- Der Pages-Output liegt unter `bin\Release\github-pages\wwwroot`.
+- `index.html` liegt am Artefakt-Root.
+- `<base href>` ist auf `/Nasreddins-Camera-Arcanum/` gesetzt.
+- `404.html` ist als SPA-Fallback vorhanden.
+- `.nojekyll` ist vorhanden.
+- Lokale Tool-Artefakte werden nicht in den Pages-Output kopiert.
+
+Hinweis: In der Codex-Sandbox war der Zugriff auf `obj\Release\net9.0` eingeschränkt. Der Releasebuild wurde deshalb lokal einmal außerhalb der Sandbox verifiziert. Auf GitHub Actions ist ein sauberer Runner vorgesehen, der diesen lokalen Zugriffskonflikt nicht übernimmt.

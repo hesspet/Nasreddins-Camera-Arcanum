@@ -1,0 +1,59 @@
+name: Releasebuild für GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Releasebuild erstellen
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: .NET einrichten
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: GitHub Pages einrichten
+        uses: actions/configure-pages@v5
+
+      - name: Abhängigkeiten wiederherstellen
+        run: dotnet restore Nasreddins-Camera-Arcanum.csproj
+
+      - name: Releasebuild für GitHub Pages vorbereiten
+        shell: pwsh
+        run: ./Tools/Build-GitHubPagesRelease.ps1 -RepositoryName "${{ github.event.repository.name }}" -OutputPath "release"
+
+      - name: Pages-Artefakt hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: release/wwwroot
+
+  deploy:
+    name: Auf GitHub Pages deployen
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Pages-Artefakt veröffentlichen
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -15,7 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Tools\OverlayAlphaOptimizer\**\*.cs" />
+    <Compile Remove="Tools\**\*.cs" />
+    <Content Remove="Tools\**" />
+    <None Remove="Tools\**" />
   </ItemGroup>
 
   <ItemGroup>
