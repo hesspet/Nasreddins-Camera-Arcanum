@@ -1,7 +1,8 @@
-const TF_BUNDLE_URL = "./js/vendor/tensorflow/tf.min.js";
-const TF_WEBGL_URL = "./js/vendor/tensorflow/tf-backend-webgl.min.js";
-const BODY_SEGMENTATION_URL = "./js/vendor/body-segmentation/body-segmentation.min.js";
-const ONNX_RUNTIME_URL = "./js/vendor/onnxruntime/ort.min.js";
+const moduleBaseUrl = new URL(".", import.meta.url);
+const TF_BUNDLE_URL = new URL("vendor/tensorflow/tf.min.js", moduleBaseUrl).href;
+const TF_WEBGL_URL = new URL("vendor/tensorflow/tf-backend-webgl.min.js", moduleBaseUrl).href;
+const BODY_SEGMENTATION_URL = new URL("vendor/body-segmentation/body-segmentation.min.js", moduleBaseUrl).href;
+const ONNX_RUNTIME_URL = new URL("vendor/onnxruntime/ort.min.js", moduleBaseUrl).href;
 const ONNX_MODEL_URL =
     "https://huggingface.co/onnx-community/modnet/resolve/main/modnet.onnx?download=1";
 

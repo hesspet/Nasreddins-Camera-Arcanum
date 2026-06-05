@@ -6,14 +6,16 @@ namespace Nasreddins_Camera_Arcanum.Helpers;
 
 public class SegmentationService : IAsyncDisposable
 {
-    private const string SegmentationModulePath = "./js/bodySegmentation.js";
+    private const string SegmentationModulePath = "js/bodySegmentation.js";
 
     private readonly IJSRuntime _jsRuntime;
+    private readonly NavigationManager _navigationManager;
     private IJSObjectReference? _segmentationModule;
 
-    public SegmentationService(IJSRuntime jsRuntime)
+    public SegmentationService(IJSRuntime jsRuntime, NavigationManager navigationManager)
     {
         _jsRuntime = jsRuntime;
+        _navigationManager = navigationManager;
     }
 
     public async Task<SegmentationResult> SegmentPhotoAsync(
@@ -21,7 +23,7 @@ public class SegmentationService : IAsyncDisposable
         SegmentationFocus? focus,
         SegmentationOptions options)
     {
-        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", SegmentationModulePath);
+        _segmentationModule ??= await ImportSegmentationModuleAsync();
         return await _segmentationModule.InvokeAsync<SegmentationResult>(
             "segmentPhoto",
             photoDataUrl,
@@ -34,7 +36,7 @@ public class SegmentationService : IAsyncDisposable
         SegmentationFocus? focus,
         SegmentationOptions options)
     {
-        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", SegmentationModulePath);
+        _segmentationModule ??= await ImportSegmentationModuleAsync();
         return await _segmentationModule.InvokeAsync<SegmentationAutoTuneResult>(
             "autoCalibrateSegmentation",
             photoDataUrl,
@@ -44,7 +46,7 @@ public class SegmentationService : IAsyncDisposable
 
     public async Task<ImageMetrics?> GetImageMetricsAsync(ElementReference photoRef)
     {
-        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", SegmentationModulePath);
+        _segmentationModule ??= await ImportSegmentationModuleAsync();
         return await _segmentationModule.InvokeAsync<ImageMetrics>("getImageMetrics", photoRef);
     }
 
@@ -59,8 +61,37 @@ public class SegmentationService : IAsyncDisposable
 
     public async Task<SegmentationPerformance?> GetPerformanceSnapshotAsync()
     {
-        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", SegmentationModulePath);
+        _segmentationModule ??= await ImportSegmentationModuleAsync();
         return await _segmentationModule.InvokeAsync<SegmentationPerformance?>("getPerformanceSnapshot");
+    }
+
+    private async Task<IJSObjectReference> ImportSegmentationModuleAsync()
+    {
+        return await _jsRuntime.InvokeAsync<IJSObjectReference>("import", BuildSegmentationModuleUri());
+    }
+
+    private string BuildSegmentationModuleUri()
+    {
+        var baseUri = new Uri(_navigationManager.BaseUri);
+        if (baseUri.AbsolutePath != "/")
+        {
+            return new Uri(baseUri, SegmentationModulePath).ToString();
+        }
+
+        var currentUri = new Uri(_navigationManager.Uri);
+        if (currentUri.Host.EndsWith(".github.io", StringComparison.OrdinalIgnoreCase))
+        {
+            var pathSegments = currentUri.AbsolutePath
+                .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            if (pathSegments.Length > 0)
+            {
+                var repositoryBaseUri = new Uri($"{currentUri.Scheme}://{currentUri.Authority}/{pathSegments[0]}/");
+                return new Uri(repositoryBaseUri, SegmentationModulePath).ToString();
+            }
+        }
+
+        return new Uri(baseUri, SegmentationModulePath).ToString();
     }
 
     public async ValueTask DisposeAsync()
