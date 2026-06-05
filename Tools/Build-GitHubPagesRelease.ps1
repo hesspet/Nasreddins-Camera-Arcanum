@@ -1,5 +1,5 @@
 param(
-    [string]$RepositoryName = "Nasreddins-Camera-Arcanum",
+    [string]$RepositoryName = "camera-arcanum",
     [string]$OutputPath = "bin/Release/github-pages",
     [switch]$SkipPublish
 )

@@ -163,6 +163,8 @@ Der Workflow nutzt `Tools/Build-GitHubPagesRelease.ps1` und führt aus:
 7. `.nojekyll` anlegen, damit GitHub Pages Blazor-Dateien wie `_framework` unverändert ausliefert.
 8. `release/wwwroot` als Pages-Artefakt hochladen und veröffentlichen.
 
+Wichtig für die interne Navigation unter GitHub Pages: Blazor-Links müssen basis-relativ sein, also zum Beispiel `Href="camera-arcanum"` statt `Href="/camera-arcanum"`. Ein führender Slash springt aus dem GitHub-Pages-Unterpfad heraus und führt zu einem 404 auf `https://hesspet.github.io/camera-arcanum`.
+
 Für eine lokale Kontrolle kann der vollständige GitHub-Pages-Releasebuild so erzeugt werden:
 
 ```powershell
@@ -175,7 +177,7 @@ Der statische Pages-Output liegt danach unter:
 bin\Release\github-pages\wwwroot
 ```
 
-Wichtig: Der Repository-Name wird im Skript nur für den veröffentlichten `<base href>` verwendet. Wenn lokal für ein anders benanntes Repository gebaut werden soll, muss der Repository-Name explizit übergeben werden:
+Wichtig: Der lokale Standard-Repository-Name im Skript ist `camera-arcanum`, passend zur veröffentlichten URL `https://hesspet.github.io/camera-arcanum/`. Der Repository-Name wird im Skript nur für den veröffentlichten `<base href>` verwendet. Wenn lokal für ein anders benanntes Repository gebaut werden soll, muss der Repository-Name explizit übergeben werden:
 
 ```powershell
 Tools\Build-GitHubPagesRelease.ps1 -RepositoryName "Neuer-Repository-Name"
@@ -190,7 +192,7 @@ Damit die Anwendung über GitHub Pages nutzbar ist, muss im GitHub-Repository Fo
 3. Unter `Build and deployment` bei `Source` den Wert `GitHub Actions` auswählen.
 4. Keine Branch- oder `docs`-Quelle auswählen; der Workflow veröffentlicht das Artefakt direkt.
 5. Falls die Organisation restriktive Actions-Vorgaben nutzt, müssen GitHub Actions und Deployments in das Environment `github-pages` erlaubt sein.
-6. Nach dem ersten erfolgreichen Workflowlauf ist die Anwendung unter `https://<Benutzer-oder-Organisation>.github.io/Nasreddins-Camera-Arcanum/` erreichbar.
+6. Nach dem ersten erfolgreichen Workflowlauf ist die Anwendung unter `https://hesspet.github.io/camera-arcanum/` erreichbar.
 
 Optional kann in den Pages-Einstellungen eine eigene Domain gesetzt werden. Dann sollte `Enforce HTTPS` aktiviert bleiben. Bei einer eigenen Domain muss zusätzlich geprüft werden, ob der GitHub-Pages-Basispfad weiterhin passt oder ob die App am Domain-Root ausgeliefert wird.
 
@@ -234,7 +236,7 @@ Optional kann in den Pages-Einstellungen eine eigene Domain gesetzt werden. Dann
 
 - Der Pages-Output liegt unter `bin\Release\github-pages\wwwroot`.
 - `index.html` liegt am Artefakt-Root.
-- `<base href>` ist auf `/Nasreddins-Camera-Arcanum/` gesetzt.
+- `<base href>` ist auf `/camera-arcanum/` gesetzt.
 - `404.html` ist als SPA-Fallback vorhanden.
 - `.nojekyll` ist vorhanden.
 - Lokale Tool-Artefakte werden nicht in den Pages-Output kopiert.
