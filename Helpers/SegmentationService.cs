@@ -6,6 +6,8 @@ namespace Nasreddins_Camera_Arcanum.Helpers;
 
 public class SegmentationService : IAsyncDisposable
 {
+    private const string SegmentationModulePath = "./js/bodySegmentation.js";
+
     private readonly IJSRuntime _jsRuntime;
     private IJSObjectReference? _segmentationModule;
 
@@ -19,7 +21,7 @@ public class SegmentationService : IAsyncDisposable
         SegmentationFocus? focus,
         SegmentationOptions options)
     {
-        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
+        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", SegmentationModulePath);
         return await _segmentationModule.InvokeAsync<SegmentationResult>(
             "segmentPhoto",
             photoDataUrl,
@@ -32,7 +34,7 @@ public class SegmentationService : IAsyncDisposable
         SegmentationFocus? focus,
         SegmentationOptions options)
     {
-        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
+        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", SegmentationModulePath);
         return await _segmentationModule.InvokeAsync<SegmentationAutoTuneResult>(
             "autoCalibrateSegmentation",
             photoDataUrl,
@@ -42,7 +44,7 @@ public class SegmentationService : IAsyncDisposable
 
     public async Task<ImageMetrics?> GetImageMetricsAsync(ElementReference photoRef)
     {
-        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
+        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", SegmentationModulePath);
         return await _segmentationModule.InvokeAsync<ImageMetrics>("getImageMetrics", photoRef);
     }
 
@@ -57,7 +59,7 @@ public class SegmentationService : IAsyncDisposable
 
     public async Task<SegmentationPerformance?> GetPerformanceSnapshotAsync()
     {
-        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "/js/bodySegmentation.js");
+        _segmentationModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", SegmentationModulePath);
         return await _segmentationModule.InvokeAsync<SegmentationPerformance?>("getPerformanceSnapshot");
     }
 

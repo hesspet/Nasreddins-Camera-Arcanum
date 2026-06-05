@@ -165,6 +165,8 @@ Der Workflow nutzt `Tools/Build-GitHubPagesRelease.ps1` und führt aus:
 
 Wichtig für die interne Navigation unter GitHub Pages: Blazor-Links müssen basis-relativ sein, also zum Beispiel `Href="camera-arcanum"` statt `Href="/camera-arcanum"`. Ein führender Slash springt aus dem GitHub-Pages-Unterpfad heraus und führt zu einem 404 auf `https://hesspet.github.io/camera-arcanum`.
 
+Das gilt auch für dynamische JavaScript-Module und Vendor-Skripte: Asset-Pfade müssen basis-relativ sein, zum Beispiel `./js/bodySegmentation.js` und `./js/vendor/...` statt `/js/...`. Absolute Asset-Pfade würden unter GitHub Pages auf `https://hesspet.github.io/js/...` zeigen und dort 404-Fehler auslösen.
+
 Für eine lokale Kontrolle kann der vollständige GitHub-Pages-Releasebuild so erzeugt werden:
 
 ```powershell
