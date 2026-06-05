@@ -6,122 +6,13 @@
 <MudStack Spacing="2">
     <MudPaper Class="pa-4 home-hero" Elevation="1">
         <MudStack Spacing="1">
-            <MudText Typo="Typo.h5">Willkommen bei Nasreddin's Camera Arcanum</MudText>
+            <MudText Typo="Typo.h5">Willkommen bei Nasreddins Camera Arcanum</MudText>
             <MudText Typo="Typo.body1">
                 Version @BuildInfo.BuildVersion - @BuildInfo.BuildDate @BuildInfo.BuildTime Uhr
             </MudText>
-            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                <MudChip T="string" Color="MudBlazor.Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Bolt">Reaktiv</MudChip>
-                <MudChip T="string" Color="MudBlazor.Color.Secondary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.PhoneIphone">Smartphone-bereit</MudChip>
-                <MudChip T="string" Color="MudBlazor.Color.Info" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Explore">Entdecken</MudChip>
-            </MudStack>
             <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Class="mt-2" FullWidth="true" Href="camera-arcanum">
                 Jetzt starten
             </MudButton>
         </MudStack>
     </MudPaper>
-
-    <MudGrid Spacing="2">
-        <MudItem xs="12" sm="6">
-            <MudPaper Class="pa-3" Elevation="1">
-                <MudStack Spacing="1">
-                    <MudIcon Icon="@Icons.Material.Filled.CameraAlt" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large" />
-                    <MudText Typo="Typo.subtitle1">Schneller Zugriff</MudText>
-                    <MudText Typo="Typo.body2">
-                        Öffne wichtige Bereiche direkt aus dem Drawer und bleib immer im Flow.
-                    </MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Class="pa-3" Elevation="1">
-                <MudStack Spacing="1">
-                    <MudIcon Icon="@Icons.Material.Filled.TouchApp" Color="MudBlazor.Color.Secondary" Size="MudBlazor.Size.Large" />
-                    <MudText Typo="Typo.subtitle1">Touch-optimierte Controls</MudText>
-                    <MudText Typo="Typo.body2">
-                        Große Abstände, klare Buttons und schnelle Reaktionen sorgen für eine angenehme Bedienung.
-                    </MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12">
-            <MudPaper Class="pa-3" Elevation="1">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.subtitle1">Aktueller Teststatus</MudText>
-                    <MudAlert Severity="Severity.Success" Dense="true" Icon="@Icons.Material.Filled.CheckCircle">
-                        Bereit für Kamera- und Upload-Tests.
-                    </MudAlert>
-
-                    @if (IsNgrokTunnel)
-                    {
-                        <MudAlert Severity="Severity.Info" Dense="true" Icon="@Icons.Material.Filled.Https">
-                            Ngrok-Tunnel aktiv: Smartphone-Kameratests sind über diese HTTPS-Adresse möglich.
-                        </MudAlert>
-                    }
-                    else if (IsLocalHost)
-                    {
-                        <MudText Typo="Typo.caption" Class="mud-secondary-text">
-                            Lokaler PC-Test über localhost. Für Smartphone-Kameratests wird eine vertrauenswürdige HTTPS-Adresse benötigt.
-                        </MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.caption" Class="mud-secondary-text">
-                            Webserver-Betrieb erkannt.
-                        </MudText>
-                    }
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
 </MudStack>
-
-@code {
-    [Inject]
-    private NavigationManager NavigationManager { get; set; } = default!;
-
-    private RuntimeEnvironment CurrentRuntimeEnvironment { get; set; } = RuntimeEnvironment.Unknown;
-
-    private bool IsNgrokTunnel => CurrentRuntimeEnvironment == RuntimeEnvironment.NgrokTunnel;
-
-    private bool IsLocalHost => CurrentRuntimeEnvironment == RuntimeEnvironment.LocalHost;
-
-    protected override void OnInitialized()
-    {
-        CurrentRuntimeEnvironment = DetectRuntimeEnvironment(NavigationManager.Uri);
-    }
-
-    private static RuntimeEnvironment DetectRuntimeEnvironment(string currentUri)
-    {
-        if (!Uri.TryCreate(currentUri, UriKind.Absolute, out var uri))
-        {
-            return RuntimeEnvironment.Unknown;
-        }
-
-        var host = uri.Host.ToLowerInvariant();
-
-        if (host is "localhost" or "127.0.0.1" or "::1")
-        {
-            return RuntimeEnvironment.LocalHost;
-        }
-
-        if (host.Contains(".ngrok-free.", StringComparison.Ordinal)
-            || host.EndsWith(".ngrok-free.app", StringComparison.Ordinal)
-            || host.EndsWith(".ngrok-free.dev", StringComparison.Ordinal)
-            || host.EndsWith(".ngrok.app", StringComparison.Ordinal)
-            || host.EndsWith(".ngrok.io", StringComparison.Ordinal))
-        {
-            return RuntimeEnvironment.NgrokTunnel;
-        }
-
-        return RuntimeEnvironment.WebServer;
-    }
-
-    private enum RuntimeEnvironment
-    {
-        Unknown,
-        LocalHost,
-        NgrokTunnel,
-        WebServer
-    }
-}

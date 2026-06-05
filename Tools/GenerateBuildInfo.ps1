@@ -8,9 +8,22 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$buildDate = Get-Date -Format 'dd.MM.yyyy'
-$buildTime = Get-Date -Format 'HH:mm:ss'
-$buildTimestamp = Get-Date -Format 'yyMMdd.HHmmss'
+function Get-BerlinTimeZone {
+    try {
+        return [System.TimeZoneInfo]::FindSystemTimeZoneById('Europe/Berlin')
+    }
+    catch {
+        return [System.TimeZoneInfo]::FindSystemTimeZoneById('W. Europe Standard Time')
+    }
+}
+
+$berlinTimeZone = Get-BerlinTimeZone
+$buildNow = [System.TimeZoneInfo]::ConvertTime([System.DateTimeOffset]::UtcNow, $berlinTimeZone)
+$invariantCulture = [System.Globalization.CultureInfo]::InvariantCulture
+
+$buildDate = $buildNow.ToString('dd.MM.yyyy', $invariantCulture)
+$buildTime = $buildNow.ToString('HH:mm:ss', $invariantCulture)
+$buildTimestamp = $buildNow.ToString('yyMMdd.HHmmss', $invariantCulture)
 $buildVersion = "$Version.$buildTimestamp"
 
 $content = @"
