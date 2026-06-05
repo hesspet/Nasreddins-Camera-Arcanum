@@ -6,10 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
     <Version>1.2</Version>
+    <BuildInfoPowerShellExecutable Condition="'$(OS)' == 'Windows_NT'">powershell</BuildInfoPowerShellExecutable>
+    <BuildInfoPowerShellExecutable Condition="'$(OS)' != 'Windows_NT'">pwsh</BuildInfoPowerShellExecutable>
   </PropertyGroup>
 
   <Target Name="GenerateBuildInfo" BeforeTargets="BeforeBuild">
-    <Exec Command="powershell -NoProfile -File &quot;$(MSBuildProjectDirectory)\Tools\GenerateBuildInfo.ps1&quot; -OutputFile &quot;$(MSBuildProjectDirectory)\Helpers\BuildInfo.g.cs&quot; -Version &quot;$(Version)&quot;" />
+    <Exec Command="&quot;$(BuildInfoPowerShellExecutable)&quot; -NoProfile -File &quot;$(MSBuildProjectDirectory)/Tools/GenerateBuildInfo.ps1&quot; -OutputFile &quot;$(MSBuildProjectDirectory)/Helpers/BuildInfo.g.cs&quot; -Version &quot;$(Version)&quot;" />
   </Target>
 
   <ItemGroup>
