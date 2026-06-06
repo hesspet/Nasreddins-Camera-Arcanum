@@ -8,7 +8,17 @@
     {
         <div class="photo-wrapper">
             <img @ref="_photoRef" src="@PhotoDataUrl" alt="Aufgenommenes Foto" class="photo-image" @onclick="HandleImageClick" />
-            <div class="photo-hint">Auf das Motiv tippen, um die Segmentierung zu starten.</div>
+            @if (!_isSegmenting)
+            {
+            <div class="photo-hint">Bitte auf die Stelle der Person klicken, an der die Mitte der Geistbilder eingefügt werden sollen. Üblicherweise Brusthöhe unterhalb des Halses.</div>
+            }
+            @if (_isSegmenting)
+            {
+            <div class="segmentation-overlay">
+                <MudProgressCircular Indeterminate="true" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large" />
+                <MudText Typo="Typo.body2" Class="segmentation-overlay-text">Segmentierung läuft …</MudText>
+            </div>
+            }
         </div>
     }
 
@@ -368,6 +378,7 @@
         _segmentationError = null;
         _autoTuneInfo = null;
         _isAutoCalibrating = true;
+        await InvokeAsync(StateHasChanged);
 
         try
         {
@@ -409,6 +420,7 @@
         _mergedPhoto = null;
         _mergeError = null;
         _isSegmenting = true;
+        await InvokeAsync(StateHasChanged);
 
         try
         {
@@ -485,6 +497,7 @@
 
         _mergeError = null;
         _isMerging = true;
+        await InvokeAsync(StateHasChanged);
 
         try
         {

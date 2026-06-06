@@ -15,8 +15,17 @@ public sealed class ImageMergeService : IAsyncDisposable
         _moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/imageMerge.js").AsTask());
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        if (_moduleTask.IsValueCreated)
+        {
+            var module = await _moduleTask.Value;
+            await module.DisposeAsync();
+        }
+    }
+
     public async Task<MergeResult> MergeAsync(
-        string backgroundDataUrl,
+            string backgroundDataUrl,
         string overlayPath,
         string foregroundDataUrl,
         PointF? focusPoint,
@@ -44,15 +53,6 @@ public sealed class ImageMergeService : IAsyncDisposable
             "Canvas2D");
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_moduleTask.IsValueCreated)
-        {
-            var module = await _moduleTask.Value;
-            await module.DisposeAsync();
-        }
-    }
-
     private readonly Lazy<Task<IJSObjectReference>> _moduleTask;
 
     private sealed class JsMergeResult
@@ -64,11 +64,20 @@ public sealed class ImageMergeService : IAsyncDisposable
             TotalDurationMs = totalDurationMs;
         }
 
-        public string DataUrl { get; }
+        public string DataUrl
+        {
+            get;
+        }
 
-        public IReadOnlyList<JsMergeTiming> Timings { get; }
+        public IReadOnlyList<JsMergeTiming> Timings
+        {
+            get;
+        }
 
-        public double TotalDurationMs { get; }
+        public double TotalDurationMs
+        {
+            get;
+        }
     }
 
     private sealed class JsMergeTiming
@@ -80,11 +89,20 @@ public sealed class ImageMergeService : IAsyncDisposable
             ElapsedMs = elapsedMs;
         }
 
-        public string Step { get; }
+        public double DurationMs
+        {
+            get;
+        }
 
-        public double DurationMs { get; }
+        public double ElapsedMs
+        {
+            get;
+        }
 
-        public double ElapsedMs { get; }
+        public string Step
+        {
+            get;
+        }
     }
 }
 
@@ -98,13 +116,25 @@ public sealed class MergeResult
         Pipeline = pipeline;
     }
 
-    public string DataUrl { get; }
+    public string DataUrl
+    {
+        get;
+    }
 
-    public IReadOnlyList<MergeStepTiming> Timings { get; }
+    public string Pipeline
+    {
+        get;
+    }
 
-    public long TotalDurationMs { get; }
+    public IReadOnlyList<MergeStepTiming> Timings
+    {
+        get;
+    }
 
-    public string Pipeline { get; }
+    public long TotalDurationMs
+    {
+        get;
+    }
 }
 
 public sealed class MergeStepTiming
@@ -116,9 +146,18 @@ public sealed class MergeStepTiming
         ElapsedMs = elapsedMs;
     }
 
-    public string Step { get; }
+    public long DurationMs
+    {
+        get;
+    }
 
-    public long DurationMs { get; }
+    public long ElapsedMs
+    {
+        get;
+    }
 
-    public long ElapsedMs { get; }
+    public string Step
+    {
+        get;
+    }
 }

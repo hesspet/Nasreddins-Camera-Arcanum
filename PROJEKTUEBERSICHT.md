@@ -203,7 +203,7 @@ Optional kann in den Pages-Einstellungen eine eigene Domain gesetzt werden. Dann
 1. App über `Tools\Start-Lokaler-Test.ps1` starten.
 2. In der App auf `Kamera` wechseln.
 3. Ein Bild aus `Testbilder/Personen` hochladen.
-4. Auf das Motiv tippen, um die Segmentierung zu starten.
+4. Auf die Person klicken (Brusthöhe unterhalb des Halses), um Segmentierung und Geistbild-Mitte festzulegen.
 5. Vordergrund und Hintergrund prüfen.
 6. Inline-Regler verändern und mit `Aktualisieren` neu berechnen.
 7. Halo und abgeschnittene Personenteile beurteilen.

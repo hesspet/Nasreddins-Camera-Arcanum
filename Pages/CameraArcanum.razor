@@ -25,34 +25,43 @@
 
     @if (string.IsNullOrEmpty(_capturedPhoto))
     {
-        <MudGrid Spacing="2">
-            <MudItem xs="12" md="6">
-                <MudPaper Class="pa-4" Elevation="1">
-                    <MudText Typo="Typo.subtitle1" Class="mb-2">Live-Foto aufnehmen</MudText>
-                    <CameraView OnCapture="HandleCapture" />
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" md="6">
-                <MudPaper Class="pa-4" Elevation="1">
-                    <MudStack Spacing="1">
-                        <MudText Typo="Typo.subtitle1">Bild hochladen</MudText>
-                        <MudText Typo="Typo.body2">
-                            Ziehe eine Bilddatei hierher oder wähle sie aus deinem Dateisystem aus. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
-                        </MudText>
-                        <MudFileUpload T="IBrowserFile"
-                                       FilesChanged="@HandleFileSelected"
-                                       Accept="image/*"
-                                       MaximumFileCount="1">
-                            <ActivatorContent>
-                                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
-                                    Datei auswählen
-                                </MudButton>
-                            </ActivatorContent>
-                        </MudFileUpload>
-                    </MudStack>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
+        <div class="capture-area">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">Live-Foto aufnehmen</MudText>
+                        <CameraView OnCapture="HandleCapture" Disabled="@_isProcessingImage" />
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.subtitle1">Bild hochladen</MudText>
+                            <MudText Typo="Typo.body2">
+                                Ziehe eine Bilddatei hierher oder wähle sie aus deinem Dateisystem aus. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
+                            </MudText>
+                            <MudFileUpload T="IBrowserFile"
+                                           FilesChanged="@HandleFileSelected"
+                                           Accept="image/*"
+                                           MaximumFileCount="1">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
+                                        Datei auswählen
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+            @if (_isProcessingImage)
+            {
+                <div class="capture-overlay">
+                    <MudProgressCircular Indeterminate="true" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large" />
+                    <MudText Typo="Typo.body2" Class="capture-overlay-text">Bild wird verarbeitet …</MudText>
+                </div>
+            }
+        </div>
     }
     else
     {
@@ -86,6 +95,7 @@
     private string? _errorMessage;
     private string? _lastSavedPath;
     private bool _persistedToFilesystem;
+    private bool _isProcessingImage;
 
     [Inject]
     private FotoStorage FotoStorage { get; set; } = default!;
@@ -93,6 +103,8 @@
     private async Task HandleCapture(string? photo)
     {
         _errorMessage = null;
+        _isProcessingImage = true;
+        await InvokeAsync(StateHasChanged);
 
         try
         {
@@ -107,25 +119,35 @@
             _errorMessage = ex.Message;
             _lastSavedPath = null;
         }
+        finally
+        {
+            _isProcessingImage = false;
+        }
 
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task HandleFileSelected(IBrowserFile file)
     {
-      
+        _isProcessingImage = true;
+
         if (file is null)
         {
+            _isProcessingImage = false;
+            await InvokeAsync(StateHasChanged);
             return;
         }
         _errorMessage = null;
 
         if (!IsSupportedImage(file))
         {
+            _isProcessingImage = false;
             _errorMessage = "Bitte wähle eine gültige Bilddatei aus (PNG, JPG).";
             await InvokeAsync(StateHasChanged);
             return;
         }
+
+        await InvokeAsync(StateHasChanged);
 
         try
         {
@@ -134,6 +156,7 @@
         }
         catch (Exception ex)
         {
+            _isProcessingImage = false;
             _errorMessage = $"Hochladen fehlgeschlagen: {ex.Message}";
             await InvokeAsync(StateHasChanged);
         }
@@ -190,6 +213,7 @@
         _errorMessage = null;
         _lastSavedPath = null;
         _persistedToFilesystem = false;
+        _isProcessingImage = false;
         await InvokeAsync(StateHasChanged);
     }
 }

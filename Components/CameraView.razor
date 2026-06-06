@@ -3,7 +3,7 @@
 <div class="camera-frame">
     <video @ref="_videoRef" class="camera-video" autoplay playsinline muted></video>
     <MudStack Row="true" Justify="Justify.Center" Class="mt-2">
-        <MudFab Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.PhotoCamera" Size="MudBlazor.Size.Large" OnClick="CapturePhoto" />
+        <MudFab Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.PhotoCamera" Size="MudBlazor.Size.Large" OnClick="CapturePhoto" Disabled="@Disabled" />
     </MudStack>
 </div>
 
@@ -13,6 +13,9 @@
 
     private ElementReference _videoRef;
     private IJSObjectReference? _module;
+
+    [Parameter]
+    public bool Disabled { get; set; }
 
     [Inject]
     private IJSRuntime JS { get; set; } = default!;

@@ -1,0 +1,42 @@
+@page "/ueber"
+@using Markdig
+@inject HttpClient Http
+
+<PageTitle>Über</PageTitle>
+
+<MudStack Spacing="2">
+    <MudPaper Class="pa-4" Elevation="1">
+        <div class="markdown-content">@((MarkupString)ueberHtmlInhalt)</div>
+    </MudPaper>
+    <MudPaper Class="pa-4" Elevation="1">
+        <div class="markdown-content">@((MarkupString)lizenzenHtmlInhalt)</div>
+    </MudPaper>
+</MudStack>
+
+@code {
+    private string ueberHtmlInhalt = string.Empty;
+    private string lizenzenHtmlInhalt = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var ueberMarkdown = await Http.GetStringAsync("texts/Ueber.md");
+            ueberHtmlInhalt = Markdown.ToHtml(ueberMarkdown);
+        }
+        catch
+        {
+            ueberHtmlInhalt = "<p>Der Text konnte nicht geladen werden.</p>";
+        }
+
+        try
+        {
+            var lizenzenMarkdown = await Http.GetStringAsync("texts/OssLicences.md");
+            lizenzenHtmlInhalt = Markdown.ToHtml(lizenzenMarkdown);
+        }
+        catch
+        {
+            lizenzenHtmlInhalt = "<p>Die Lizenzinformationen konnten nicht geladen werden.</p>";
+        }
+    }
+}
