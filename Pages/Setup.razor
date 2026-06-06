@@ -1,4 +1,6 @@
 @page "/setup"
+@using Nasreddins_Camera_Arcanum.Helpers
+@inject DarkModeService DarkModeService
 
 <PageTitle>Segmentierungs-Einstellungen</PageTitle>
 
@@ -116,10 +118,24 @@
             </MudStack>
         </MudStack>
     </MudPaper>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.subtitle1">Darstellung</MudText>
+            <MudSwitch T="bool" Value="_istDarkMode"
+                       ValueChanged="@BeiDarkModeUmschalten"
+                       Label="Darkmode"
+                       Color="MudBlazor.Color.Primary" />
+            <MudText Typo="Typo.caption">
+                Schaltet zwischen hellem und dunklem Erscheinungsbild um. Die Einstellung wird automatisch gespeichert.
+            </MudText>
+        </MudStack>
+    </MudPaper>
 </MudStack>
 
 @code {
     private readonly SegmentationOptions _options = new();
+    private bool _istDarkMode;
 
     [Inject]
     private SegmentationSettings Settings { get; set; } = default!;
@@ -131,6 +147,10 @@
     {
         await Settings.EnsureInitializedAsync();
         CopyFrom(Settings.Options, _options);
+
+        await DarkModeService.StelleSicherInitialisiertAsync();
+        _istDarkMode = DarkModeService.IstDarkMode;
+        DarkModeService.DarkModeGeändert += BeiDarkModeGeändert;
     }
 
     private async Task ApplySettings()
@@ -144,6 +164,17 @@
         CopyFrom(new SegmentationOptions(), _options);
         await Settings.UpdateAsync(_options);
         Snackbar.Add("Standardwerte wiederhergestellt", Severity.Info);
+    }
+
+    private async void BeiDarkModeGeändert(bool istDarkMode)
+    {
+        _istDarkMode = istDarkMode;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task BeiDarkModeUmschalten(bool checkedValue)
+    {
+        await DarkModeService.SetzeDarkModeAsync(checkedValue);
     }
 
     private static void CopyFrom(SegmentationOptions source, SegmentationOptions target)

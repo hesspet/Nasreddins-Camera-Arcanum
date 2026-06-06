@@ -1,5 +1,6 @@
 @page "/"
 @using NasreddinsCameraArcanum
+@using Markdig
 @inject HttpClient Http
 
 <PageTitle>Startseite</PageTitle>
@@ -21,24 +22,24 @@
         {
             <MudAlert Severity="Severity.Warning" Class="mb-2">@ladeFehler</MudAlert>
         }
-        <MudText Typo="Typo.body1" Class="home-intro-text">@markdownInhalt</MudText>
+        <div class="home-intro-text">@((MarkupString)htmlInhalt)</div>
     </MudPaper>
 </MudStack>
 
 @code {
-    private string? markdownInhalt;
+    private string htmlInhalt = string.Empty;
     private string? ladeFehler;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            markdownInhalt = await Http.GetStringAsync("texts/intro.md");
+            var markdownText = await Http.GetStringAsync("texts/intro.md");
+            htmlInhalt = Markdown.ToHtml(markdownText);
         }
         catch (Exception exception)
         {
             ladeFehler = $"Die Einführung konnte nicht geladen werden: {exception.Message}";
-            markdownInhalt = string.Empty;
         }
     }
 }

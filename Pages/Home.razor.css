@@ -6,8 +6,30 @@
     line-height: 1.6;
 }
 
-.home-intro-text {
-    white-space: pre-wrap;
+.home-intro-text h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.home-intro-text h2 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.home-intro-text p {
+    margin-bottom: 0.75rem;
+}
+
+.home-intro-text ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.home-intro-text li {
+    margin-bottom: 0.25rem;
 }
 
 .mud-chip {

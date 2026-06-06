@@ -1,4 +1,9 @@
-<MudThemeProvider Theme="@_theme" />
+@using Nasreddins_Camera_Arcanum.Helpers
+@inject DarkModeService DarkModeService
+
+<MudThemeProvider Theme="@_thema"
+                  IsDarkMode="@DarkModeService.IstDarkMode"
+                  IsDarkModeChanged="@BeiDarkModeGeändert" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -20,7 +25,7 @@
 </Router>
 
 @code {
-    private readonly MudTheme _theme = new()
+    private readonly MudTheme _thema = new()
     {
         PaletteLight = new PaletteLight
         {
@@ -28,6 +33,26 @@
             Secondary = Colors.Cyan.Darken3,
             Background = Colors.Gray.Lighten5,
             AppbarBackground = Colors.Blue.Darken3,
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = Colors.Blue.Lighten2,
+            Secondary = Colors.Cyan.Lighten2,
+            Background = Colors.Gray.Darken4,
+            Surface = Colors.Gray.Darken3,
+            AppbarBackground = "#1E1E2E",
+            TextPrimary = Colors.Shades.White,
         }
     };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await DarkModeService.StelleSicherInitialisiertAsync();
+    }
+
+    private async Task BeiDarkModeGeändert(bool istDarkMode)
+    {
+        await DarkModeService.SetzeDarkModeAsync(istDarkMode);
+        StateHasChanged();
+    }
 }
