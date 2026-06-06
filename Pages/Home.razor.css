@@ -2,6 +2,14 @@
     background: linear-gradient(135deg, #e3f2fd, #e0f7fa);
 }
 
+.home-intro {
+    line-height: 1.6;
+}
+
+.home-intro-text {
+    white-space: pre-wrap;
+}
+
 .mud-chip {
     min-width: 96px;
     justify-content: center;

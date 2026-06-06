@@ -1,5 +1,6 @@
 @page "/"
 @using NasreddinsCameraArcanum
+@inject HttpClient Http
 
 <PageTitle>Startseite</PageTitle>
 
@@ -13,17 +14,31 @@
             <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Class="mt-2" FullWidth="true" Href="camera-arcanum">
                 Jetzt starten
             </MudButton>
-            <MudTextField T="string" Lines="10" ReadOnly="true" Variant="Variant.Outlined" Class="mt-4"
-                          Text="Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.
-Excepteur sint occaecat cupidatat non proident, sunt in culpa qui.
-Officia deserunt mollit anim id est laborum sed perspiciatis unde.
-Omnis iste natus error sit voluptatem accusantium doloremque laudantium.
-Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.
-Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet consectetur.
-At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis." />
         </MudStack>
     </MudPaper>
+    <MudPaper Class="pa-4 home-intro" Elevation="0">
+        @if (ladeFehler != null)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-2">@ladeFehler</MudAlert>
+        }
+        <MudText Typo="Typo.body1" Class="home-intro-text">@markdownInhalt</MudText>
+    </MudPaper>
 </MudStack>
+
+@code {
+    private string? markdownInhalt;
+    private string? ladeFehler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            markdownInhalt = await Http.GetStringAsync("texts/intro.md");
+        }
+        catch (Exception exception)
+        {
+            ladeFehler = $"Die Einführung konnte nicht geladen werden: {exception.Message}";
+            markdownInhalt = string.Empty;
+        }
+    }
+}
