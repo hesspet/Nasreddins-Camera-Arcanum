@@ -1,0 +1,64 @@
+@using Markdig
+@using Nasreddins_Camera_Arcanum.Helpers
+@inject HttpClient Http
+
+<MudDialog>
+    <DialogContent>
+        @if (_hatFehler)
+        {
+            <MudAlert Severity="Severity.Warning">@_fehlertext</MudAlert>
+        }
+        else if (_inhaltBereit)
+        {
+            <div class="help-dialog-content markdown-content" style="@_schriftStil">
+                @((MarkupString)_htmlInhalt)
+            </div>
+        }
+        else
+        {
+            <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="pa-4">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+                <MudText Typo="Typo.body2">Hilfetext wird geladen …</MudText>
+            </MudStack>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public string HelpKey { get; set; } = "";
+
+    private string _htmlInhalt = "";
+    private string _schriftStil = "";
+    private string? _fehlertext;
+    private bool _hatFehler;
+    private bool _inhaltBereit;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var pfad = $"texts/help/{HelpKey}.md";
+            var markdownText = await Http.GetStringAsync(pfad);
+            var frontmatter = MarkdownFrontmatter.Parsen(markdownText);
+            var stilTeile = new System.Collections.Generic.List<string>();
+            if (frontmatter.Schrift is not null)
+            {
+                stilTeile.Add($"--markdown-font: '{frontmatter.Schrift}', serif");
+            }
+            if (frontmatter.Schriftgroesse is not null)
+            {
+                stilTeile.Add($"--markdown-font-size: {frontmatter.Schriftgroesse}");
+            }
+            _schriftStil = string.Join("; ", stilTeile);
+            _htmlInhalt = Markdown.ToHtml(frontmatter.Markdown);
+            _inhaltBereit = true;
+        }
+        catch (Exception ex)
+        {
+            _fehlertext = $"Der Hilfetext konnte nicht geladen werden: {ex.Message}";
+            _hatFehler = true;
+        }
+    }
+
+}

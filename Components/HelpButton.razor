@@ -1,0 +1,35 @@
+@using MudBlazor
+
+<MudIconButton Icon="@Icons.Material.Filled.HelpOutline"
+               Size="Size.Small"
+               Color="Color.Primary"
+               OnClick="OeffneHilfeAsync"
+               aria-label="Hilfe anzeigen"
+               Class="@CssClass" />
+
+@code {
+    [Parameter]
+    public string HelpKey { get; set; } = "";
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = default!;
+
+    private Task OeffneHilfeAsync()
+    {
+        var parameter = new DialogParameters { ["HelpKey"] = HelpKey };
+        var optionen = new DialogOptions
+        {
+            FullWidth = true,
+            MaxWidth = MaxWidth.Large,
+            CloseButton = false,
+            BackdropClick = true,
+            Position = DialogPosition.Center,
+            NoHeader = true
+        };
+        DialogService.Show<HelpDialog>("Hilfe", parameter, optionen);
+        return Task.CompletedTask;
+    }
+}

@@ -11,6 +11,7 @@
             @if (!_isSegmenting)
             {
             <div class="photo-hint">Bitte auf die Stelle der Person klicken, an der die Mitte der Geistbilder eingefügt werden sollen. Üblicherweise Brusthöhe unterhalb des Halses.</div>
+            <HelpButton HelpKey="camera-arcanum/foto-vorschau" CssClass="help-button-inline" />
             }
             @if (_isSegmenting)
             {
@@ -38,6 +39,7 @@
             </MudButton>
         }
     </MudStack>
+    <HelpButton HelpKey="camera-arcanum/aktionen" CssClass="help-button-inline" />
 
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
         <MudButton Variant="Variant.Outlined"
@@ -50,6 +52,7 @@
         <MudText Typo="Typo.caption" Class="mud-secondary-text">
             Passt Schwellenwert und Kantenglättung anhand des aktuellen Motivs an.
         </MudText>
+        <HelpButton HelpKey="camera-arcanum/halo-auto-kalibrierung" CssClass="help-button-inline" />
         @if (_isAutoCalibrating)
         {
             <SpinnerImage SizePx="32" />
@@ -64,6 +67,7 @@
     <MudPaper Class="pa-3 mt-2" Elevation="1">
         <MudStack Spacing="1">
             <MudText Typo="Typo.subtitle2">Performance &amp; Qualität</MudText>
+            <HelpButton HelpKey="camera-arcanum/qualitaet-performance" CssClass="help-button-inline" />
             <MudStack Row="true" Spacing="1">
                 <MudSelect T="string"
                            Value="@SegmentationSettings.Options.Quality"
@@ -133,6 +137,7 @@
                     <MudStack Spacing="1">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                             <MudText Typo="Typo.subtitle2">Motiverkennung</MudText>
+                            <HelpButton HelpKey="camera-arcanum/segmentierung-schwellwert" CssClass="help-button-inline" />
                             <MudButton Variant="Variant.Text"
                                        Color="MudBlazor.Color.Primary"
                                        Size="MudBlazor.Size.Small"
@@ -159,6 +164,7 @@
                     <MudStack Spacing="1">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                             <MudText Typo="Typo.subtitle2">Maskenform</MudText>
+                            <HelpButton HelpKey="camera-arcanum/segmentierung-maskenform" CssClass="help-button-inline" />
                             <MudButton Variant="Variant.Text"
                                        Color="MudBlazor.Color.Primary"
                                        Size="MudBlazor.Size.Small"
@@ -195,6 +201,7 @@
                     <MudStack Spacing="1">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                             <MudText Typo="Typo.subtitle2">Kanten</MudText>
+                            <HelpButton HelpKey="camera-arcanum/segmentierung-kanten" CssClass="help-button-inline" />
                             <MudButton Variant="Variant.Text"
                                        Color="MudBlazor.Color.Primary"
                                        Size="MudBlazor.Size.Small"
@@ -244,6 +251,7 @@
     {
         <OverlayCarousel OnProceed="HandleOverlayProceed" />
 
+        <HelpButton HelpKey="camera-arcanum/einstellungen-speichern" CssClass="help-button-inline" />
         <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Tertiary" StartIcon="@Icons.Material.Filled.Bookmark" OnClick="SaveSnapshotAsync" Class="mt-2" FullWidth="true">
             Einstellungen speichern
         </MudButton>
@@ -273,6 +281,7 @@
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                         <MudIcon Icon="@Icons.Material.Filled.Layers" Color="MudBlazor.Color.Primary" />
                         <MudText Typo="Typo.subtitle1">Zusammengeführtes Ergebnis</MudText>
+                        <HelpButton HelpKey="camera-arcanum/ergebnis" CssClass="help-button-inline" />
                     </MudStack>
 
                     <div class="photo-wrapper">

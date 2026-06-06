@@ -9,6 +9,7 @@
     <MudPaper Class="pa-4" Elevation="1">
         <MudStack Spacing="1">
             <MudText Typo="Typo.h5">Kameramodus</MudText>
+            <HelpButton HelpKey="camera-arcanum/kameramodus" CssClass="help-button-inline" />
             <MudText Typo="Typo.body2">
                 Öffne die Live-Vorschau, löse per großem Kameraknopf aus und sieh dir dein Foto direkt danach in der Vorschau an.
             </MudText>
@@ -30,6 +31,7 @@
                 <MudItem xs="12" md="6">
                     <MudPaper Class="pa-4" Elevation="1">
                         <MudText Typo="Typo.subtitle1" Class="mb-2">Live-Foto aufnehmen</MudText>
+                        <HelpButton HelpKey="camera-arcanum/live-foto" CssClass="help-button-inline" />
                         <CameraView OnCapture="HandleCapture" Disabled="@_isProcessingImage" />
                     </MudPaper>
                 </MudItem>
@@ -37,6 +39,7 @@
                     <MudPaper Class="pa-4" Elevation="1">
                         <MudStack Spacing="1">
                             <MudText Typo="Typo.subtitle1">Bild hochladen</MudText>
+                            <HelpButton HelpKey="camera-arcanum/bild-hochladen" CssClass="help-button-inline" />
                             <MudText Typo="Typo.body2">
                                 Ziehe eine Bilddatei hierher oder wähle sie aus deinem Dateisystem aus. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
                             </MudText>
@@ -76,6 +79,7 @@
                 {
                     <text>Foto im Browser zwischengespeichert (@_lastSavedPath)</text>
                 }
+                <HelpButton HelpKey="camera-arcanum/foto-gespeichert" CssClass="help-button-inline" />
             </MudAlert>
         }
 
