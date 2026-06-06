@@ -1,6 +1,8 @@
 @page "/setup"
 @using Nasreddins_Camera_Arcanum.Helpers
+@using NasreddinsCameraArcanum
 @inject DarkModeService DarkModeService
+@inject FontEinstellungenService FontEinstellungenService
 
 <PageTitle>Segmentierungs-Einstellungen</PageTitle>
 
@@ -11,6 +13,9 @@
             <MudText Typo="Typo.body2">
                 Wähle hier die Parameter für das MediaPipe Selfie Segmentierungsmodell. Die Einstellungen wirken sich direkt auf
                 die Vorschau und die erzeugten Vorder-/Hintergrund-Bilder aus.
+            </MudText>
+            <MudText Typo="Typo.caption" Color="MudBlazor.Color.Secondary">
+                Build @BuildInfo.BuildVersion – @BuildInfo.BuildDate @BuildInfo.BuildTime Uhr
             </MudText>
         </MudStack>
     </MudPaper>
@@ -129,6 +134,45 @@
             <MudText Typo="Typo.caption">
                 Schaltet zwischen hellem und dunklem Erscheinungsbild um. Die Einstellung wird automatisch gespeichert.
             </MudText>
+
+            <MudDivider Class="my-2" />
+
+            <MudText Typo="Typo.subtitle2">Schriftart für Texte</MudText>
+            <MudSelect T="string" Value="_ausgewaehlteSchriftCss"
+                       ValueChanged="@BeiSchriftAuswahl"
+                       Label="Schrift auswählen"
+                       Variant="Variant.Outlined"
+                       AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="@("")">App-Standard</MudSelectItem>
+                <MudDivider />
+                <MudSelectItem Value="@("")" Disabled="true">
+                    <MudText Typo="Typo.caption" Color="MudBlazor.Color.Secondary"><strong>Mittelalter / Fantasy</strong></MudText>
+                </MudSelectItem>
+                @foreach (var schrift in VerfuegbareSchriften.FantasySchriften)
+                {
+                    <MudSelectItem Value="@schrift.CssWert">@schrift.AnzeigeName</MudSelectItem>
+                }
+                <MudDivider />
+                <MudSelectItem Value="@("")" Disabled="true">
+                    <MudText Typo="Typo.caption" Color="MudBlazor.Color.Secondary"><strong>Web-Standard</strong></MudText>
+                </MudSelectItem>
+                @foreach (var schrift in VerfuegbareSchriften.WebStandardSchriften)
+                {
+                    <MudSelectItem Value="@schrift.CssWert">@schrift.AnzeigeName</MudSelectItem>
+                }
+                <MudDivider />
+                <MudSelectItem Value="@("")" Disabled="true">
+                    <MudText Typo="Typo.caption" Color="MudBlazor.Color.Secondary"><strong>Generisch</strong></MudText>
+                </MudSelectItem>
+                @foreach (var schrift in VerfuegbareSchriften.GenerischeSchriften)
+                {
+                    <MudSelectItem Value="@schrift.CssWert">@schrift.AnzeigeName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudText Typo="Typo.caption">
+                Wähle eine Schriftart für die Markdown-Texte. „App-Standard“ verwendet die voreingestellte Fantasyschrift.
+                Web-Standard-Schriften deaktivieren die Fantasyschriften und nutzen die auf jedem Gerät verfügbaren Systemschriften.
+            </MudText>
         </MudStack>
     </MudPaper>
 </MudStack>
@@ -136,6 +180,7 @@
 @code {
     private readonly SegmentationOptions _options = new();
     private bool _istDarkMode;
+    private string _ausgewaehlteSchriftCss = string.Empty;
 
     [Inject]
     private SegmentationSettings Settings { get; set; } = default!;
@@ -151,6 +196,10 @@
         await DarkModeService.StelleSicherInitialisiertAsync();
         _istDarkMode = DarkModeService.IstDarkMode;
         DarkModeService.DarkModeGeändert += BeiDarkModeGeändert;
+
+        await FontEinstellungenService.StelleSicherInitialisiertAsync();
+        _ausgewaehlteSchriftCss = FontEinstellungenService.GewaehlteSchriftCss;
+        FontEinstellungenService.SchriftGeaendert += BeiSchriftGeaendert;
     }
 
     private async Task ApplySettings()
@@ -186,5 +235,19 @@
         target.ErosionRadius = source.ErosionRadius;
         target.InnerFeatherRadius = source.InnerFeatherRadius;
         target.OuterFeatherRadius = source.OuterFeatherRadius;
+    }
+
+    private async Task BeiSchriftAuswahl(string cssWert)
+    {
+        _ausgewaehlteSchriftCss = cssWert;
+        var eintrag = VerfuegbareSchriften.Alle.FirstOrDefault(f => f.CssWert == cssWert);
+        var anzeigeName = eintrag.AnzeigeName ?? "App-Standard";
+        await FontEinstellungenService.SetzeSchriftAsync(cssWert, anzeigeName);
+    }
+
+    private async void BeiSchriftGeaendert()
+    {
+        _ausgewaehlteSchriftCss = FontEinstellungenService.GewaehlteSchriftCss;
+        await InvokeAsync(StateHasChanged);
     }
 }

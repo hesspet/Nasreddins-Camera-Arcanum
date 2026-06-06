@@ -1,4 +1,5 @@
 @page "/ueber"
+@using Nasreddins_Camera_Arcanum.Helpers
 @using Markdig
 @inject HttpClient Http
 
@@ -6,7 +7,7 @@
 
 <MudStack Spacing="2">
     <MudPaper Class="pa-4" Elevation="1">
-        <div class="markdown-content">@((MarkupString)ueberHtmlInhalt)</div>
+        <div class="markdown-content" style="@_ueberStyle">@((MarkupString)ueberHtmlInhalt)</div>
     </MudPaper>
     <MudPaper Class="pa-4" Elevation="1">
         <div class="markdown-content">@((MarkupString)lizenzenHtmlInhalt)</div>
@@ -16,13 +17,25 @@
 @code {
     private string ueberHtmlInhalt = string.Empty;
     private string lizenzenHtmlInhalt = string.Empty;
+    private string _ueberStyle = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var ueberMarkdown = await Http.GetStringAsync("texts/Ueber.md");
-            ueberHtmlInhalt = Markdown.ToHtml(ueberMarkdown);
+            var frontmatter = MarkdownFrontmatter.Parsen(ueberMarkdown);
+            var stilTeile = new System.Collections.Generic.List<string>();
+            if (frontmatter.Schrift != null)
+            {
+                stilTeile.Add($"--markdown-font: '{frontmatter.Schrift}', serif");
+            }
+            if (frontmatter.Schriftgroesse != null)
+            {
+                stilTeile.Add($"--markdown-font-size: {frontmatter.Schriftgroesse}");
+            }
+            _ueberStyle = string.Join("; ", stilTeile);
+            ueberHtmlInhalt = Markdown.ToHtml(frontmatter.Markdown);
         }
         catch
         {
@@ -32,7 +45,8 @@
         try
         {
             var lizenzenMarkdown = await Http.GetStringAsync("texts/OssLicences.md");
-            lizenzenHtmlInhalt = Markdown.ToHtml(lizenzenMarkdown);
+            var frontmatter = MarkdownFrontmatter.Parsen(lizenzenMarkdown);
+            lizenzenHtmlInhalt = Markdown.ToHtml(frontmatter.Markdown);
         }
         catch
         {

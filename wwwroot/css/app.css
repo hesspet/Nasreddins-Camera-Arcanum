@@ -1,5 +1,217 @@
+/* ============================================================
+   Webfonts – geladen aus wwwroot/fonts/<familie>/
+   ============================================================ */
+
+@font-face {
+  font-family: 'Berry Rotunda';
+  src: url('../fonts/berry-rotunda/berry-rotunda.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bodywork';
+  src: url('../fonts/bodywork/bodywork.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Books Vhasenti';
+  src: url('../fonts/books-vhasenti/books-vhasenti.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Celtic Garamond 2nd';
+  src: url('../fonts/celtic-garamond-2nd/celtic-garamond-2nd.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Elementary Gothic Bookhand';
+  src: url('../fonts/elementary-gothic-bookhand/elementary-gothic-bookhand.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Medieval Scribish';
+  src: url('../fonts/medieval-scribish/scribish.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Perry Gothic';
+  src: url('../fonts/perry-gothic/perry-gothic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rotunda Pommerania';
+  src: url('../fonts/rotunda-pommerania/rotunda-pommerania.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Seven Swordsmen BB';
+  src: url('../fonts/seven-swordsmen-bb/seven-swordsmen-bb.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'KR Astro 1';
+  src: url('../fonts/kr-astro/kr-astro-1.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'KR Astro 2';
+  src: url('../fonts/kr-astro/kr-astro-2.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'KR Astro 3';
+  src: url('../fonts/kr-astro/kr-astro-3.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Uberholme (Standard-Schnitte) --- */
+@font-face {
+  font-family: 'Uberholme';
+  src: url('../fonts/uberholme/uberv2.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uberholme';
+  src: url('../fonts/uberholme/uberv2i.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-stretch: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uberholme';
+  src: url('../fonts/uberholme/uberv2l.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-stretch: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uberholme';
+  src: url('../fonts/uberholme/uberv2c.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: semi-condensed;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uberholme';
+  src: url('../fonts/uberholme/uberv2e.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: semi-expanded;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uberholme';
+  src: url('../fonts/uberholme/uberv2o.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: normal;
+  font-display: swap;
+}
+
+/* --- Uberholme Alt (Alternativ-Schnitte) --- */
+@font-face {
+  font-family: 'Uberholme Alt';
+  src: url('../fonts/uberholme/uberlav2.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uberholme Alt';
+  src: url('../fonts/uberholme/uberlav2i.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-stretch: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uberholme Alt';
+  src: url('../fonts/uberholme/uberlav2c.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: semi-condensed;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uberholme Alt';
+  src: url('../fonts/uberholme/uberlav2e.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: semi-expanded;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Uberholme Alt';
+  src: url('../fonts/uberholme/uberlav2ei.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-stretch: semi-expanded;
+  font-display: swap;
+}
+
+/* ============================================================
+   Basis-Typografie
+   ============================================================ */
+
+:root {
+  --font-body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-fantasy: 'Perry Gothic', 'Medieval Scribish', 'Georgia', serif;
+  --font-display: 'Rotunda Pommerania', 'Georgia', serif;
+  --font-code: 'Consolas', 'Fira Code', monospace;
+}
+
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: var(--font-body);
     background-color: #f5f7fb;
     margin: 0;
 }
@@ -27,13 +239,49 @@ a, .btn-link {
     padding-top: 1rem;
 }
 
+/* --- Sternzeichen-Menü-Icon --- */
+
+.zodiac-menu-icon {
+    font-family: 'KR Astro 3', serif;
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+/* --- Navigations-Menü (Drawer) --- */
+
+.mud-nav-link,
+.mud-nav-link-text {
+    font-family: var(--font-fantasy) !important;
+}
+
+/* --- Menüleisten-Titel --- */
+
+.mud-appbar .mud-typography-h6 {
+    font-family: var(--font-fantasy);
+}
+
+/* --- Hero-Schrift auf der Startseite --- */
+
+.home-hero .mud-typography-h5,
+.home-hero h5 {
+    font-family: var(--font-fantasy);
+    letter-spacing: 0.02em;
+}
+
+.home-hero .mud-button-root {
+    font-family: var(--font-fantasy);
+}
+
 /* --- Markdown-Inhalt (global, da MarkupString die CSS-Isolation umgeht) --- */
 
 .markdown-content {
+    font-family: var(--markdown-font, var(--font-fantasy));
+    font-size: var(--markdown-font-size, inherit);
     line-height: 1.7;
 }
 
 .markdown-content h1 {
+    font-family: inherit;
     font-size: 1.6rem;
     font-weight: 600;
     margin-top: 0;
@@ -43,6 +291,7 @@ a, .btn-link {
 }
 
 .markdown-content h2 {
+    font-family: inherit;
     font-size: 1.3rem;
     font-weight: 500;
     margin-top: 1.5rem;
@@ -50,6 +299,7 @@ a, .btn-link {
 }
 
 .markdown-content h3 {
+    font-family: inherit;
     font-size: 1.1rem;
     font-weight: 500;
     margin-top: 1.25rem;
@@ -57,6 +307,7 @@ a, .btn-link {
 }
 
 .markdown-content p {
+    font-family: inherit;
     margin-bottom: 0.85rem;
 }
 
@@ -84,6 +335,7 @@ a, .btn-link {
 }
 
 .markdown-content li {
+    font-family: inherit;
     margin-bottom: 0.3rem;
 }
 
@@ -96,7 +348,7 @@ a, .btn-link {
     padding: 0.15rem 0.35rem;
     border-radius: 3px;
     font-size: 0.9em;
-    font-family: 'Consolas', 'Fira Code', monospace;
+    font-family: var(--font-code);
 }
 
 #blazor-error-ui {

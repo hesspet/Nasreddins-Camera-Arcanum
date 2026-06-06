@@ -1,5 +1,6 @@
 @page "/"
 @using NasreddinsCameraArcanum
+@using Nasreddins_Camera_Arcanum.Helpers
 @using Markdig
 @inject HttpClient Http
 
@@ -9,9 +10,6 @@
     <MudPaper Class="pa-4 home-hero" Elevation="1">
         <MudStack Spacing="1">
             <MudText Typo="Typo.h5">Willkommen bei Nasreddins Camera Arcanum</MudText>
-            <MudText Typo="Typo.body1">
-                Version @BuildInfo.BuildVersion - @BuildInfo.BuildDate @BuildInfo.BuildTime Uhr
-            </MudText>
             <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Class="mt-2" FullWidth="true" Href="camera-arcanum">
                 Jetzt starten
             </MudButton>
@@ -22,20 +20,32 @@
         {
             <MudAlert Severity="Severity.Warning" Class="mb-2">@ladeFehler</MudAlert>
         }
-        <div class="markdown-content">@((MarkupString)htmlInhalt)</div>
+        <div class="markdown-content" style="@_markdownStyle">@((MarkupString)htmlInhalt)</div>
     </MudPaper>
 </MudStack>
 
 @code {
     private string htmlInhalt = string.Empty;
     private string? ladeFehler;
+    private string _markdownStyle = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var markdownText = await Http.GetStringAsync("texts/intro.md");
-            htmlInhalt = Markdown.ToHtml(markdownText);
+            var frontmatter = MarkdownFrontmatter.Parsen(markdownText);
+            var stilTeile = new System.Collections.Generic.List<string>();
+            if (frontmatter.Schrift != null)
+            {
+                stilTeile.Add($"--markdown-font: '{frontmatter.Schrift}', serif");
+            }
+            if (frontmatter.Schriftgroesse != null)
+            {
+                stilTeile.Add($"--markdown-font-size: {frontmatter.Schriftgroesse}");
+            }
+            _markdownStyle = string.Join("; ", stilTeile);
+            htmlInhalt = Markdown.ToHtml(frontmatter.Markdown);
         }
         catch (Exception exception)
         {

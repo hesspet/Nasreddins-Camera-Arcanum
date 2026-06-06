@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@using Nasreddins_Camera_Arcanum.Helpers
+@inject FontEinstellungenService FontEinstellungenService
 
 <MudLayout>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="1" Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Always" Class="drawer">
@@ -15,10 +17,12 @@
 
     <MudMainContent>
         <MudAppBar Elevation="4" Color="MudBlazor.Color.Primary">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="MudBlazor.Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+            <MudIconButton Color="MudBlazor.Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer">
+                <span class="zodiac-menu-icon">@_sternzeichenBuchstabe</span>
+            </MudIconButton>
             <MudText Typo="Typo.h6" Class="ms-2">Nasreddin's Camera Arcanum</MudText>
         </MudAppBar>
-        <main class="content-frame" id="main-content">
+        <main class="content-frame" id="main-content" style="@_fontVariableStyle">
             @Body
         </main>
     </MudMainContent>
@@ -26,6 +30,35 @@
 
 @code {
     private bool _drawerOpen;
+    private string _fontVariableStyle = string.Empty;
+    private string _sternzeichenBuchstabe = "C";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sternzeichenBuchstabe = SternzeichenHelper.HeutigesSternzeichenBuchstabe().ToString();
+
+        await FontEinstellungenService.StelleSicherInitialisiertAsync();
+        AktualisiereFontStyle();
+        FontEinstellungenService.SchriftGeaendert += BeiSchriftGeaendert;
+    }
+
+    private void AktualisiereFontStyle()
+    {
+        if (!string.IsNullOrEmpty(FontEinstellungenService.GewaehlteSchriftCss))
+        {
+            _fontVariableStyle = $"--font-fantasy: {FontEinstellungenService.GewaehlteSchriftCss}";
+        }
+        else
+        {
+            _fontVariableStyle = string.Empty;
+        }
+    }
+
+    private async void BeiSchriftGeaendert()
+    {
+        AktualisiereFontStyle();
+        await InvokeAsync(StateHasChanged);
+    }
 
     private void ToggleDrawer()
     {

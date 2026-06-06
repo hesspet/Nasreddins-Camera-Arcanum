@@ -15,6 +15,7 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.PreventDuplicates = true;
 });
 builder.Services.AddScoped<DarkModeService>();
+builder.Services.AddScoped<FontEinstellungenService>();
 builder.Services.AddScoped<FotoStorage>();
 builder.Services.AddScoped<SegmentationSettings>();
 builder.Services.AddScoped<SegmentationService>();
