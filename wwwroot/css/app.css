@@ -208,16 +208,41 @@
   --font-fantasy: 'Perry Gothic', 'Medieval Scribish', 'Georgia', serif;
   --font-display: 'Rotunda Pommerania', 'Georgia', serif;
   --font-code: 'Consolas', 'Fira Code', monospace;
+
+  /* Parchment-Effekt (Hellmodus) */
+  --parchment-light: #F5E6C8;
+  --parchment-mid: #EDE0C8;
+  --parchment-dark: #D4C4A0;
+  --parchment-shadow: rgba(139, 119, 80, 0.15);
+  --sepia-border: #C4B088;
+  --ink-color: #3E2723;
 }
 
 html, body {
     font-family: var(--font-body);
-    background-color: #f5f7fb;
+    /* Parchment-Gradient mit leichter Textur (Hellmodus) */
+    background:
+        linear-gradient(
+            135deg,
+            #F5E6C8 0%,
+            #F0DFB8 20%,
+            #F5E6C8 40%,
+            #EDDA9E 60%,
+            #F5E6C8 80%,
+            #F0DFB8 100%
+        );
     margin: 0;
+    color: var(--ink-color);
+}
+
+/* --- Rahmen für MudPaper-Karten --- */
+
+.mud-paper {
+    border: 1px solid var(--sepia-border);
 }
 
 a, .btn-link {
-    color: #1565c0;
+    color: #5D4037;
 }
 
 .file-drop-zone {
@@ -259,6 +284,45 @@ a, .btn-link {
 .kamera-pur .mud-alert,
 .kamera-pur .mud-input-label {
     font-family: var(--font-fantasy);
+}
+
+.kamera-pur .photo-wrapper {
+    width: auto;
+    max-width: min(100%, 500px);
+    margin: 0 auto;
+}
+
+.kamera-pur .photo-image {
+    max-width: 100%;
+    max-height: min(55vh, 400px);
+    object-fit: contain;
+    display: block;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* --- Vollbild-Overlay (Kamera Pur) --- */
+
+.fullscreen-overlay {
+    position: fixed;
+    top: 64px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.fullscreen-image {
+    max-width: 95vw;
+    max-height: 95vh;
+    object-fit: contain;
+    border-radius: 4px;
+    cursor: default;
 }
 
 /* --- Navigations-Menü (Drawer) --- */

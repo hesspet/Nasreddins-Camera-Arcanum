@@ -103,11 +103,11 @@
                     @if (!string.IsNullOrEmpty(_ergebnisBild))
                     {
                         <div class="photo-wrapper">
-                            <img src="@_ergebnisBild" alt="Zusammengeführtes Bild" class="photo-image" />
+                            <img src="@_ergebnisBild" alt="Zusammengeführtes Bild" class="photo-image" @onclick="VollbildUmschalten" />
                         </div>
                         <MudStack Row="true" Spacing="2" Justify="Justify.Center">
-                            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.Download" Href="@_ergebnisBild" download="kamera_pur_merge.png">
-                                Ergebnis herunterladen
+                            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.Download" Href="@_ergebnisBild" download="@_downloadDateiname">
+                                Speichere die arcane Analyse
                             </MudButton>
                             <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Replay" OnClick="NeuStarten">
                                 Neues Bild
@@ -120,6 +120,13 @@
     }
 </MudStack>
 
+@if (_istVollbild)
+{
+    <div class="fullscreen-overlay" @onclick="VollbildUmschalten">
+        <img src="@_ergebnisBild" alt="Vollbild" class="fullscreen-image" @onclick:stopPropagation="true" />
+    </div>
+}
+
 @code {
     private const long MaxUploadBytes = 10 * 1024 * 1024;
 
@@ -130,7 +137,9 @@
     private string? _fehler;
     private string? _ergebnisBild;
     private bool _verarbeitet;
+    private bool _istVollbild;
     private bool _snapshotGeladen;
+    private string _downloadDateiname = "Arcane_Analyse.png";
     private SnapshotEinstellungen _snapshot = new();
     private SegmentationFocus? _letzterFokus;
 
@@ -236,6 +245,7 @@
                 request.OverlayOpacityPercent);
 
             _ergebnisBild = mergeResult.DataUrl;
+            _downloadDateiname = $"Arcane_Analyse_{DateTime.Now:yyyyMMdd_HHmmss}.png";
             _schritt = Schritt.Ergebnis;
         }
         catch (Exception ex)
@@ -266,6 +276,11 @@
         };
     }
 
+    private void VollbildUmschalten()
+    {
+        _istVollbild = !_istVollbild;
+    }
+
     private void NeuStarten()
     {
         _schritt = Schritt.Foto;
@@ -273,6 +288,7 @@
         _fehler = null;
         _ergebnisBild = null;
         _letzterFokus = null;
+        _istVollbild = false;
     }
 
     private static string GetMimeType(IBrowserFile file)
