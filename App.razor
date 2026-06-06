@@ -1,5 +1,6 @@
 @using Nasreddins_Camera_Arcanum.Helpers
 @inject DarkModeService DarkModeService
+@implements IDisposable
 
 <MudThemeProvider Theme="@_thema"
                   IsDarkMode="@DarkModeService.IstDarkMode"
@@ -48,11 +49,22 @@
     protected override async Task OnInitializedAsync()
     {
         await DarkModeService.StelleSicherInitialisiertAsync();
+        DarkModeService.DarkModeGeändert += BeiDarkModeExternGeändert;
     }
 
     private async Task BeiDarkModeGeändert(bool istDarkMode)
     {
         await DarkModeService.SetzeDarkModeAsync(istDarkMode);
         StateHasChanged();
+    }
+
+    private async void BeiDarkModeExternGeändert(bool istDarkMode)
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        DarkModeService.DarkModeGeändert -= BeiDarkModeExternGeändert;
     }
 }
