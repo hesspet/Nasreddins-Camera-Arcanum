@@ -1,0 +1,296 @@
+@page "/kamera-pur"
+@using Nasreddins_Camera_Arcanum.Components
+@using Nasreddins_Camera_Arcanum.Helpers
+@using Microsoft.AspNetCore.Components.Forms
+@implements IAsyncDisposable
+
+<PageTitle>Kamera Pur</PageTitle>
+
+<MudStack Spacing="2" Class="kamera-pur">
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.h5">Kamera Pur</MudText>
+            <MudText Typo="Typo.body2">
+                Vereinfachter Ablauf: Foto aufnehmen, Zwischenschicht wählen, verarbeiten – fertig.
+            </MudText>
+            @if (_snapshotGeladen)
+            {
+                <MudText Typo="Typo.caption" Color="MudBlazor.Color.Success">
+                    Gespeicherte Einstellungen geladen.
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Color="MudBlazor.Color.Secondary">
+                    Keine gespeicherten Einstellungen – es werden sinnvolle Standardwerte verwendet.
+                </MudText>
+            }
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_fehler))
+    {
+        <MudAlert Severity="Severity.Error">@_fehler</MudAlert>
+    }
+
+    @switch (_schritt)
+    {
+        case Schritt.Foto:
+            <div class="capture-area">
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.subtitle1" Class="mb-2">Schritt 1: Foto aufnehmen</MudText>
+                            <CameraView OnCapture="FotoAufgenommen" Disabled="@_verarbeitet" />
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.subtitle1">Oder Bild hochladen</MudText>
+                                <MudFileUpload T="IBrowserFile"
+                                               FilesChanged="@DateiAusgewaehlt"
+                                               Accept="image/*"
+                                               MaximumFileCount="1">
+                                    <ActivatorContent>
+                                        <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
+                                            Datei auswählen
+                                        </MudButton>
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+                @if (_verarbeitet)
+                {
+                    <div class="capture-overlay">
+                        <SpinnerImage SizePx="120" />
+                        <MudText Typo="Typo.body2" Class="capture-overlay-text">Bild wird gespeichert …</MudText>
+                    </div>
+                }
+            </div>
+            break;
+
+        case Schritt.Overlay:
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.subtitle1">Schritt 2: Zwischenschicht auswählen</MudText>
+                    <MudText Typo="Typo.body2">
+                        Wähle eine Zwischenschicht und klicke auf „Auswahl bestätigen“. Die Verarbeitung startet automatisch.
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+            <OverlayCarousel OnProceed="OverlayAusgewaehlt" />
+            break;
+
+        case Schritt.Verarbeiten:
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                    <SpinnerImage SizePx="120" />
+                    <MudText Typo="Typo.body1">Schritt 3: Bild wird verarbeitet …</MudText>
+                    <MudText Typo="Typo.caption" Color="MudBlazor.Color.Secondary">
+                        Segmentierung und Zusammenführung laufen. Das dauert einen Moment.
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+            break;
+
+        case Schritt.Ergebnis:
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle1">Schritt 4: Ergebnis</MudText>
+                    @if (!string.IsNullOrEmpty(_ergebnisBild))
+                    {
+                        <div class="photo-wrapper">
+                            <img src="@_ergebnisBild" alt="Zusammengeführtes Bild" class="photo-image" />
+                        </div>
+                        <MudStack Row="true" Spacing="2" Justify="Justify.Center">
+                            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.Download" Href="@_ergebnisBild" download="kamera_pur_merge.png">
+                                Ergebnis herunterladen
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Replay" OnClick="NeuStarten">
+                                Neues Bild
+                            </MudButton>
+                        </MudStack>
+                    }
+                </MudStack>
+            </MudPaper>
+            break;
+    }
+</MudStack>
+
+@code {
+    private const long MaxUploadBytes = 10 * 1024 * 1024;
+
+    private enum Schritt { Foto, Overlay, Verarbeiten, Ergebnis }
+
+    private Schritt _schritt = Schritt.Foto;
+    private string? _fotoDataUrl;
+    private string? _fehler;
+    private string? _ergebnisBild;
+    private bool _verarbeitet;
+    private bool _snapshotGeladen;
+    private SnapshotEinstellungen _snapshot = new();
+    private SegmentationFocus? _letzterFokus;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    [Inject]
+    private FotoStorage FotoStorage { get; set; } = default!;
+
+    [Inject]
+    private SnapshotEinstellungenService SnapshotService { get; set; } = default!;
+
+    [Inject]
+    private SegmentationService SegmentationService { get; set; } = default!;
+
+    [Inject]
+    private ImageMergeService ImageMergeService { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SnapshotService.StelleSicherInitialisiertAsync();
+        _snapshot = SnapshotService.AktuelleEinstellungen;
+        _snapshotGeladen = _snapshot.OverlayPath is not null;
+    }
+
+    private async Task FotoAufgenommen(string? photo)
+    {
+        _fehler = null;
+        _verarbeitet = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var stored = await FotoStorage.SavePhotoAsync(photo);
+            _fotoDataUrl = stored.PreviewDataUrl;
+            _schritt = Schritt.Overlay;
+        }
+        catch (Exception ex)
+        {
+            _fehler = ex.Message;
+        }
+        finally
+        {
+            _verarbeitet = false;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task DateiAusgewaehlt(IBrowserFile file)
+    {
+        if (file is null) return;
+        _verarbeitet = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await using var stream = file.OpenReadStream(MaxUploadBytes);
+            using var memory = new MemoryStream();
+            await stream.CopyToAsync(memory);
+            var base64 = Convert.ToBase64String(memory.ToArray());
+            var mime = GetMimeType(file);
+            var dataUrl = $"data:{mime};base64,{base64}";
+            await FotoAufgenommen(dataUrl);
+        }
+        catch (Exception ex)
+        {
+            _fehler = $"Hochladen fehlgeschlagen: {ex.Message}";
+            _verarbeitet = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OverlayAusgewaehlt(OverlayProceedRequest request)
+    {
+        _fehler = null;
+        _schritt = Schritt.Verarbeiten;
+        await InvokeAsync(StateHasChanged);
+
+        // Snapshot mit Overlay-Daten aktualisieren
+        _snapshot.OverlayPath = request.OverlayPath;
+        _snapshot.UseOriginalBackground = request.UseOriginalBackground;
+        _snapshot.OverlayOpacityPercent = request.OverlayOpacityPercent;
+
+        try
+        {
+            // Erst speichern für zukünftige Nutzung
+            await SnapshotService.SpeichernAsync(_snapshot);
+
+            // Segmentation mit Snapshot-Einstellungen ausführen
+            var segOptions = ErstelleSegmentationOptions();
+            var segResult = await SegmentationService.SegmentPhotoAsync(_fotoDataUrl!, _letzterFokus, segOptions);
+            var foreground = segResult.ForegroundDataUrl;
+            var background = segResult.BackgroundDataUrl;
+
+            // Merge
+            var backgroundSource = request.UseOriginalBackground ? _fotoDataUrl : background;
+            var mergeResult = await ImageMergeService.MergeAsync(
+                backgroundSource!,
+                request.OverlayPath,
+                foreground,
+                null,
+                request.OverlayOpacityPercent);
+
+            _ergebnisBild = mergeResult.DataUrl;
+            _schritt = Schritt.Ergebnis;
+        }
+        catch (Exception ex)
+        {
+            _fehler = $"Verarbeitung fehlgeschlagen: {ex.Message}";
+            _schritt = Schritt.Overlay;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private SegmentationOptions ErstelleSegmentationOptions()
+    {
+        return new SegmentationOptions
+        {
+            SegmentationThreshold = _snapshot.SegmentationThreshold,
+            MaskBlurAmount = _snapshot.MaskBlurAmount,
+            DilationRadius = _snapshot.DilationRadius,
+            ErosionRadius = _snapshot.ErosionRadius,
+            InnerFeatherRadius = _snapshot.InnerFeatherRadius,
+            OuterFeatherRadius = _snapshot.OuterFeatherRadius,
+            Quality = _snapshot.Quality,
+            BackendPreference = _snapshot.BackendPreference,
+            TemporalSmoothing = _snapshot.TemporalSmoothing,
+            TemporalSmoothingAlpha = _snapshot.TemporalSmoothingAlpha,
+            EnableEdgeRefinement = _snapshot.EnableEdgeRefinement,
+            EnableSharpening = _snapshot.EnableSharpening,
+        };
+    }
+
+    private void NeuStarten()
+    {
+        _schritt = Schritt.Foto;
+        _fotoDataUrl = null;
+        _fehler = null;
+        _ergebnisBild = null;
+        _letzterFokus = null;
+    }
+
+    private static string GetMimeType(IBrowserFile file)
+    {
+        if (!string.IsNullOrWhiteSpace(file.ContentType) && file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            return file.ContentType;
+        var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+        return ext switch
+        {
+            ".jpeg" or ".jpg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => "image/png",
+        };
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await SegmentationService.DisposeAsync();
+    }
+}

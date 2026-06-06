@@ -1,6 +1,13 @@
 @using Microsoft.JSInterop
+@implements IAsyncDisposable
 
 <div class="camera-frame">
+    @if (!string.IsNullOrEmpty(_kameraFehler))
+    {
+        <MudAlert Severity="Severity.Warning" Class="mb-2">
+            @_kameraFehler
+        </MudAlert>
+    }
     <video @ref="_videoRef" class="camera-video" autoplay playsinline muted></video>
     <MudStack Row="true" Justify="Justify.Center" Class="mt-2">
         <MudFab Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.PhotoCamera" Size="MudBlazor.Size.Large" OnClick="CapturePhoto" Disabled="@Disabled" />
@@ -20,12 +27,37 @@
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
 
+    private string? _kameraFehler;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/cameraArcanum.js");
-            await _module.InvokeVoidAsync("startCamera", _videoRef);
+            try
+            {
+                _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/cameraArcanum.js");
+                await _module.InvokeVoidAsync("startCamera", _videoRef);
+            }
+            catch (JSException ex) when (ex.Message.Contains("Device in use", StringComparison.OrdinalIgnoreCase)
+                                       || ex.Message.Contains("NotReadableError", StringComparison.OrdinalIgnoreCase)
+                                       || ex.Message.Contains("in use", StringComparison.OrdinalIgnoreCase))
+            {
+                _kameraFehler = "Die Kamera wird bereits von einem anderen Browser-Tab oder einer anderen Anwendung verwendet. "
+                              + "Bitte schliesse das andere Tab oder die andere Anwendung und lade diese Seite neu.";
+            }
+            catch (JSException ex) when (ex.Message.Contains("NotAllowedError", StringComparison.OrdinalIgnoreCase)
+                                       || ex.Message.Contains("Permission", StringComparison.OrdinalIgnoreCase))
+            {
+                _kameraFehler = "Der Kamerazugriff wurde verweigert. Bitte erlaube den Zugriff auf die Kamera in den Browser-Einstellungen.";
+            }
+            catch (JSException ex) when (ex.Message.Contains("NotFoundError", StringComparison.OrdinalIgnoreCase))
+            {
+                _kameraFehler = "Es wurde keine Kamera am Gerät gefunden. Bitte schliesse eine Kamera an oder verwende den Datei-Upload.";
+            }
+            catch (JSException ex)
+            {
+                _kameraFehler = $"Die Kamera konnte nicht gestartet werden: {ex.Message}";
+            }
         }
     }
 

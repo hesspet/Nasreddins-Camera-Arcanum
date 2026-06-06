@@ -247,6 +247,20 @@ a, .btn-link {
     line-height: 1;
 }
 
+/* --- Kamera-Pur-Seite (Fantasy-Font auf allen MudBlazor-Elementen) --- */
+
+.kamera-pur .mud-typography-h5,
+.kamera-pur .mud-typography-subtitle1,
+.kamera-pur .mud-typography-subtitle2,
+.kamera-pur .mud-typography-body1,
+.kamera-pur .mud-typography-body2,
+.kamera-pur .mud-typography-caption,
+.kamera-pur .mud-button-root,
+.kamera-pur .mud-alert,
+.kamera-pur .mud-input-label {
+    font-family: var(--font-fantasy);
+}
+
 /* --- Navigations-Menü (Drawer) --- */
 
 .mud-nav-link,

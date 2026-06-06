@@ -16,6 +16,7 @@ builder.Services.AddMudServices(config =>
 });
 builder.Services.AddScoped<DarkModeService>();
 builder.Services.AddScoped<FontEinstellungenService>();
+builder.Services.AddScoped<SnapshotEinstellungenService>();
 builder.Services.AddScoped<FotoStorage>();
 builder.Services.AddScoped<SegmentationSettings>();
 builder.Services.AddScoped<SegmentationService>();

@@ -244,6 +244,10 @@
     {
         <OverlayCarousel OnProceed="HandleOverlayProceed" />
 
+        <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Tertiary" StartIcon="@Icons.Material.Filled.Bookmark" OnClick="SaveSnapshotAsync" Class="mt-2" FullWidth="true">
+            Einstellungen speichern
+        </MudButton>
+
         @if (!string.IsNullOrWhiteSpace(_selectionInfo))
         {
             <MudAlert Severity="Severity.Info" Dense="true">@_selectionInfo</MudAlert>
@@ -323,6 +327,9 @@
 
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
+
+    [Inject]
+    private SnapshotEinstellungenService SnapshotService { get; set; } = default!;
 
     private string DownloadFileName => "camera_arcanum_photo.png";
     private string MergedDownloadFileName => "camera_arcanum_merge.png";
@@ -536,6 +543,28 @@
             _isMerging = false;
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private async Task SaveSnapshotAsync()
+    {
+        var snapshot = new SnapshotEinstellungen
+        {
+            SegmentationThreshold = _inlineSegmentationOptions.SegmentationThreshold,
+            MaskBlurAmount = _inlineSegmentationOptions.MaskBlurAmount,
+            DilationRadius = _inlineSegmentationOptions.DilationRadius,
+            ErosionRadius = _inlineSegmentationOptions.ErosionRadius,
+            InnerFeatherRadius = _inlineSegmentationOptions.InnerFeatherRadius,
+            OuterFeatherRadius = _inlineSegmentationOptions.OuterFeatherRadius,
+            Quality = _inlineSegmentationOptions.Quality,
+            BackendPreference = _inlineSegmentationOptions.BackendPreference,
+            TemporalSmoothing = _inlineSegmentationOptions.TemporalSmoothing,
+            TemporalSmoothingAlpha = _inlineSegmentationOptions.TemporalSmoothingAlpha,
+            EnableEdgeRefinement = _inlineSegmentationOptions.EnableEdgeRefinement,
+            EnableSharpening = _inlineSegmentationOptions.EnableSharpening,
+        };
+
+        await SnapshotService.SpeichernAsync(snapshot);
+        Snackbar.Add("Einstellungen für Kamera Pur gespeichert", Severity.Success);
     }
 
     public async ValueTask DisposeAsync()
