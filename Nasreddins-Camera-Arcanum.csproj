@@ -6,12 +6,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
     <Version>1.2</Version>
-    <BuildInfoPowerShellExecutable Condition="'$(OS)' == 'Windows_NT'">powershell</BuildInfoPowerShellExecutable>
-    <BuildInfoPowerShellExecutable Condition="'$(OS)' != 'Windows_NT'">pwsh</BuildInfoPowerShellExecutable>
+    <WasmBuildNative Condition="'$(Configuration)' == 'Release'">false</WasmBuildNative>
+    <BuildInfoPowerShellExecutable Condition="$([MSBuild]::IsOSPlatform('Windows'))">powershell</BuildInfoPowerShellExecutable>
+    <BuildInfoPowerShellExecutable Condition="!$([MSBuild]::IsOSPlatform('Windows'))">pwsh</BuildInfoPowerShellExecutable>
+    <BuildInfoPowerShellArguments Condition="$([MSBuild]::IsOSPlatform('Windows'))">-NoProfile -ExecutionPolicy Bypass</BuildInfoPowerShellArguments>
+    <BuildInfoPowerShellArguments Condition="!$([MSBuild]::IsOSPlatform('Windows'))">-NoProfile</BuildInfoPowerShellArguments>
   </PropertyGroup>
 
   <Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile">
-    <Exec Command="&quot;$(BuildInfoPowerShellExecutable)&quot; -NoProfile -File &quot;$(MSBuildProjectDirectory)/Tools/GenerateBuildInfo.ps1&quot; -OutputFile &quot;$(MSBuildProjectDirectory)/Helpers/BuildInfo.g.cs&quot; -Version &quot;$(Version)&quot;" />
+    <Exec Command="&quot;$(BuildInfoPowerShellExecutable)&quot; $(BuildInfoPowerShellArguments) -File &quot;$(MSBuildProjectDirectory)/Tools/GenerateBuildInfo.ps1&quot; -OutputFile &quot;$(MSBuildProjectDirectory)/Helpers/BuildInfo.g.cs&quot; -Version &quot;$(Version)&quot;" />
     <ItemGroup>
       <Compile Include="Helpers/BuildInfo.g.cs" />
     </ItemGroup>
