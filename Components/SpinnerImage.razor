@@ -1,0 +1,75 @@
+@using System.Threading
+@using Nasreddins_Camera_Arcanum.Helpers
+@implements IDisposable
+
+<div class="spinner-image-container" style="width: @(SizePx)px; height: @(SizePx)px;">
+    <img src="@_currentImage" alt="Wird geladen …" class="spinner-image animated" />
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Text))
+{
+    <MudText Typo="Typo.body2" Class="@TextClass">@Text</MudText>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<string>? ImagePaths { get; set; }
+
+    [Parameter]
+    public string? Text { get; set; }
+
+    [Parameter]
+    public string TextClass { get; set; } = string.Empty;
+
+    [Parameter]
+    public int SizePx { get; set; } = 120;
+
+    /// <summary>
+    /// If greater than zero, the displayed image cycles to a different
+    /// random entry every <see cref="CycleIntervalMs"/> milliseconds.
+    /// </summary>
+    [Parameter]
+    public int CycleIntervalMs { get; set; }
+
+    private string _currentImage = string.Empty;
+    private IReadOnlyList<string> _effectivePaths = Array.Empty<string>();
+    private Timer? _cycleTimer;
+    private readonly Random _rng = new();
+
+    protected override void OnInitialized()
+    {
+        _effectivePaths = ImagePaths is { Count: > 0 } ? ImagePaths : SpinnerImageCatalog.Images;
+        PickRandomImage();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (CycleIntervalMs > 0 && _effectivePaths.Count > 1)
+        {
+            _cycleTimer?.Dispose();
+            _cycleTimer = new Timer(_ => PickRandomImage(), null, CycleIntervalMs, CycleIntervalMs);
+        }
+        else
+        {
+            _cycleTimer?.Dispose();
+            _cycleTimer = null;
+        }
+    }
+
+    private void PickRandomImage()
+    {
+        if (_effectivePaths.Count == 0)
+        {
+            return;
+        }
+
+        var index = _rng.Next(_effectivePaths.Count);
+        _currentImage = _effectivePaths[index];
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _cycleTimer?.Dispose();
+    }
+}

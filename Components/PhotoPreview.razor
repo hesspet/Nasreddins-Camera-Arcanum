@@ -15,7 +15,7 @@
             @if (_isSegmenting)
             {
             <div class="segmentation-overlay">
-                <MudProgressCircular Indeterminate="true" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large" />
+                <SpinnerImage SizePx="100" />
                 <MudText Typo="Typo.body2" Class="segmentation-overlay-text">Segmentierung läuft …</MudText>
             </div>
             }
@@ -52,7 +52,7 @@
         </MudText>
         @if (_isAutoCalibrating)
         {
-            <MudProgressCircular Indeterminate="true" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium" />
+            <SpinnerImage SizePx="32" />
         }
     </MudStack>
 
@@ -252,7 +252,7 @@
         @if (_isMerging)
         {
             <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="1">
-                <MudProgressCircular Indeterminate="true" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large" />
+                <SpinnerImage SizePx="120" />
                 <MudText Typo="Typo.body2">Bild wird zusammengeführt …</MudText>
             </MudStack>
         }
