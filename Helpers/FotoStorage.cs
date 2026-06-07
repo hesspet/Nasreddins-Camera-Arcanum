@@ -1,19 +1,25 @@
+using Microsoft.JSInterop;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
-using Microsoft.JSInterop;
 
 namespace Nasreddins_Camera_Arcanum.Helpers;
 
 public class FotoStorage : IAsyncDisposable
 {
-    private readonly IJSRuntime _jsRuntime;
-    private readonly Lazy<Task<IJSObjectReference>> _moduleTask;
-
     public FotoStorage(IJSRuntime jsRuntime)
     {
         _jsRuntime = jsRuntime;
         _moduleTask = new Lazy<Task<IJSObjectReference>>(() =>
             _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fotoStorage.js").AsTask());
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_moduleTask.IsValueCreated)
+        {
+            var module = await _moduleTask.Value;
+            await module.DisposeAsync();
+        }
     }
 
     public async Task<StoredPhoto> SavePhotoAsync(string? dataUrl, CancellationToken cancellationToken = default)
@@ -47,42 +53,8 @@ public class FotoStorage : IAsyncDisposable
         return new StoredPhoto(filePath, filePreviewDataUrl, true);
     }
 
-    private static byte[] ExtractBytesFromDataUrl(string dataUrl)
-    {
-        var base64Index = dataUrl.IndexOf(",", StringComparison.Ordinal);
-        if (base64Index < 0)
-        {
-            throw new InvalidOperationException("Ungültiges Bildformat: Kein Base64-Inhalt gefunden.");
-        }
-
-        var base64 = dataUrl[(base64Index + 1)..];
-        return Convert.FromBase64String(base64);
-    }
-
-    private static string GetExtensionFromDataUrl(string dataUrl)
-    {
-        const string prefix = "data:image/";
-        var startIndex = dataUrl.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
-        if (startIndex < 0)
-        {
-            return "png";
-        }
-
-        startIndex += prefix.Length;
-        var endIndex = dataUrl.IndexOf(";", startIndex, StringComparison.Ordinal);
-        if (endIndex < 0)
-        {
-            return "png";
-        }
-
-        return dataUrl[startIndex..endIndex].ToLowerInvariant() switch
-        {
-            "jpeg" or "jpg" => "jpg",
-            "gif" => "gif",
-            "webp" => "webp",
-            _ => "png",
-        };
-    }
+    private readonly IJSRuntime _jsRuntime;
+    private readonly Lazy<Task<IJSObjectReference>> _moduleTask;
 
     private static string BuildPlatformPath(string extension)
     {
@@ -124,6 +96,43 @@ public class FotoStorage : IAsyncDisposable
         return Path.Combine(Path.GetTempPath(), fileName);
     }
 
+    private static byte[] ExtractBytesFromDataUrl(string dataUrl)
+    {
+        var base64Index = dataUrl.IndexOf(",", StringComparison.Ordinal);
+        if (base64Index < 0)
+        {
+            throw new InvalidOperationException("Ungültiges Bildformat: Kein Base64-Inhalt gefunden.");
+        }
+
+        var base64 = dataUrl[(base64Index + 1)..];
+        return Convert.FromBase64String(base64);
+    }
+
+    private static string GetExtensionFromDataUrl(string dataUrl)
+    {
+        const string prefix = "data:image/";
+        var startIndex = dataUrl.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
+        if (startIndex < 0)
+        {
+            return "png";
+        }
+
+        startIndex += prefix.Length;
+        var endIndex = dataUrl.IndexOf(";", startIndex, StringComparison.Ordinal);
+        if (endIndex < 0)
+        {
+            return "png";
+        }
+
+        return dataUrl[startIndex..endIndex].ToLowerInvariant() switch
+        {
+            "jpeg" or "jpg" => "jpg",
+            "gif" => "gif",
+            "webp" => "webp",
+            _ => "png",
+        };
+    }
+
     private static async Task<string> ReadFileAsDataUrlAsync(
         string filePath,
         string extension,
@@ -134,15 +143,6 @@ public class FotoStorage : IAsyncDisposable
         await stream.CopyToAsync(memoryStream, cancellationToken);
         var base64 = Convert.ToBase64String(memoryStream.ToArray());
         return $"data:image/{extension};base64,{base64}";
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_moduleTask.IsValueCreated)
-        {
-            var module = await _moduleTask.Value;
-            await module.DisposeAsync();
-        }
     }
 
     private sealed record BrowserStorageResult

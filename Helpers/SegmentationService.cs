@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -6,29 +5,10 @@ namespace Nasreddins_Camera_Arcanum.Helpers;
 
 public class SegmentationService : IAsyncDisposable
 {
-    private const string SegmentationModulePath = "js/bodySegmentation.js";
-
-    private readonly IJSRuntime _jsRuntime;
-    private readonly NavigationManager _navigationManager;
-    private IJSObjectReference? _segmentationModule;
-
     public SegmentationService(IJSRuntime jsRuntime, NavigationManager navigationManager)
     {
         _jsRuntime = jsRuntime;
         _navigationManager = navigationManager;
-    }
-
-    public async Task<SegmentationResult> SegmentPhotoAsync(
-        string photoDataUrl,
-        SegmentationFocus? focus,
-        SegmentationOptions options)
-    {
-        _segmentationModule ??= await ImportSegmentationModuleAsync();
-        return await _segmentationModule.InvokeAsync<SegmentationResult>(
-            "segmentPhoto",
-            photoDataUrl,
-            focus,
-            options);
     }
 
     public async Task<SegmentationAutoTuneResult> AutoCalibrateAsync(
@@ -44,10 +24,21 @@ public class SegmentationService : IAsyncDisposable
             options);
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        await ResetAsync();
+    }
+
     public async Task<ImageMetrics?> GetImageMetricsAsync(ElementReference photoRef)
     {
         _segmentationModule ??= await ImportSegmentationModuleAsync();
         return await _segmentationModule.InvokeAsync<ImageMetrics>("getImageMetrics", photoRef);
+    }
+
+    public async Task<SegmentationPerformance?> GetPerformanceSnapshotAsync()
+    {
+        _segmentationModule ??= await ImportSegmentationModuleAsync();
+        return await _segmentationModule.InvokeAsync<SegmentationPerformance?>("getPerformanceSnapshot");
     }
 
     public async Task ResetAsync()
@@ -59,16 +50,24 @@ public class SegmentationService : IAsyncDisposable
         }
     }
 
-    public async Task<SegmentationPerformance?> GetPerformanceSnapshotAsync()
+    public async Task<SegmentationResult> SegmentPhotoAsync(
+        string photoDataUrl,
+        SegmentationFocus? focus,
+        SegmentationOptions options)
     {
         _segmentationModule ??= await ImportSegmentationModuleAsync();
-        return await _segmentationModule.InvokeAsync<SegmentationPerformance?>("getPerformanceSnapshot");
+        return await _segmentationModule.InvokeAsync<SegmentationResult>(
+            "segmentPhoto",
+            photoDataUrl,
+            focus,
+            options);
     }
 
-    private async Task<IJSObjectReference> ImportSegmentationModuleAsync()
-    {
-        return await _jsRuntime.InvokeAsync<IJSObjectReference>("import", BuildSegmentationModuleUri());
-    }
+    private const string SegmentationModulePath = "js/bodySegmentation.js";
+
+    private readonly IJSRuntime _jsRuntime;
+    private readonly NavigationManager _navigationManager;
+    private IJSObjectReference? _segmentationModule;
 
     private string BuildSegmentationModuleUri()
     {
@@ -94,9 +93,9 @@ public class SegmentationService : IAsyncDisposable
         return new Uri(baseUri, SegmentationModulePath).ToString();
     }
 
-    public async ValueTask DisposeAsync()
+    private async Task<IJSObjectReference> ImportSegmentationModuleAsync()
     {
-        await ResetAsync();
+        return await _jsRuntime.InvokeAsync<IJSObjectReference>("import", BuildSegmentationModuleUri());
     }
 }
 

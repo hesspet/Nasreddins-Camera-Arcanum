@@ -3,29 +3,56 @@ using Microsoft.JSInterop;
 namespace Nasreddins_Camera_Arcanum.Helpers;
 
 /// <summary>
-/// Verwaltet die globale Schriftarten-Auswahl und speichert sie im localStorage.
+///     Verwaltet die globale Schriftarten-Auswahl und speichert sie im localStorage.
 /// </summary>
 public class FontEinstellungenService
 {
-    private readonly IJSRuntime _javascriptLaufzeit;
-    private const string SpeicherSchluessel = "nasreddin-schriftart";
-
-    /// <summary>CSS-font-family-Wert der aktuell gewählten Schrift.</summary>
-    public string GewaehlteSchriftCss { get; private set; } = string.Empty;
-
-    /// <summary>Anzeigename der aktuell gewählten Schrift.</summary>
-    public string GewaehlteSchriftName { get; private set; } = "App-Standard";
-
-    /// <summary>Wird ausgelöst, wenn sich die Schriftauswahl ändert.</summary>
-    public event Action? SchriftGeaendert;
-
     public FontEinstellungenService(IJSRuntime javascriptLaufzeit)
     {
         _javascriptLaufzeit = javascriptLaufzeit;
     }
 
     /// <summary>
-    /// Lädt die gespeicherte Schriftart aus dem localStorage.
+    ///     Wird ausgelöst, wenn sich die Schriftauswahl ändert.
+    /// </summary>
+    public event Action? SchriftGeaendert;
+
+    /// <summary>
+    ///     CSS-font-family-Wert der aktuell gewählten Schrift.
+    /// </summary>
+    public string GewaehlteSchriftCss { get; private set; } = string.Empty;
+
+    /// <summary>
+    ///     Anzeigename der aktuell gewählten Schrift.
+    /// </summary>
+    public string GewaehlteSchriftName { get; private set; } = "App-Standard";
+
+    /// <summary>
+    ///     Setzt die Schriftart und speichert sie.
+    /// </summary>
+    /// <param name="cssWert">    
+    ///     Der CSS-font-family-Wert (z.B. "'Medieval Scribish', serif").
+    /// </param>
+    /// <param name="anzeigeName"> Der Anzeigename für die UI. </param>
+    public async Task SetzeSchriftAsync(string cssWert, string anzeigeName)
+    {
+        GewaehlteSchriftCss = cssWert;
+        GewaehlteSchriftName = anzeigeName;
+
+        try
+        {
+            await _javascriptLaufzeit.InvokeVoidAsync("localStorage.setItem", SpeicherSchluessel, cssWert);
+        }
+        catch
+        {
+            // Speichern fehlgeschlagen
+        }
+
+        SchriftGeaendert?.Invoke();
+    }
+
+    /// <summary>
+    ///     Lädt die gespeicherte Schriftart aus dem localStorage.
     /// </summary>
     public async Task StelleSicherInitialisiertAsync()
     {
@@ -49,40 +76,21 @@ public class FontEinstellungenService
         }
     }
 
-    /// <summary>
-    /// Setzt die Schriftart und speichert sie.
-    /// </summary>
-    /// <param name="cssWert">Der CSS-font-family-Wert (z.B. "'Medieval Scribish', serif").</param>
-    /// <param name="anzeigeName">Der Anzeigename für die UI.</param>
-    public async Task SetzeSchriftAsync(string cssWert, string anzeigeName)
-    {
-        GewaehlteSchriftCss = cssWert;
-        GewaehlteSchriftName = anzeigeName;
-
-        try
-        {
-            await _javascriptLaufzeit.InvokeVoidAsync("localStorage.setItem", SpeicherSchluessel, cssWert);
-        }
-        catch
-        {
-            // Speichern fehlgeschlagen
-        }
-
-        SchriftGeaendert?.Invoke();
-    }
+    private const string SpeicherSchluessel = "nasreddin-schriftart";
+    private readonly IJSRuntime _javascriptLaufzeit;
 }
 
 /// <summary>
-/// Statische Liste aller verfügbaren Schriften.
+///     Statische Liste aller verfügbaren Schriften.
 /// </summary>
 public static class VerfuegbareSchriften
 {
-    public readonly struct SchriftEintrag
-    {
-        public string AnzeigeName { get; init; }
-        public string CssWert { get; init; }
-        public string Gruppe { get; init; }
-    }
+    public static readonly IReadOnlyList<SchriftEintrag> Alle = new List<SchriftEintrag> { AppStandard }
+        .Concat(FantasySchriften)
+        .Concat(WebStandardSchriften)
+        .Concat(GenerischeSchriften)
+        .ToList()
+        .AsReadOnly();
 
     public static readonly SchriftEintrag AppStandard = new()
     {
@@ -106,6 +114,13 @@ public static class VerfuegbareSchriften
         new() { AnzeigeName = "Uberholme Alt",               CssWert = "'Uberholme Alt', serif",               Gruppe = "Mittelalter / Fantasy" },
     };
 
+    public static readonly IReadOnlyList<SchriftEintrag> GenerischeSchriften = new List<SchriftEintrag>
+    {
+        new() { AnzeigeName = "Sans-Serif (System)",         CssWert = "sans-serif",                           Gruppe = "Generisch" },
+        new() { AnzeigeName = "Serif (System)",              CssWert = "serif",                                Gruppe = "Generisch" },
+        new() { AnzeigeName = "Monospace (System)",          CssWert = "monospace",                            Gruppe = "Generisch" },
+    };
+
     public static readonly IReadOnlyList<SchriftEintrag> WebStandardSchriften = new List<SchriftEintrag>
     {
         new() { AnzeigeName = "Arial",                       CssWert = "Arial, sans-serif",                    Gruppe = "Web-Standard" },
@@ -119,17 +134,21 @@ public static class VerfuegbareSchriften
         new() { AnzeigeName = "Impact",                      CssWert = "Impact, sans-serif",                   Gruppe = "Web-Standard" },
     };
 
-    public static readonly IReadOnlyList<SchriftEintrag> GenerischeSchriften = new List<SchriftEintrag>
+    public readonly struct SchriftEintrag
     {
-        new() { AnzeigeName = "Sans-Serif (System)",         CssWert = "sans-serif",                           Gruppe = "Generisch" },
-        new() { AnzeigeName = "Serif (System)",              CssWert = "serif",                                Gruppe = "Generisch" },
-        new() { AnzeigeName = "Monospace (System)",          CssWert = "monospace",                            Gruppe = "Generisch" },
-    };
+        public string AnzeigeName
+        {
+            get; init;
+        }
 
-    public static readonly IReadOnlyList<SchriftEintrag> Alle = new List<SchriftEintrag> { AppStandard }
-        .Concat(FantasySchriften)
-        .Concat(WebStandardSchriften)
-        .Concat(GenerischeSchriften)
-        .ToList()
-        .AsReadOnly();
+        public string CssWert
+        {
+            get; init;
+        }
+
+        public string Gruppe
+        {
+            get; init;
+        }
+    }
 }

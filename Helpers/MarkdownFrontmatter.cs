@@ -1,36 +1,14 @@
 namespace Nasreddins_Camera_Arcanum.Helpers;
 
 /// <summary>
-/// Einfacher Frontmatter-Parser für Markdown-Dateien.
-/// Erkennt YAML-Frontmatter zwischen --- Trennlinien am Dateianfang.
+///     Einfacher Frontmatter-Parser für Markdown-Dateien. Erkennt YAML-Frontmatter zwischen ---
+///     Trennlinien am Dateianfang.
 /// </summary>
 public static class MarkdownFrontmatter
 {
     /// <summary>
-    /// Ergebnis der Frontmatter-Analyse.
-    /// </summary>
-    public readonly struct Ergebnis
-    {
-        /// <summary>Markdown-Inhalt ohne Frontmatter-Block.</summary>
-        public string Markdown { get; init; }
-
-        /// <summary>Optionaler Schriftname aus dem font-Feld.</summary>
-        public string? Schrift { get; init; }
-
-        /// <summary>Optionale Schriftgrösse aus dem font-size-Feld (z.B. "1.1rem", "18px").</summary>
-        public string? Schriftgroesse { get; init; }
-
-        /// <summary>Ob überhaupt ein Frontmatter-Block vorhanden war.</summary>
-        public bool HatFrontmatter { get; init; }
-    }
-
-    /// <summary>
-    /// Parst den Frontmatter-Block aus einem Markdown-String.
-    /// Erwartet das Format:
-    /// ---
-    /// font: Schriftname
-    /// ---
-    /// # Überschrift
+    ///     Parst den Frontmatter-Block aus einem Markdown-String. Erwartet das Format: ---
+    ///     font: Schriftname --- # Überschrift
     /// </summary>
     public static Ergebnis Parsen(string rohText)
     {
@@ -76,7 +54,8 @@ public static class MarkdownFrontmatter
         {
             var zeile = zeilen[i].TrimEnd('\r');
             var doppelpunkt = zeile.IndexOf(':');
-            if (doppelpunkt <= 0) continue;
+            if (doppelpunkt <= 0)
+                continue;
 
             var schluessel = zeile[..doppelpunkt].Trim();
             var wert = zeile[(doppelpunkt + 1)..].Trim();
@@ -115,5 +94,43 @@ public static class MarkdownFrontmatter
             Schriftgroesse = schriftgroesse,
             HatFrontmatter = true
         };
+    }
+
+    /// <summary>
+    ///     Ergebnis der Frontmatter-Analyse.
+    /// </summary>
+    public readonly struct Ergebnis
+    {
+        /// <summary>
+        ///     Ob überhaupt ein Frontmatter-Block vorhanden war.
+        /// </summary>
+        public bool HatFrontmatter
+        {
+            get; init;
+        }
+
+        /// <summary>
+        ///     Markdown-Inhalt ohne Frontmatter-Block.
+        /// </summary>
+        public string Markdown
+        {
+            get; init;
+        }
+
+        /// <summary>
+        ///     Optionaler Schriftname aus dem font-Feld.
+        /// </summary>
+        public string? Schrift
+        {
+            get; init;
+        }
+
+        /// <summary>
+        ///     Optionale Schriftgrösse aus dem font-size-Feld (z.B. "1.1rem", "18px").
+        /// </summary>
+        public string? Schriftgroesse
+        {
+            get; init;
+        }
     }
 }

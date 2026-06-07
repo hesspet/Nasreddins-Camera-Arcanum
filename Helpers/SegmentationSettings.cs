@@ -1,28 +1,18 @@
-using System.Text.Json;
 using Microsoft.JSInterop;
+using System.Text.Json;
 
 namespace Nasreddins_Camera_Arcanum.Helpers;
 
 public class SegmentationSettings
 {
-    private const string StorageKey = "camera_arcanum_segmentation_options";
-    private readonly IJSRuntime _jsRuntime;
-    private readonly JsonSerializerOptions _serializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-    };
-
-    private bool _initialized;
-
     public SegmentationSettings(IJSRuntime jsRuntime)
     {
         _jsRuntime = jsRuntime;
     }
 
-    public SegmentationOptions Options { get; private set; } = new();
-
     public event Action? OnChange;
+
+    public SegmentationOptions Options { get; private set; } = new();
 
     public async Task EnsureInitializedAsync()
     {
@@ -70,6 +60,17 @@ public class SegmentationSettings
         OnChange?.Invoke();
     }
 
+    private const string StorageKey = "camera_arcanum_segmentation_options";
+    private readonly IJSRuntime _jsRuntime;
+
+    private readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+    };
+
+    private bool _initialized;
+
     private static SegmentationOptions Normalize(SegmentationOptions source)
     {
         return new SegmentationOptions
@@ -100,31 +101,20 @@ public class SegmentationSettings
 
 public sealed class SegmentationOptions
 {
+    public string BackendPreference { get; set; } = "auto";
+    public int DilationRadius { get; set; } = 0;
+    public bool EnableEdgeRefinement { get; set; } = true;
+    public bool EnablePerfOverlay { get; set; } = false;
+    public bool EnableSharpening { get; set; } = true;
+    public int ErosionRadius { get; set; } = 0;
+    public int InnerFeatherRadius { get; set; } = 3;
+    public int MaskBlurAmount { get; set; } = 5;
     public string ModelType { get; set; } = "general";
 
-    public double SegmentationThreshold { get; set; } = 0.6;
-
-    public int MaskBlurAmount { get; set; } = 5;
-
-    public int DilationRadius { get; set; } = 0;
-
-    public int ErosionRadius { get; set; } = 0;
-
-    public int InnerFeatherRadius { get; set; } = 3;
-
     public int OuterFeatherRadius { get; set; } = 6;
-
     public string Quality { get; set; } = "auto";
-
-    public string BackendPreference { get; set; } = "auto";
-
+    public double SegmentationThreshold { get; set; } = 0.6;
     public bool TemporalSmoothing { get; set; } = true;
 
     public double TemporalSmoothingAlpha { get; set; } = 0.7;
-
-    public bool EnableEdgeRefinement { get; set; } = true;
-
-    public bool EnableSharpening { get; set; } = true;
-
-    public bool EnablePerfOverlay { get; set; } = false;
 }

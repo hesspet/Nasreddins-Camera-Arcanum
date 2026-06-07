@@ -12,19 +12,21 @@
     object-fit: cover;
 }
 
-.spinner-image.animated {
-    animation: spinner-pulse 1.8s ease-in-out infinite;
-}
+    .spinner-image.animated {
+        animation: spinner-pulse 1.8s ease-in-out infinite;
+    }
 
 @keyframes spinner-pulse {
     0% {
         transform: scale(0.92);
         opacity: 0.75;
     }
+
     50% {
         transform: scale(1.05);
         opacity: 1;
     }
+
     100% {
         transform: scale(0.92);
         opacity: 0.75;
