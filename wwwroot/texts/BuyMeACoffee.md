@@ -9,9 +9,5 @@ Ein einfacher Weg Nasreddin und somit Peter Hess eine kleine Spende fuer Kaffee 
 
 Danke für Deine Kaffeespende!
 
-<a href="https://www.buymeacoffee.com/hesspet" target="_blank">
-  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
-       alt="Kaufe Nasreddin eine Kaffee!"
-       style="display: block; margin: 0 auto; height: 60px;" />
-</a>
+<a href='https://ko-fi.com/Z4E020ZX00' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi4.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 
