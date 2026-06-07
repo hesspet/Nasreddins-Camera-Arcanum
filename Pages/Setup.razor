@@ -3,6 +3,7 @@
 @using NasreddinsCameraArcanum
 @inject DarkModeService DarkModeService
 @inject FontEinstellungenService FontEinstellungenService
+@inject PwaUpdateService PwaUpdateService
 
 <PageTitle>Segmentierungs-Einstellungen</PageTitle>
 
@@ -175,12 +176,63 @@
             </MudText>
         </MudStack>
     </MudPaper>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.subtitle1">App-Aktualisierung</MudText>
+
+            @if (_plattformInfo == null)
+            {
+                <MudText Typo="Typo.body2">Plattform-Informationen werden ermittelt...</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">
+                    Erkannte Plattform: <strong>@_plattformInfo.Platform</strong> –
+                    @(_plattformInfo.IsInstalledPwa ? "Installierte PWA" : "Browser")
+                </MudText>
+
+                @if (_plattformInfo.IsInstalledPwa && _plattformInfo.Platform == "ios")
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-2">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.body2">
+                                <strong>iOS-Hinweis:</strong> Bei installierten PWAs kann das automatische Update eingeschränkt sein.
+                                Falls der Button nicht zum Erfolg führt, schließe die App vollständig
+                                (aus dem App-Umschalter wischen) und öffne sie erneut.
+                            </MudText>
+                        </MudStack>
+                    </MudAlert>
+                }
+
+                @if (!string.IsNullOrEmpty(_updateNachricht))
+                {
+                    <MudAlert Severity="@(_updateErfolgreich ? Severity.Success : Severity.Error)" Variant="Variant.Outlined">
+                        @_updateNachricht
+                    </MudAlert>
+                }
+
+                <MudButton Variant="Variant.Filled"
+                           Color="MudBlazor.Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Update"
+                           OnClick="UpdateErzwingen"
+                           Disabled="@_updateInProgress">
+                    Update erzwingen
+                </MudButton>
+            }
+        </MudStack>
+    </MudPaper>
 </MudStack>
 
 @code {
     private readonly SegmentationOptions _options = new();
     private bool _istDarkMode;
     private string _ausgewaehlteSchriftCss = string.Empty;
+
+    private PwaPlattformInfo? _plattformInfo;
+    private bool _updateInProgress;
+    private string _updateNachricht = string.Empty;
+    private bool _updateErfolgreich;
 
     [Inject]
     private SegmentationSettings Settings { get; set; } = default!;
@@ -200,6 +252,10 @@
         await FontEinstellungenService.StelleSicherInitialisiertAsync();
         _ausgewaehlteSchriftCss = FontEinstellungenService.GewaehlteSchriftCss;
         FontEinstellungenService.SchriftGeaendert += BeiSchriftGeaendert;
+
+        // Plattform-Info für den Update-Block ermitteln
+        try { _plattformInfo = await PwaUpdateService.ErmittlePlattformInfoAsync(); }
+        catch { /* Fehler bei Plattform-Erkennung – Block zeigt dann Ladezustand */ }
     }
 
     private async Task ApplySettings()
@@ -249,5 +305,34 @@
     {
         _ausgewaehlteSchriftCss = FontEinstellungenService.GewaehlteSchriftCss;
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateErzwingen()
+    {
+        _updateInProgress = true;
+        _updateNachricht = "Suche nach Updates...";
+        _updateErfolgreich = true;
+
+        try
+        {
+            var ergebnis = await PwaUpdateService.UpdateErzwingenAsync();
+            _updateErfolgreich = ergebnis.Success;
+            _updateNachricht = ergebnis.Message;
+
+            if (ergebnis.Success && ergebnis.Reload)
+            {
+                // Der Reload wird vom JS controllerchange-Handler ausgelöst.
+                _updateInProgress = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _updateErfolgreich = false;
+            _updateNachricht = $"Fehler bei der Aktualisierung: {ex.Message}";
+        }
+        finally
+        {
+            _updateInProgress = false;
+        }
     }
 }

@@ -34,7 +34,18 @@ async function onActivate(event) {
     await Promise.all(cacheKeys
         .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
         .map(key => caches.delete(key)));
+
+    // Take control of all clients immediately (needed for force-update flow)
+    await self.clients.claim();
 }
+
+// Listen for SKIP_WAITING message from the page (force-update flow)
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        console.info('Service worker: skipWaiting requested via message');
+        self.skipWaiting();
+    }
+});
 
 async function onFetch(event) {
     let cachedResponse = null;

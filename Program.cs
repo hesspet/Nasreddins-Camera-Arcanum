@@ -21,5 +21,6 @@ builder.Services.AddScoped<FotoStorage>();
 builder.Services.AddScoped<SegmentationSettings>();
 builder.Services.AddScoped<SegmentationService>();
 builder.Services.AddScoped<ImageMergeService>();
+builder.Services.AddScoped<PwaUpdateService>();
 
 await builder.Build().RunAsync();
