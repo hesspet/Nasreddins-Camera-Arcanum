@@ -1,6 +1,6 @@
 # Projektübersicht: Nasreddin's Camera Arcanum
 
-Stand: 06.06.2026
+Stand: 07.06.2026
 
 ## Zweck
 
@@ -197,6 +197,24 @@ Damit die Anwendung über GitHub Pages nutzbar ist, muss im GitHub-Repository Fo
 6. Nach dem ersten erfolgreichen Workflowlauf ist die Anwendung unter `https://hesspet.github.io/camera-arcanum/` erreichbar.
 
 Optional kann in den Pages-Einstellungen eine eigene Domain gesetzt werden. Dann sollte `Enforce HTTPS` aktiviert bleiben. Bei einer eigenen Domain muss zusätzlich geprüft werden, ob der GitHub-Pages-Basispfad weiterhin passt oder ob die App am Domain-Root ausgeliefert wird.
+
+## Email-Benachrichtigung nach Deployment
+
+Nach einem erfolgreichen GitHub-Pages-Deployment (nur bei Push, nicht bei `workflow_dispatch`) versendet der Workflow eine Email-Benachrichtigung. Verwendet wird die Action `dawidd6/action-send-mail@v4` über GMX-SMTP.
+
+### Erforderliche GitHub Secrets
+
+Folgende Secrets müssen im Repository unter `Settings` → `Secrets and variables` → `Actions` hinterlegt werden:
+
+| Secret | Beschreibung |
+|---|---|
+| `MAIL_USERNAME` | GMX-Email-Adresse (z.B. `ich@gmx.de`) |
+| `MAIL_PASSWORD` | Anwendungsspezifisches Passwort (in den GMX-Einstellungen unter „Sicherheit" → „Passwort für E-Mail-Programme" generieren) |
+| `MAIL_TO` | Empfänger-Adresse |
+
+### Email-Inhalt
+
+Die Email enthält Repository-Name, Pages-URL, Commit-Nachricht, Autor und einen Link zum Workflow-Run.
 
 ## Aktueller manueller Smoke-Test
 
