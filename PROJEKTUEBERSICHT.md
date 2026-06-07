@@ -212,6 +212,8 @@ Folgende Secrets müssen im Repository unter `Settings` → `Secrets and variabl
 | `MAIL_PASSWORD` | Anwendungsspezifisches Passwort (in den GMX-Einstellungen unter „Sicherheit" → „Passwort für E-Mail-Programme" generieren) |
 | `MAIL_TO` | Empfänger-Adresse |
 
+Wichtig: Die Secrets müssen in Repository Secrets nicht in Github Secrets liegen
+
 ### Email-Inhalt
 
 Die Email enthält Repository-Name, Pages-URL, Commit-Nachricht, Autor und einen Link zum Workflow-Run.
