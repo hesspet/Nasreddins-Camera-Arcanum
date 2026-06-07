@@ -1,13 +1,13 @@
 @implements IAsyncDisposable
 
-<MudPaper Class="overlay-carousel" Elevation="1">
-    <MudStack Spacing="2">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-            <MudIcon Icon="@Icons.Material.Filled.Collections" Color="MudBlazor.Color.Primary" />
-            <MudText Typo="Typo.subtitle1">Geisterebene auswählen</MudText>
-            <HelpButton HelpKey="camera-arcanum/zwischenschicht-auswahl" CssClass="help-button-inline" />
-        </MudStack>
+<div class="overlay-carousel">
+    <div class="section-header">
+        <MudIcon Icon="@Icons.Material.Filled.Collections" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Small" />
+        <MudText Typo="Typo.subtitle1">Geisterebene auswählen</MudText>
+        <HelpButton HelpKey="camera-arcanum/zwischenschicht-auswahl" CssClass="help-button-inline" />
+    </div>
 
+    <MudStack Spacing="2">
         @if (_isLoading)
         {
             <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="1">
@@ -22,12 +22,12 @@
         else
         {
             <div class="carousel-stage" @onpointerdown="HandlePointerDown" @onpointerup="HandlePointerUp">
-                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Color="MudBlazor.Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" />
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Color="MudBlazor.Color.Inherit" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" Class="carousel-arrow carousel-arrow-left" />
                 <div class="carousel-image-wrapper">
                     <img src="@CurrentOverlay?.Path" alt="@CurrentOverlay?.Title" class="carousel-image" @ondblclick="ProceedAsync" />
                     <div class="carousel-caption">@CurrentOverlay?.Title</div>
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Color="MudBlazor.Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" />
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Color="MudBlazor.Color.Inherit" OnClick="NextAsync" Disabled="@(!_canNavigate)" Class="carousel-arrow carousel-arrow-right" />
             </div>
 
             <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1">
@@ -87,7 +87,7 @@
             </MudText>
         }
     </MudStack>
-</MudPaper>
+</div>
 
 @code {
     private const string StorageKey = "merge-overlay-last-selection";

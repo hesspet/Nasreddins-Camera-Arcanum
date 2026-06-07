@@ -2,11 +2,11 @@
 
 Stand: 18.05.2026
 
-Ziel ist es, den bestehenden PWA-Flow beizubehalten und die Segmentierungsqualität sowie die Bedienbarkeit auf Smartphones zu verbessern. Der aktuelle Workflow ist: Foto aufnehmen oder hochladen, Person segmentieren, Segmentierung direkt an der Ausgabe feinjustieren, Zwischenschicht auswählen, Hintergrundmodus und Zwischenschicht-Deckkraft einstellen, Ergebnis herunterladen.
+Ziel ist es, den bestehenden PWA-Flow beizubehalten und die Qualität der Arcanen Trennung sowie die Bedienbarkeit auf Smartphones zu verbessern. Der aktuelle Workflow ist: Foto aufnehmen oder hochladen, Person vom Hintergrund trennen, Arcane Trennung direkt an der Ausgabe feinjustieren, Zwischenschicht auswählen, Hintergrundmodus und Zwischenschicht-Deckkraft einstellen, Ergebnis herunterladen.
 
 ## Anforderungen und Annahmen
 
-- UI-Flow und bestehende Features bleiben erhalten: Kamera, Upload, Segmentierung, Overlay-Auswahl, Merge und Download.
+- UI-Flow und bestehende Features bleiben erhalten: Kamera, Upload, Arcane Trennung, Overlay-Auswahl, Merge und Download.
 - Zielplattformen sind mobile Browser auf Android und iOS; Desktop bleibt Entwicklungs- und Fallback-Umgebung.
 - GPU- oder NN-Beschleunigung soll genutzt werden, wo sie im Browser verfügbar ist.
 - Adaptive Qualitätsstufen sollen unterschiedliche Geräteklassen unterstützen.
@@ -18,7 +18,7 @@ Ziel ist es, den bestehenden PWA-Flow beizubehalten und die Segmentierungsqualit
 - Backend-Auswahl Auto, ONNX und TensorFlow.js.
 - Temporale Glättung und Performance-Overlay.
 - Auto-Kalibrierung für Halo- und Randparameter.
-- Inline-Regler neben der Segmentierungs-Ausgabe:
+- Inline-Regler neben der Ausgabe der Arcanen Trennung:
   - Schwellwert
   - Dilatation
   - Erosion
@@ -35,7 +35,7 @@ Ziel ist es, den bestehenden PWA-Flow beizubehalten und die Segmentierungsqualit
    - FPS und Latenz pro Schritt messen: Capture, Preprocessing, Inference, Postprocessing, Merge und Export.
    - Messwerte auf mindestens einem Android-Gerät und einem iPhone dokumentieren.
 
-2. **Segmentierungsqualität operativ kalibrieren**
+2. **Qualität der Arcanen Trennung operativ kalibrieren**
    - Geeignete Startwerte für die Inline-Regler anhand der Testbilder festlegen.
    - Zielkonflikt dokumentieren: enger Rand gegen abgeschnittene Haare, Hände und Kleidung.
    - Prüfen, ob der Standardwert für `MaskBlurAmount`, `OuterFeatherRadius` und `SegmentationThreshold` angepasst werden sollte.
@@ -64,8 +64,8 @@ Ziel ist es, den bestehenden PWA-Flow beizubehalten und die Segmentierungsqualit
 
 ## Abnahmekriterien
 
-- Auf einem Midrange-Android bleibt der Workflow bedienbar und die Segmentierung reagiert nach Regleränderungen nachvollziehbar.
-- Auf einem aktuellen iPhone ist die Segmentierung bei Medium oder High stabil genug für manuelle Tests.
+- Auf einem Midrange-Android bleibt der Workflow bedienbar und die Arcane Trennung reagiert nach Regleränderungen nachvollziehbar.
+- Auf einem aktuellen iPhone ist die Arcane Trennung bei Medium oder High stabil genug für manuelle Tests.
 - Halos können mit den Inline-Reglern sichtbar reduziert werden, ohne dass die Person unkontrolliert abgeschnitten wird.
 - Geisterhafte Zwischenschichten lassen den Hintergrund bei reduzierter Deckkraft sichtbar durchscheinen.
 - Der ngrok-Testpfad bleibt frei von automatisch gestarteten zusätzlichen Testservern.

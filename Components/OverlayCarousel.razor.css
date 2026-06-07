@@ -1,16 +1,24 @@
 .overlay-carousel {
-    padding: 12px;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.carousel-stage {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
+.overlay-carousel .section-header {
+    display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    margin-bottom: 0;
+}
+
+/* ── Carousel Stage ── */
+.carousel-stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
 }
 
 .carousel-image-wrapper {
@@ -19,7 +27,7 @@
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
     background: linear-gradient(135deg, rgba(63, 81, 181, 0.08), rgba(63, 81, 181, 0.16));
-    min-height: 180px;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -27,7 +35,7 @@
 
 .carousel-image {
     max-width: 100%;
-    max-height: 360px;
+    max-height: 300px;
     object-fit: contain;
     cursor: pointer;
 }
@@ -43,6 +51,26 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
+/* ── Arrow Overlays ── */
+.carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.45) !important;
+    color: white !important;
+    border-radius: 50%;
+}
+
+.carousel-arrow-left {
+    left: 4px;
+}
+
+.carousel-arrow-right {
+    right: 4px;
+}
+
+/* ── Choice Buttons ── */
 .overlay-choice-list {
     display: flex;
     flex-wrap: wrap;
@@ -54,9 +82,32 @@
 .overlay-choice-button {
     min-width: 44px;
     min-height: 44px;
-    flex: 1 1 44%;
 }
 
+/* Mobile: full-width stacked */
+@media (max-width: 600px) {
+    .overlay-choice-button {
+        flex: 1 1 100%;
+    }
+
+    .carousel-image {
+        max-height: 220px;
+    }
+
+    .carousel-caption {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
+}
+
+/* Desktop: 2-column wrap */
+@media (min-width: 601px) {
+    .overlay-choice-button {
+        flex: 1 1 44%;
+    }
+}
+
+/* ── Merge Control Block ── */
 .merge-control-block {
     padding: 10px;
     border: 1px solid rgba(0, 0, 0, 0.08);

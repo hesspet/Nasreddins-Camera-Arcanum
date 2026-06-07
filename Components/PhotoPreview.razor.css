@@ -1,11 +1,11 @@
 .photo-preview {
-    padding: 12px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
+/* ── Photo ── */
 .photo-wrapper {
     position: relative;
     width: 100%;
@@ -47,22 +47,29 @@
     border-radius: 8px;
 }
 
-.segmentation-workbench {
-    width: 100%;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
-}
-
-.segmentation-controls {
-    padding: 12px;
-    width: 100%;
-}
-
-.segmentation-control-block {
-    padding: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+/* ── Ergebnis der Arcanen Trennung ── */
+.preview-tile {
+    padding: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
     border-radius: 8px;
     background: #fafafa;
+}
+
+.preview-image {
+    width: 100%;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Mobile: Tighter Padding ── */
+@media (max-width: 600px) {
+    .photo-preview {
+        padding: 4px;
+        gap: 6px;
+    }
+
+    .photo-hint {
+        font-size: 0.78rem;
+        padding: 4px 8px;
+    }
 }

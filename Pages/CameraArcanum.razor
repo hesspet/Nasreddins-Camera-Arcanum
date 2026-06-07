@@ -5,20 +5,22 @@
 
 <PageTitle>Kamera-Arcanum</PageTitle>
 
-<MudStack Spacing="2">
-    <MudPaper Class="pa-4" Elevation="1">
-        <MudStack Spacing="1">
+<div class="camera-arcanum-page">
+    @* ── Page Header ── *@
+    <div class="preview-section">
+        <div class="section-header">
+            <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Small" />
             <MudText Typo="Typo.h5">Kameramodus</MudText>
             <HelpButton HelpKey="camera-arcanum/kameramodus" CssClass="help-button-inline" />
-            <MudText Typo="Typo.body2">
-                Nimm ein Foto auf oder lade ein Bild hoch. Tippe dann auf die Person, um sie vom Hintergrund zu trennen.
-            </MudText>
-        </MudStack>
-    </MudPaper>
+        </div>
+        <MudText Typo="Typo.body2">
+            Nimm ein Foto auf oder lade ein Bild hoch. Tippe dann auf die Person, um sie vom Hintergrund zu trennen.
+        </MudText>
+    </div>
 
     @if (!string.IsNullOrEmpty(_errorMessage))
     {
-        <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+        <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
     }
 
     @if (string.IsNullOrEmpty(_capturedPhoto))
@@ -26,32 +28,31 @@
         <div class="capture-area">
             <MudGrid Spacing="2">
                 <MudItem xs="12">
-                    <MudPaper Class="pa-4" Elevation="1">
+                    <div class="preview-section">
                         <MudText Typo="Typo.subtitle1" Class="mb-2">Live-Foto aufnehmen</MudText>
                         <HelpButton HelpKey="camera-arcanum/live-foto" CssClass="help-button-inline" />
                         <CameraView OnCapture="HandleCapture" Disabled="@_isProcessingImage" />
-                    </MudPaper>
+                    </div>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudPaper Class="pa-4" Elevation="1">
-                        <MudStack Spacing="1">
-                            <MudText Typo="Typo.subtitle1">Bild hochladen</MudText>
-                            <HelpButton HelpKey="camera-arcanum/bild-hochladen" CssClass="help-button-inline" />
-                            <MudText Typo="Typo.body2">
-                                Wähle ein Bild aus deiner Galerie oder deinen Dateien. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
-                            </MudText>
-                            <MudFileUpload T="IBrowserFile"
-                                           FilesChanged="@HandleFileSelected"
-                                           Accept="image/*"
-                                           MaximumFileCount="1">
-                                <ActivatorContent>
-                                    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
-                                        Datei auswählen
-                                    </MudButton>
-                                </ActivatorContent>
-                            </MudFileUpload>
-                        </MudStack>
-                    </MudPaper>
+                    <div class="preview-section">
+                        <MudText Typo="Typo.subtitle1">Bild hochladen</MudText>
+                        <HelpButton HelpKey="camera-arcanum/bild-hochladen" CssClass="help-button-inline" />
+                        <MudText Typo="Typo.body2">
+                            Wähle ein Bild aus deiner Galerie oder deinen Dateien. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
+                        </MudText>
+                        <MudFileUpload T="IBrowserFile"
+                                       FilesChanged="@HandleFileSelected"
+                                       Accept="image/*"
+                                       MaximumFileCount="1"
+                                       Class="mt-2">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile" FullWidth="true">
+                                    Datei auswählen
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </div>
                 </MudItem>
             </MudGrid>
             @if (_isProcessingImage)
@@ -82,7 +83,7 @@
 
         <PhotoPreview PhotoDataUrl="@_capturedPhoto" OnRetake="@ResetCapture" />
     }
-</MudStack>
+</div>
 
 @code {
     private const long MaxUploadSize = 10 * 1024 * 1024;

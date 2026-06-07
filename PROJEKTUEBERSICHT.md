@@ -4,7 +4,7 @@ Stand: 07.06.2026
 
 ## Zweck
 
-Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die App funktioniert wie eine einfache Effektkamera: Ein Foto wird aufgenommen oder hochgeladen, eine Person wird per Body-Segmentation vom Hintergrund getrennt, danach wird eine dekorative Zwischenschicht wie Flügel, Geist, Skelett oder Schädel zwischen Hintergrund und Person gelegt. Das Ergebnis kann heruntergeladen werden.
+Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die App funktioniert wie eine einfache Effektkamera: Ein Foto wird aufgenommen oder hochgeladen, eine Person wird per Arcaner Trennung vom Hintergrund getrennt, danach wird eine dekorative Zwischenschicht wie Flügel, Geist, Skelett oder Schädel zwischen Hintergrund und Person gelegt. Das Ergebnis kann heruntergeladen werden.
 
 Diese Datei stellt den Projektkontext für neue Chats her. Neue Arbeiten sollten zuerst diese Datei, `README.md`, `Tasks/SmartphoneBackgroundReplacement.md` und die relevanten Dateien unter `Components`, `Helpers` und `wwwroot/js` lesen.
 
@@ -26,11 +26,11 @@ Diese Datei stellt den Projektkontext für neue Chats her. Neue Arbeiten sollten
 - PWA-Grundlagen: `manifest.webmanifest`, Service Worker und App-Icons.
 - Persistenz:
   - Fotos werden im Browser in `sessionStorage` zwischengespeichert.
-  - Segmentierungsoptionen, Overlay-Auswahl, Hintergrundmodus und Zwischenschicht-Deckkraft werden in `localStorage` gespeichert.
+  - Optionen der Arcanen Trennung, Overlay-Auswahl, Hintergrundmodus und Zwischenschicht-Deckkraft werden in `localStorage` gespeichert.
 
-## Segmentierung
+## Arcane Trennung
 
-Die Segmentierung läuft über `Helpers/SegmentationService.cs` und `wwwroot/js/bodySegmentation.js`.
+Die Arcane Trennung läuft über `Helpers/SegmentationService.cs` und `wwwroot/js/bodySegmentation.js`.
 
 Vorhandene Funktionen:
 
@@ -95,9 +95,9 @@ Die Kompositionsreihenfolge ist:
 Der Hintergrund kann aus zwei Quellen kommen:
 
 - Originalbild als Hintergrund.
-- Extrahierter Hintergrund aus der Segmentierung.
+- Extrahierter Hintergrund aus der Arcanen Trennung.
 
-Wichtig: `Originalbild als Hintergrund verwenden` auf Aus bedeutet nicht „kein Hintergrund“. Es bedeutet, dass der extrahierte Hintergrund aus der Segmentierung genutzt wird.
+Wichtig: `Originalbild als Hintergrund verwenden` auf Aus bedeutet nicht „kein Hintergrund". Es bedeutet, dass der extrahierte Hintergrund aus der Arcanen Trennung genutzt wird.
 
 ## Aktuelle Merge-Korrekturen
 
@@ -114,16 +114,16 @@ Zusätzlich gibt es im Merge-Schritt einen Regler `Zwischenschicht-Deckkraft`. D
 - `Layout/MainLayout.razor`: App-Layout mit Navigation.
 - `Pages/Home.razor`: Startseite.
 - `Pages/CameraArcanum.razor`: Hauptworkflow für Kamera, Upload, Foto-Speicherung und Vorschau.
-- `Pages/Setup.razor`: separate Einstellungsseite für Segmentierungsparameter.
+- `Pages/Setup.razor`: separate Einstellungsseite für Parameter der Arcanen Trennung.
 - `Components/CameraView.razor`: Kamera-Vorschau und Snapshot-Erzeugung.
-- `Components/PhotoPreview.razor`: zentrale Nachbearbeitung, Segmentierung, Inline-Regler, Overlay-Auswahl und Ergebnisdownload.
+- `Components/PhotoPreview.razor`: zentrale Nachbearbeitung, Arcane Trennung, Inline-Regler, Overlay-Auswahl und Ergebnisdownload.
 - `Components/OverlayCarousel.razor`: Zwischenschicht-Auswahl, Hintergrundmodus und Zwischenschicht-Deckkraft.
 - `Components/SegmentationPreview.razor`: Anzeige von Vordergrund und Hintergrund.
 - `Helpers/SegmentationService.cs`: .NET-Brücke zum JavaScript-Modul `bodySegmentation.js`.
 - `Helpers/ImageMergeService.cs`: .NET-Brücke zum JavaScript-Modul `imageMerge.js`.
-- `Helpers/SegmentationSettings.cs`: lädt, normalisiert und speichert Segmentierungsoptionen.
+- `Helpers/SegmentationSettings.cs`: lädt, normalisiert und speichert Optionen der Arcanen Trennung.
 - `Helpers/OverlayProceedRequest.cs`: Datenmodell für den Merge-Schritt.
-- `wwwroot/js/bodySegmentation.js`: Segmentierungs-Pipeline und Masken-Nachbearbeitung.
+- `wwwroot/js/bodySegmentation.js`: Pipeline der Arcanen Trennung und Masken-Nachbearbeitung.
 - `wwwroot/js/imageMerge.js`: Canvas-basierte Zusammenführung mit Transparenz-Erkennung für Zwischenschichten.
 - `wwwroot/images/merge/zwischenbilder/`: Effekt-/Zwischenschichtbilder mit vorberechneten Alpha-Kanten.
 - `Tools/OverlayAlphaOptimizer`: wiederholbares ImageSharp-Tool zur Optimierung der Zwischenschicht-Transparenz.
@@ -223,7 +223,7 @@ Die Email enthält Repository-Name, Pages-URL, Commit-Nachricht, Autor und einen
 1. App über `Tools\Start-Lokaler-Test.ps1` starten.
 2. In der App auf `Kamera` wechseln.
 3. Ein Bild aus `Testbilder/Personen` hochladen.
-4. Auf die Person klicken (Brusthöhe unterhalb des Halses), um Segmentierung und Geistbild-Mitte festzulegen.
+4. Auf die Person klicken (Brusthöhe unterhalb des Halses), um Arcane Trennung und Geistbild-Mitte festzulegen.
 5. Vordergrund und Hintergrund prüfen.
 6. Inline-Regler verändern und mit `Aktualisieren` neu berechnen.
 7. Halo und abgeschnittene Personenteile beurteilen.
@@ -236,7 +236,7 @@ Die Email enthält Repository-Name, Pages-URL, Commit-Nachricht, Autor und einen
 
 - Die ONNX-Option lädt das MODNet-Modell aktuell direkt von Hugging Face. Das kann Ladezeit, Datenschutz, CORS, Offline-Fähigkeit und Ausfallsicherheit beeinträchtigen.
 - `auto` beim Backend läuft faktisch auf TensorFlow.js hinaus. ONNX wird nur bei expliziter Auswahl genutzt.
-- Die Qualität der Segmentierung hängt stark vom Motiv, der Kleidung, dem Hintergrund und den Nachbearbeitungsparametern ab.
+- Die Qualität der Arcanen Trennung hängt stark vom Motiv, der Kleidung, dem Hintergrund und den Nachbearbeitungsparametern ab.
 - Zu hohe Feather- oder Blur-Werte erzeugen sichtbare Halos.
 - Zu hohe Erosion oder zu hoher Schwellwert kann Haare, Hände und Kleidung abschneiden.
 - Die PWA-Offline-Fähigkeit ist noch nicht final ausgearbeitet.
@@ -245,9 +245,9 @@ Die Email enthält Repository-Name, Pages-URL, Commit-Nachricht, Autor und einen
 ## Empfohlene nächste Schritte
 
 1. Mehrere Testbilder mit den neuen Inline-Reglern kalibrieren.
-2. Gute Standardwerte für enge Segmentierung ohne harte Abrisse festlegen.
+2. Gute Standardwerte für enge Arcane Trennung ohne harte Abrisse festlegen.
 3. Smartphone-Test über ngrok durchführen.
-4. Messergebnisse für Segmentierung und Merge dokumentieren.
+4. Messergebnisse für Arcane Trennung und Merge dokumentieren.
 5. Entscheiden, ob ONNX lokal eingebunden, als experimentell markiert oder entfernt wird.
 6. Download-Dateinamen und Exportformat prüfen.
 7. Service-Worker-Strategie für echte PWA-Nutzung definieren.

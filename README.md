@@ -1,6 +1,6 @@
 # Nasreddin's Camera Arcanum
 
-Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die App nimmt ein Foto auf oder verarbeitet ein hochgeladenes Bild, trennt die Person per Body-Segmentation vom Hintergrund und setzt eine dekorative Zwischenschicht zwischen Hintergrund und Vordergrund. Das Ergebnis kann anschließend heruntergeladen werden.
+Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die App nimmt ein Foto auf oder verarbeitet ein hochgeladenes Bild, trennt die Person per Arcaner Trennung vom Hintergrund und setzt eine dekorative Zwischenschicht zwischen Hintergrund und Vordergrund. Das Ergebnis kann anschließend heruntergeladen werden.
 
 ## Aktueller Stand
 
@@ -8,11 +8,11 @@ Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die
 - MudBlazor für Layout und Bedienelemente.
 - Kameraaufnahme per `getUserMedia`.
 - Datei-Upload als Fallback und Testpfad.
-- Body-Segmentation über TensorFlow.js MediaPipe Selfie Segmentation.
+- Arcane Trennung über TensorFlow.js MediaPipe Selfie-Trennung.
 - Experimenteller ONNX-Runtime-Pfad mit MODNet-Modell.
 - Qualitätsprofile: Auto, High, Medium und Low.
 - Temporale Glättung, Kantenverfeinerung und Auto-Kalibrierung.
-- Inline-Regler direkt neben der Segmentierungs-Ausgabe für Schwellwert, Dilatation, Erosion, Maskenweichzeichnung und weiche Innen-/Außenkante.
+- Inline-Regler direkt neben der Ausgabe der Arcanen Trennung für Schwellwert, Dilatation, Erosion, Maskenweichzeichnung und weiche Innen-/Außenkante.
 - Overlay-Auswahl mit Flügel-, Geist-, Skelett- und Schädelmotiven.
 - Merge-Schritt mit Auswahl zwischen Originalbild und extrahiertem Hintergrund.
 - Merge-Schritt mit einstellbarer Zwischenschicht-Deckkraft, damit der Hintergrund durch Geisterbilder und andere Effekte durchscheinen kann.
@@ -23,20 +23,20 @@ Nasreddin's Camera Arcanum ist eine Progressive Web App für mobile Browser. Die
 ## Projektstruktur
 
 - `Pages/CameraArcanum.razor`: Hauptworkflow für Kamera, Upload und Foto-Vorschau.
-- `Pages/Setup.razor`: separate Einstellungsseite für Segmentierungsparameter.
+- `Pages/Setup.razor`: separate Einstellungsseite für Parameter der Arcanen Trennung.
 - `Components/CameraView.razor`: Live-Kamera und Auslöser.
-- `Components/PhotoPreview.razor`: Segmentierung, Inline-Feinjustierung, Qualitätsoptionen, Overlay-Auswahl und Ergebnis.
+- `Components/PhotoPreview.razor`: Arcane Trennung, Inline-Feinjustierung, Qualitätsoptionen, Overlay-Auswahl und Ergebnis.
 - `Components/OverlayCarousel.razor`: Auswahl der Zwischenschicht, Hintergrundmodus und Zwischenschicht-Deckkraft.
 - `Components/SegmentationPreview.razor`: Anzeige von Vordergrund und Hintergrund.
-- `Helpers/SegmentationService.cs`: .NET-Interop zur Segmentierungslogik.
+- `Helpers/SegmentationService.cs`: .NET-Interop zur Logik der Arcanen Trennung.
 - `Helpers/ImageMergeService.cs`: .NET-Interop zur Bildzusammenführung.
 - `Helpers/OverlayProceedRequest.cs`: Transportmodell für Overlay-Pfad, Hintergrundmodus und Zwischenschicht-Deckkraft.
-- `wwwroot/js/bodySegmentation.js`: Segmentierungs-Pipeline mit Nachbearbeitung der Alpha-Maske.
+- `wwwroot/js/bodySegmentation.js`: Pipeline der Arcanen Trennung mit Nachbearbeitung der Alpha-Maske.
 - `wwwroot/js/imageMerge.js`: Canvas-Komposition aus Hintergrund, Zwischenschicht und Vordergrund mit Transparenz-Erkennung.
 - `wwwroot/images/merge/zwischenbilder/`: ausgelieferte Effekt-/Zwischenschichtbilder mit vorberechneten Alpha-Kanten und `katalog.json`.
 - `wwwroot/js/mergeOverlays.js`: lädt den Zwischenschicht-Katalog und benennt die Buttons nach den Dateinamen ohne Endung.
 - `Tools/OverlayAlphaOptimizer`: ImageSharp-Tool zum wiederholbaren Erzeugen weicher Alpha-Masken für Zwischenschichten.
-- `Testbilder/Personen`: Personenbilder für Upload-, Segmentierungs-, Overlay- und Download-Tests.
+- `Testbilder/Personen`: Personenbilder für Upload-, Arcane-Trennungs-, Overlay- und Download-Tests.
 - `PROJEKTUEBERSICHT.md`: ausführlicher Projektkontext für neue Chats.
 
 ## Lokale Ausführung
@@ -58,8 +58,8 @@ Der wichtigste Smoke-Test ist:
 1. App über das Startup-Skript starten.
 2. Auf `Kamera` wechseln.
 3. Ein Bild aus `Testbilder/Personen` hochladen.
-4. Segmentierung durch Tippen auf das Motiv starten.
-5. Segmentierungsregler direkt neben der Ausgabe verändern und mit `Aktualisieren` neu berechnen.
+4. Arcane Trennung durch Tippen auf das Motiv starten.
+5. Regler der Arcanen Trennung direkt neben der Ausgabe verändern und mit `Aktualisieren` neu berechnen.
 6. Vordergrund und Hintergrund auf Halo, abgeschnittene Körperteile und Randlecks prüfen.
 7. Zwischenschicht auswählen.
 8. Hintergrundmodus prüfen: Originalbild und extrahierter Hintergrund.

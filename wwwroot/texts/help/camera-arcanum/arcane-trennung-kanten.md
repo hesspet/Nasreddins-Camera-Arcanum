@@ -1,4 +1,4 @@
-# Trennung: Kanten
+# Arcane Trennung: Kanten
 
 ## Maskenweichzeichnung
 

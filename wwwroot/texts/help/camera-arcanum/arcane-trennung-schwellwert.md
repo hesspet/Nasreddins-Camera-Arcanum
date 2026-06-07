@@ -1,4 +1,4 @@
-# Trennung: Schwellwert
+# Arcane Trennung: Schwellwert
 
 ## Was der Schwellwert bewirkt
 

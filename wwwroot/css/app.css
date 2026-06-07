@@ -291,6 +291,66 @@ a, .btn-link {
     cursor: pointer;
 }
 
+/* --- Gemeinsame Section-Styles (Camera-Arcanum & Kamera-Pur) --- */
+
+.camera-arcanum-page {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px;
+}
+
+.preview-section {
+    padding: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.control-block {
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.collapse-toggle {
+    justify-content: flex-start;
+    text-transform: none;
+    font-weight: 500;
+}
+
+.flex-1 {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .camera-arcanum-page {
+        gap: 6px;
+        padding: 2px;
+    }
+
+    .preview-section {
+        padding: 8px;
+    }
+
+    .control-block {
+        padding: 8px;
+    }
+
+    .section-header .mud-typography-subtitle1 {
+        font-size: 0.95rem;
+    }
+}
+
 /* --- Vollbild-Overlay (Kamera Pur) --- */
 
 .fullscreen-overlay {

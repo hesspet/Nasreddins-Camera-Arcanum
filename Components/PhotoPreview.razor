@@ -3,282 +3,348 @@
 @using System.Globalization
 @using Nasreddins_Camera_Arcanum.Helpers
 
-<MudPaper Class="photo-preview" Elevation="2">
+<MudPaper Class="photo-preview" Elevation="1">
     @if (!string.IsNullOrEmpty(PhotoDataUrl))
     {
-        <div class="photo-wrapper">
-            <img @ref="_photoRef" src="@PhotoDataUrl" alt="Aufgenommenes Foto" class="photo-image" @onclick="HandleImageClick" />
-            @if (!_isSegmenting)
-            {
-            <div class="photo-hint">Tippe auf die Person – dorthin, wo die Geistbilder erscheinen sollen (meist Brusthöhe).</div>
-            <HelpButton HelpKey="camera-arcanum/foto-vorschau" CssClass="help-button-inline" />
-            }
-            @if (_isSegmenting)
-            {
-            <div class="segmentation-overlay">
-                <SpinnerImage SizePx="100" />
-                <MudText Typo="Typo.body2" Class="segmentation-overlay-text">Trennung läuft …</MudText>
+        @* ═══════════════════════════════════════════════
+           SECTION 1: Foto
+           ═══════════════════════════════════════════════ *@
+        <div class="preview-section">
+            <div class="section-header">
+                <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Small" />
+                <MudText Typo="Typo.subtitle1">Foto</MudText>
+                <HelpButton HelpKey="camera-arcanum/foto-vorschau" CssClass="help-button-inline" />
             </div>
+
+            <div class="photo-wrapper">
+                <img @ref="_photoRef" src="@PhotoDataUrl" alt="Aufgenommenes Foto" class="photo-image" @onclick="HandleImageClick" />
+                @if (!_isSegmenting)
+                {
+                    <div class="photo-hint">Tippe auf die Person – dorthin, wo die Geistbilder erscheinen sollen (meist Brusthöhe).</div>
+                }
+                @if (_isSegmenting)
+                {
+                    <div class="segmentation-overlay">
+                        <SpinnerImage SizePx="100" />
+                        <MudText Typo="Typo.body2" Class="segmentation-overlay-text">Trennung läuft …</MudText>
+                    </div>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_segmentationError))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@_segmentationError</MudAlert>
+            }
+
+            <MudGrid Spacing="2" Class="mt-2">
+                <MudItem xs="12" sm="6">
+                    <MudButton Variant="Variant.Filled"
+                               Color="MudBlazor.Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Replay"
+                               OnClick="HandleRetake"
+                               FullWidth="true">
+                        Nochmals aufnehmen
+                    </MudButton>
+                </MudItem>
+                @if (!string.IsNullOrEmpty(PhotoDataUrl))
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="MudBlazor.Color.Secondary"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   Href="@PhotoDataUrl"
+                                   download="@DownloadFileName"
+                                   FullWidth="true">
+                            Foto herunterladen
+                        </MudButton>
+                    </MudItem>
+                }
+            </MudGrid>
+        </div>
+
+        @* ═══════════════════════════════════════════════
+           SECTION 2: Arcane Trennung
+           ═══════════════════════════════════════════════ *@
+        <div class="preview-section">
+            <div class="section-header">
+                <MudIcon Icon="@Icons.Material.Filled.ContentCut" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Small" />
+                <MudText Typo="Typo.subtitle1">Trennung der Person vom Hintergrund</MudText>
+                <HelpButton HelpKey="camera-arcanum/halo-auto-kalibrierung" CssClass="help-button-inline" />
+            </div>
+
+            @* Auto-Calibration *@
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                <MudButton Variant="Variant.Outlined"
+                           Color="MudBlazor.Color.Primary"
+                           Disabled="@(_isSegmenting || _isAutoCalibrating || string.IsNullOrEmpty(PhotoDataUrl))"
+                           StartIcon="@Icons.Material.Filled.AutoFixHigh"
+                           OnClick="RunAutoCalibrationAsync"
+                           FullWidth="true">
+                    Halo-Auto-Kalibrierung
+                </MudButton>
+                @if (_isAutoCalibrating)
+                {
+                    <SpinnerImage SizePx="32" />
+                }
+            </MudStack>
+
+            @if (!string.IsNullOrWhiteSpace(_autoTuneInfo))
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">@_autoTuneInfo</MudAlert>
+            }
+
+            @* Quality & Performance (collapsible) *@
+            <MudButton Variant="Variant.Text"
+                       Color="MudBlazor.Color.Primary"
+                       EndIcon="@Icons.Material.Filled.ExpandMore"
+                       OnClick="ToggleQualityPanel"
+                       FullWidth="true"
+                       Class="collapse-toggle">
+                Performance &amp; Qualität
+            </MudButton>
+            <MudCollapse Expanded="_showQualityPanel">
+                <MudPaper Class="control-block" Elevation="0">
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" Spacing="2">
+                            <MudSelect T="string"
+                                       Value="@SegmentationSettings.Options.Quality"
+                                       ValueChanged="UpdateQualityAsync"
+                                       Dense="true"
+                                       Label="Qualität"
+                                       Variant="Variant.Outlined"
+                                       Class="flex-1">
+                                <MudSelectItem Value="@("auto")">Auto (720p Ziel, dynamisch)</MudSelectItem>
+                                <MudSelectItem Value="@("high")">High (900p, beste Kanten)</MudSelectItem>
+                                <MudSelectItem Value="@("medium")">Medium (720p, Standard)</MudSelectItem>
+                                <MudSelectItem Value="@("low")">Low (540p, Akku-schonend)</MudSelectItem>
+                            </MudSelect>
+
+                            <MudSelect T="string"
+                                       Value="@SegmentationSettings.Options.BackendPreference"
+                                       ValueChanged="UpdateBackendAsync"
+                                       Dense="true"
+                                       Label="Backend"
+                                       Variant="Variant.Outlined"
+                                       Class="flex-1">
+                                <MudSelectItem Value="@("auto")">Auto (WebGPU/WebGL → TFJS)</MudSelectItem>
+                                <MudSelectItem Value="@("onnx")">ONNX Runtime (GPU bevorzugt)</MudSelectItem>
+                                <MudSelectItem Value="@("tfjs")">MediaPipe TFJS Fallback</MudSelectItem>
+                            </MudSelect>
+                        </MudStack>
+
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudSwitch T="bool"
+                                       Color="MudBlazor.Color.Primary"
+                                       Value="@SegmentationSettings.Options.TemporalSmoothing"
+                                       ValueChanged="ToggleTemporalSmoothingAsync">
+                                Temporale Glättung
+                            </MudSwitch>
+                            <MudSwitch T="bool"
+                                       Color="MudBlazor.Color.Secondary"
+                                       Value="@SegmentationSettings.Options.EnablePerfOverlay"
+                                       ValueChanged="TogglePerfOverlayAsync">
+                                Live-Profiler-Overlay
+                            </MudSwitch>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+            </MudCollapse>
+
+            @if (_perfSummary is not null)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">
+                    Backend: @_perfSummary.Backend ?? "?" | Qualität: @_perfSummary.Quality (dynamisch: @_perfSummary.DynamicQuality)
+                    | Auflösung: @_perfSummary.Resolution | Gesamt: @_perfSummary.Total.ToString("F1", CultureInfo.InvariantCulture) ms
+                </MudAlert>
+            }
+
+            @* Segmentation result preview *@
+            @if (HasSegmentationResult)
+            {
+                <div class="mt-2">
+                    <SegmentationPreview ForegroundDataUrl="@_foreground"
+                                         BackgroundDataUrl="@_background"
+                                         IsBusy="@_isSegmenting"
+                                         OnRetry="RetrySegmentation" />
+                </div>
+            }
+            else if (!_isSegmenting && string.IsNullOrWhiteSpace(_segmentationError))
+            {
+                <MudText Typo="Typo.body2" Class="mud-secondary-text mt-1">
+                    Tippe auf die Person im Foto, um die Trennung der Person vom Hintergrund zu starten.
+                </MudText>
             }
         </div>
-    }
 
-    @if (!string.IsNullOrWhiteSpace(_segmentationError))
-    {
-        <MudAlert Severity="Severity.Error" Dense="true">@_segmentationError</MudAlert>
-    }
-
-    <MudStack Row="true" Spacing="2" Justify="Justify.Center" Class="mt-2">
-        <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.Replay" OnClick="HandleRetake">
-            Nochmals aufnehmen
-        </MudButton>
-        @if (!string.IsNullOrEmpty(PhotoDataUrl))
+        @if (HasSegmentationResult)
         {
-            <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@PhotoDataUrl" download="@DownloadFileName">
-                Foto herunterladen
-            </MudButton>
-        }
-    </MudStack>
-    <HelpButton HelpKey="camera-arcanum/aktionen" CssClass="help-button-inline" />
+            @* ═══════════════════════════════════════════════
+               SECTION 3: Feinjustierung
+               ═══════════════════════════════════════════════ *@
+            <div class="preview-section">
+                <div class="section-header">
+                    <MudIcon Icon="@Icons.Material.Filled.Tune" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Small" />
+                    <MudText Typo="Typo.subtitle1">Feinjustierung</MudText>
+                    <HelpButton HelpKey="camera-arcanum/arcane-trennung-schwellwert" CssClass="help-button-inline" />
+                </div>
 
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
-        <MudButton Variant="Variant.Outlined"
-                   Color="MudBlazor.Color.Primary"
-                   Disabled="@(_isSegmenting || _isAutoCalibrating || string.IsNullOrEmpty(PhotoDataUrl))"
-                   StartIcon="@Icons.Material.Filled.AutoFixHigh"
-                   OnClick="RunAutoCalibrationAsync">
-            Halo-Auto-Kalibrierung
-        </MudButton>
-        <MudText Typo="Typo.caption" Class="mud-secondary-text">
-            Passt Schwellenwert und Kantenglättung anhand des aktuellen Motivs an.
-        </MudText>
-        <HelpButton HelpKey="camera-arcanum/halo-auto-kalibrierung" CssClass="help-button-inline" />
-        @if (_isAutoCalibrating)
-        {
-            <SpinnerImage SizePx="32" />
-        }
-    </MudStack>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudPaper Class="control-block" Elevation="0">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.subtitle2">Motiverkennung</MudText>
+                                <MudText Typo="Typo.caption">Schwellwert</MudText>
+                                <MudSlider @bind-Value="_inlineSegmentationOptions.SegmentationThreshold"
+                                           Min="0.05"
+                                           Max="0.95"
+                                           Step="0.05"
+                                           Color="MudBlazor.Color.Secondary"
+                                           Variant="Variant.Filled"
+                                           ValueLabel="@true"
+                                           ValueLabelFormat="0.00" />
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
 
-    @if (!string.IsNullOrWhiteSpace(_autoTuneInfo))
-    {
-        <MudAlert Severity="Severity.Info" Dense="true">@_autoTuneInfo</MudAlert>
-    }
+                    <MudItem xs="12" md="6">
+                        <MudPaper Class="control-block" Elevation="0">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.subtitle2">Maskenform</MudText>
+                                <MudText Typo="Typo.caption">Dilatation</MudText>
+                                <MudSlider @bind-Value="_inlineSegmentationOptions.DilationRadius"
+                                           Min="0"
+                                           Max="10"
+                                           Step="1"
+                                           Color="MudBlazor.Color.Secondary"
+                                           Variant="Variant.Filled"
+                                           ValueLabel="@true"
+                                           ValueLabelFormat="0" />
+                                <MudText Typo="Typo.caption">Erosion</MudText>
+                                <MudSlider @bind-Value="_inlineSegmentationOptions.ErosionRadius"
+                                           Min="0"
+                                           Max="10"
+                                           Step="1"
+                                           Color="MudBlazor.Color.Secondary"
+                                           Variant="Variant.Filled"
+                                           ValueLabel="@true"
+                                           ValueLabelFormat="0" />
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
 
-    <MudExpansionPanel Text="Performance &amp; Qualität" Class="mt-2">
-        <HelpButton HelpKey="camera-arcanum/qualitaet-performance" CssClass="help-button-inline" />
-        <MudStack Spacing="1">
-            <MudStack Row="true" Spacing="1">
-                <MudSelect T="string"
-                           Value="@SegmentationSettings.Options.Quality"
-                           ValueChanged="UpdateQualityAsync"
-                           Dense="true"
-                           Label="Qualität">
-                    <MudSelectItem Value="@("auto")">Auto (720p Ziel, dynamisch)</MudSelectItem>
-                    <MudSelectItem Value="@("high")">High (900p, beste Kanten)</MudSelectItem>
-                    <MudSelectItem Value="@("medium")">Medium (720p, Standard)</MudSelectItem>
-                    <MudSelectItem Value="@("low")">Low (540p, Akku-schonend)</MudSelectItem>
-                </MudSelect>
+                    <MudItem xs="12" md="6">
+                        <MudPaper Class="control-block" Elevation="0">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.subtitle2">Kanten</MudText>
+                                <MudText Typo="Typo.caption">Maskenweichzeichnung</MudText>
+                                <MudSlider @bind-Value="_inlineSegmentationOptions.MaskBlurAmount"
+                                           Min="0"
+                                           Max="20"
+                                           Step="1"
+                                           Color="MudBlazor.Color.Secondary"
+                                           Variant="Variant.Filled"
+                                           ValueLabel="@true"
+                                           ValueLabelFormat="0" />
+                                <MudText Typo="Typo.caption">Weiche Kante innen</MudText>
+                                <MudSlider @bind-Value="_inlineSegmentationOptions.InnerFeatherRadius"
+                                           Min="0"
+                                           Max="20"
+                                           Step="1"
+                                           Color="MudBlazor.Color.Secondary"
+                                           Variant="Variant.Filled"
+                                           ValueLabel="@true"
+                                           ValueLabelFormat="0" />
+                                <MudText Typo="Typo.caption">Weiche Kante außen</MudText>
+                                <MudSlider @bind-Value="_inlineSegmentationOptions.OuterFeatherRadius"
+                                           Min="0"
+                                           Max="30"
+                                           Step="1"
+                                           Color="MudBlazor.Color.Secondary"
+                                           Variant="Variant.Filled"
+                                           ValueLabel="@true"
+                                           ValueLabelFormat="0" />
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
 
-                <MudSelect T="string"
-                           Value="@SegmentationSettings.Options.BackendPreference"
-                           ValueChanged="UpdateBackendAsync"
-                           Dense="true"
-                           Label="Backend">
-                    <MudSelectItem Value="@("auto")">Auto (WebGPU/WebGL → TFJS)</MudSelectItem>
-                    <MudSelectItem Value="@("onnx")">ONNX Runtime (GPU bevorzugt)</MudSelectItem>
-                    <MudSelectItem Value="@("tfjs")">MediaPipe TFJS Fallback</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudSwitch T="bool"
+                <MudButton Variant="Variant.Filled"
                            Color="MudBlazor.Color.Primary"
-                           Value="@SegmentationSettings.Options.TemporalSmoothing"
-                           ValueChanged="ToggleTemporalSmoothingAsync">
-                    Temporale Glättung
-                </MudSwitch>
-                <MudSwitch T="bool"
-                           Color="MudBlazor.Color.Secondary"
-                           Value="@SegmentationSettings.Options.EnablePerfOverlay"
-                           ValueChanged="TogglePerfOverlayAsync">
-                    Live-Profiler-Overlay
-                </MudSwitch>
-            </MudStack>
-        </MudStack>
-    </MudExpansionPanel>
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
+                           OnClick="ApplyInlineSegmentationSettingsAsync"
+                           FullWidth="true"
+                           Class="mt-2">
+                    Trennung aktualisieren
+                </MudButton>
+            </div>
 
-    @if (_perfSummary is not null)
-    {
-        <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">
-            Backend: @_perfSummary.Backend ?? "?" | Qualität: @_perfSummary.Quality (dynamisch: @_perfSummary.DynamicQuality)
-            | Auflösung: @_perfSummary.Resolution | Gesamt: @_perfSummary.Total.ToString("F1", CultureInfo.InvariantCulture) ms
-        </MudAlert>
-    }
+            @* ═══════════════════════════════════════════════
+               SECTION 4: Geisterebene
+               ═══════════════════════════════════════════════ *@
+            <div class="preview-section">
+                <OverlayCarousel OnProceed="HandleOverlayProceed" />
+            </div>
 
-    <div class="segmentation-workbench">
-        <SegmentationPreview ForegroundDataUrl="@_foreground" BackgroundDataUrl="@_background" IsBusy="@_isSegmenting" OnRetry="RetrySegmentation" />
+            @* Selection info *@
+            @if (!string.IsNullOrWhiteSpace(_selectionInfo))
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">@_selectionInfo</MudAlert>
+            }
 
-        <MudPaper Class="segmentation-controls" Elevation="1">
-            <MudStack Spacing="2">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                        <MudIcon Icon="@Icons.Material.Filled.Tune" Color="MudBlazor.Color.Primary" />
-                        <MudText Typo="Typo.subtitle1">Trennung feinjustieren</MudText>
-                    </MudStack>
-                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                   Color="MudBlazor.Color.Primary"
-                                   title="Aktualisieren"
-                                   Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
-                                   OnClick="ApplyInlineSegmentationSettingsAsync" />
+            @* Merge progress *@
+            @if (_isMerging)
+            {
+                <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="1">
+                    <SpinnerImage SizePx="120" />
+                    <MudText Typo="Typo.body2">Bild wird zusammengeführt …</MudText>
                 </MudStack>
+            }
 
-                <MudPaper Class="segmentation-control-block" Elevation="0">
-                    <MudStack Spacing="1">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                            <MudText Typo="Typo.subtitle2">Motiverkennung</MudText>
-                            <HelpButton HelpKey="camera-arcanum/segmentierung-schwellwert" CssClass="help-button-inline" />
-                        </MudStack>
+            @if (!string.IsNullOrWhiteSpace(_mergeError))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">@_mergeError</MudAlert>
+            }
 
-                        <MudText Typo="Typo.caption">Schwellwert</MudText>
-                        <MudSlider @bind-Value="_inlineSegmentationOptions.SegmentationThreshold"
-                                   Min="0.05"
-                                   Max="0.95"
-                                   Step="0.05"
-                                   Color="MudBlazor.Color.Secondary"
-                                   Variant="Variant.Filled"
-                                   ValueLabel="@true"
-                                   ValueLabelFormat="0.00" />
-                    </MudStack>
-                </MudPaper>
-
-                <MudPaper Class="segmentation-control-block" Elevation="0">
-                    <MudStack Spacing="1">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                            <MudText Typo="Typo.subtitle2">Maskenform</MudText>
-                            <HelpButton HelpKey="camera-arcanum/segmentierung-maskenform" CssClass="help-button-inline" />
-                        </MudStack>
-
-                        <MudText Typo="Typo.caption">Dilatation</MudText>
-                        <MudSlider @bind-Value="_inlineSegmentationOptions.DilationRadius"
-                                   Min="0"
-                                   Max="10"
-                                   Step="1"
-                                   Color="MudBlazor.Color.Secondary"
-                                   Variant="Variant.Filled"
-                                   ValueLabel="@true"
-                                   ValueLabelFormat="0" />
-
-                        <MudText Typo="Typo.caption">Erosion</MudText>
-                        <MudSlider @bind-Value="_inlineSegmentationOptions.ErosionRadius"
-                                   Min="0"
-                                   Max="10"
-                                   Step="1"
-                                   Color="MudBlazor.Color.Secondary"
-                                   Variant="Variant.Filled"
-                                   ValueLabel="@true"
-                                   ValueLabelFormat="0" />
-                    </MudStack>
-                </MudPaper>
-
-                <MudPaper Class="segmentation-control-block" Elevation="0">
-                    <MudStack Spacing="1">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                            <MudText Typo="Typo.subtitle2">Kanten</MudText>
-                            <HelpButton HelpKey="camera-arcanum/segmentierung-kanten" CssClass="help-button-inline" />
-                        </MudStack>
-
-                        <MudText Typo="Typo.caption">Maskenweichzeichnung</MudText>
-                        <MudSlider @bind-Value="_inlineSegmentationOptions.MaskBlurAmount"
-                                   Min="0"
-                                   Max="20"
-                                   Step="1"
-                                   Color="MudBlazor.Color.Secondary"
-                                   Variant="Variant.Filled"
-                                   ValueLabel="@true"
-                                   ValueLabelFormat="0" />
-
-                        <MudText Typo="Typo.caption">Weiche Kante innen</MudText>
-                        <MudSlider @bind-Value="_inlineSegmentationOptions.InnerFeatherRadius"
-                                   Min="0"
-                                   Max="20"
-                                   Step="1"
-                                   Color="MudBlazor.Color.Secondary"
-                                   Variant="Variant.Filled"
-                                   ValueLabel="@true"
-                                   ValueLabelFormat="0" />
-
-                        <MudText Typo="Typo.caption">Weiche Kante außen</MudText>
-                        <MudSlider @bind-Value="_inlineSegmentationOptions.OuterFeatherRadius"
-                                   Min="0"
-                                   Max="30"
-                                   Step="1"
-                                   Color="MudBlazor.Color.Secondary"
-                                   Variant="Variant.Filled"
-                                   ValueLabel="@true"
-                                   ValueLabelFormat="0" />
-                    </MudStack>
-                </MudPaper>
-            </MudStack>
-            <MudButton Variant="Variant.Filled"
-                       Color="MudBlazor.Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Refresh"
-                       Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
-                       OnClick="ApplyInlineSegmentationSettingsAsync"
-                       FullWidth="true"
-                       Class="mt-2">
-                Trennung aktualisieren
-            </MudButton>
-        </MudPaper>
-    </div>
-
-    @if (HasSegmentationResult)
-    {
-        <OverlayCarousel OnProceed="HandleOverlayProceed" />
-
-        <HelpButton HelpKey="camera-arcanum/einstellungen-speichern" CssClass="help-button-inline" />
-        <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Tertiary" StartIcon="@Icons.Material.Filled.Bookmark" OnClick="SaveSnapshotAsync" Class="mt-2" FullWidth="true">
-            Einstellungen speichern
-        </MudButton>
-
-        @if (!string.IsNullOrWhiteSpace(_selectionInfo))
-        {
-            <MudAlert Severity="Severity.Info" Dense="true">@_selectionInfo</MudAlert>
-        }
-
-        @if (_isMerging)
-        {
-            <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="1">
-                <SpinnerImage SizePx="120" />
-                <MudText Typo="Typo.body2">Bild wird zusammengeführt …</MudText>
-            </MudStack>
-        }
-
-        @if (!string.IsNullOrWhiteSpace(_mergeError))
-        {
-            <MudAlert Severity="Severity.Error" Dense="true">@_mergeError</MudAlert>
-        }
-
-        @if (!string.IsNullOrWhiteSpace(_mergedPhoto))
-        {
-            <MudPaper Class="photo-preview" Elevation="1">
-                <MudStack Spacing="1">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                        <MudIcon Icon="@Icons.Material.Filled.Layers" Color="MudBlazor.Color.Primary" />
-                        <MudText Typo="Typo.subtitle1">Zusammengeführtes Ergebnis</MudText>
+            @* ═══════════════════════════════════════════════
+               SECTION 5: Ergebnis
+               ═══════════════════════════════════════════════ *@
+            @if (!string.IsNullOrWhiteSpace(_mergedPhoto))
+            {
+                <div class="preview-section">
+                    <div class="section-header">
+                        <MudIcon Icon="@Icons.Material.Filled.Layers" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Small" />
+                        <MudText Typo="Typo.subtitle1">Ergebnis</MudText>
                         <HelpButton HelpKey="camera-arcanum/ergebnis" CssClass="help-button-inline" />
-                    </MudStack>
+                    </div>
 
                     <div class="photo-wrapper">
                         <img src="@_mergedPhoto" alt="Zusammengeführtes Bild" class="photo-image" />
                     </div>
 
-                    <MudStack Row="true" Spacing="2" Justify="Justify.Center" Class="mt-2">
-                        <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.Download" Href="@_mergedPhoto" download="@MergedDownloadFileName">
+                    <MudStack Justify="Justify.Center" Class="mt-2">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="MudBlazor.Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   Href="@_mergedPhoto"
+                                   download="@MergedDownloadFileName"
+                                   FullWidth="true">
                             Ergebnis herunterladen
                         </MudButton>
                     </MudStack>
-                </MudStack>
-            </MudPaper>
+                </div>
+            }
+
+            @* Footer: Einstellungen speichern *@
+            <HelpButton HelpKey="camera-arcanum/einstellungen-speichern" CssClass="help-button-inline" />
+            <MudButton Variant="Variant.Outlined"
+                       Color="MudBlazor.Color.Tertiary"
+                       StartIcon="@Icons.Material.Filled.Bookmark"
+                       OnClick="SaveSnapshotAsync"
+                       Class="mt-2"
+                       FullWidth="true">
+                Einstellungen speichern
+            </MudButton>
         }
     }
 </MudPaper>
@@ -302,6 +368,7 @@
     private string? _mergeError;
     private bool _isMerging;
     private bool _isAutoCalibrating;
+    private bool _showQualityPanel;
     private string? _autoTuneInfo;
     private SegmentationPerformance? _perfSummary;
     private readonly SegmentationOptions _inlineSegmentationOptions = new();
@@ -609,6 +676,11 @@
         await SegmentationSettings.UpdateAsync(next);
         CopyFrom(SegmentationSettings.Options, _inlineSegmentationOptions);
         await InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleQualityPanel()
+    {
+        _showQualityPanel = !_showQualityPanel;
     }
 
     private async Task ApplyInlineSegmentationSettingsAsync()
