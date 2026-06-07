@@ -21,7 +21,7 @@ Ein Tippen auf das Bild erlaubt Dir auch Nasreddin in der Taverne zu besuchen.
 Spendiere dem Arcanisten etwas fuer seine magische Getraenkekasse, belohne seine Arbeit und hilf ihm, sich zu erfrischen.
 
 <a href="buymeacoffee">
-	<img src="../images/ueber/NasreddinKaffeeUndLaptop.png" alt="Nasreddin mit Kaffee und Laptop" style="display: block; margin: 0 auto; max-width: 600px; width: 90%;" />
+	<img src="images/ueber/NasreddinKaffeeUndLaptop.png" alt="Nasreddin mit Kaffee und Laptop" style="display: block; margin: 0 auto; max-width: 600px; width: 90%;" />
 </a>
 
 Der Arcanist alias Nasreddin alias Peter Hess wird es Dir danken.
