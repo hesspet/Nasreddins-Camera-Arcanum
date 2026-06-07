@@ -479,6 +479,10 @@ a, .btn-link {
         font-family: var(--font-code);
     }
 
+    .markdown-content a {
+        text-decoration: underline;
+    }
+
 #blazor-error-ui {
     color-scheme: light only;
     background: lightyellow;

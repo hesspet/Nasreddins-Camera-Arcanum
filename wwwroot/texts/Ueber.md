@@ -1,24 +1,29 @@
-# Ueber Nasreddin's Camera Arcanum
+﻿# Ueber den Arcanist
 
-Nasreddin's Camera Arcanum ist eine Progressive Web App fuer mobile Browser. Die App nimmt ein Foto auf oder verarbeitet ein hochgeladenes Bild, trennt die Person per Arcaner Trennung vom Hintergrund und setzt eine dekorative Geisterebene zwischen Hintergrund und Vordergrund.
+Der Arcanist, der Euch hier sein geheimes Wissen zur Verfuegung stellt, stieg fuer Euch hinab in die Tiefen der mystischen Webanwendungsentwicklung.
 
-## Technologie
+Dort fand er arcanes Wissen an den seltsamsten Orten und hat es fuer Euch zu dieser Anwendung zusammengeschmiedet.
 
-Die Anwendung basiert auf folgenden Technologien:
+Nasreddin, Euer Arcanist, bietet Euch hier eine Webanwendung fuer mobile Browser.
 
-- **Blazor WebAssembly** auf .NET 9 fuer die Benutzeroberflaeche
-- **MudBlazor** fuer Layout und Bedienelemente
-- **TensorFlow.js** mit MediaPipe Selfie-Trennung fuer die Personenerkennung
-- **Canvas API** fuer die Bildzusammenfuehrung
+Lichtet Personen ab oder waehlt ein Bild einer Person aus Eurer Galerie. Nutzt dann die Magie der arcanen Trennung, um sichtbar zu machen, dass hinter jedem Menschen ein Geisterwesen verborgen ist.
 
-## Funktionen
+Macht es sichtbar und zeigt, von welchen Geistern die Menschen besessen sind.
 
-- Kameraaufnahme per `getUserMedia`
-- Datei-Upload als Fallback und Testpfad
-- Arcane Trennung mit einstellbaren Parametern
-- Overlay-Auswahl mit verschiedenen Motiven
-- Bildzusammenfuehrung und Download
+Die Entwicklung der arcanen Methoden dieser magischen Anwendung ist noch lange nicht abgeschlossen.
 
-## Entwicklung
+Der Arcanist hat vieles Ungewoehnliche in den Tiefen gefunden, doch seine Suche ist noch lange nicht beendet.
 
-Das Projekt wird aktiv weiterentwickelt. Neue Funktionen und Verbesserungen sind in Planung.
+Der Arcanist darbt nach magischen Getraenken, um seine Arbeit fortzufuehren. Wenn Du, Magier, dem Arcanisten ein magisches Getraenk bereitstellen willst, so besuche die Taverne ["Buy Me A Coffee"](buymeacoffee).
+
+Ein Tippen auf das Bild erlaubt Dir auch Nasreddin in der Taverne zu besuchen.
+
+Spendiere dem Arcanisten etwas fuer seine magische Getraenkekasse, belohne seine Arbeit und hilf ihm, sich zu erfrischen.
+
+<a href="buymeacoffee">
+	<img src="../images/ueber/NasreddinKaffeeUndLaptop.png" alt="Nasreddin mit Kaffee und Laptop" style="display: block; margin: 0 auto; max-width: 600px; width: 90%;" />
+</a>
+
+Der Arcanist alias Nasreddin alias Peter Hess wird es Dir danken.
+
+

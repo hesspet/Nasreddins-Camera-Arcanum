@@ -11,4 +11,4 @@ Du bist eingeladen die Wege der Geister zu ergruenden. Erwarte aber, dass das Ar
 
 Moegen die Geister Dich erhoeren!
 
-Peter
+Nasreddin der Arcanist

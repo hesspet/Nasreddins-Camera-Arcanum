@@ -1,0 +1,43 @@
+@page "/buymeacoffee"
+@using Nasreddins_Camera_Arcanum.Helpers
+@using Markdig
+@inject HttpClient Http
+
+<PageTitle>Buy Me A Coffee</PageTitle>
+
+<MudStack Spacing="2">
+    <MudPaper Class="pa-4" Elevation="1">
+        <div class="markdown-content" style="@_buyMeStyle">@((MarkupString)buyMeHtmlInhalt)</div>
+    </MudPaper>
+</MudStack>
+
+@code {
+    private string buyMeHtmlInhalt = string.Empty;
+    private string _buyMeStyle = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var buyMeMarkdown = await Http.GetStringAsync("texts/BuyMeACoffee.md");
+            var frontmatter = MarkdownFrontmatter.Parsen(buyMeMarkdown);
+            var stilTeile = new System.Collections.Generic.List<string>();
+            if (frontmatter.Schrift != null)
+            {
+                stilTeile.Add($"--markdown-font: '{frontmatter.Schrift}', serif");
+            }
+            if (frontmatter.Schriftgroesse != null)
+            {
+                stilTeile.Add($"--markdown-font-size: {frontmatter.Schriftgroesse}");
+            }
+            _buyMeStyle = string.Join("; ", stilTeile);
+            buyMeHtmlInhalt = Markdown.ToHtml(frontmatter.Markdown);
+        }
+        catch
+        {
+            buyMeHtmlInhalt = "<p>Der Text konnte nicht geladen werden.</p>";
+        }
+    }
+
+
+}
