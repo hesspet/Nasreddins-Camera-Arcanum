@@ -5,14 +5,14 @@
 @inject FontEinstellungenService FontEinstellungenService
 @inject PwaUpdateService PwaUpdateService
 
-<PageTitle>Segmentierungs-Einstellungen</PageTitle>
+<PageTitle>Trennungseinstellungen</PageTitle>
 
 <MudStack Spacing="2">
     <MudPaper Class="pa-4" Elevation="1">
         <MudStack Spacing="1">
-            <MudText Typo="Typo.h5">Body-Segmentation einrichten</MudText>
+            <MudText Typo="Typo.h5">Person-Hintergrund-Trennung einrichten</MudText>
             <MudText Typo="Typo.body2">
-                Wähle hier die Parameter für das MediaPipe Selfie Segmentierungsmodell. Die Einstellungen wirken sich direkt auf
+                Wähle hier die Parameter für die Person-Hintergrund-Trennung. Die Einstellungen wirken sich direkt auf
                 die Vorschau und die erzeugten Vorder-/Hintergrund-Bilder aus.
             </MudText>
             <MudText Typo="Typo.caption" Color="MudBlazor.Color.Secondary">
@@ -261,7 +261,7 @@
     private async Task ApplySettings()
     {
         await Settings.UpdateAsync(_options);
-        Snackbar.Add("Segmentierungs-Einstellungen aktualisiert", Severity.Success);
+        Snackbar.Add("Trennungseinstellungen aktualisiert", Severity.Success);
     }
 
     private async Task ResetDefaults()
@@ -296,6 +296,8 @@
     private async Task BeiSchriftAuswahl(string cssWert)
     {
         _ausgewaehlteSchriftCss = cssWert;
+        StateHasChanged(); // Sofortige UI-Aktualisierung, noch bevor die Schrift global gesetzt wird
+
         var eintrag = VerfuegbareSchriften.Alle.FirstOrDefault(f => f.CssWert == cssWert);
         var anzeigeName = eintrag.AnzeigeName ?? "App-Standard";
         await FontEinstellungenService.SetzeSchriftAsync(cssWert, anzeigeName);

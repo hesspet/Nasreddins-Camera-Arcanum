@@ -21,6 +21,6 @@ Die maximale Dateigrösse beträgt **10 MB**.
 
 ## So geht's
 
-1. Klicke auf **"Datei auswählen"**
-2. Wähle eine Bilddatei aus deinem Dateisystem
+1. Tippe auf **"Datei auswählen"**
+2. Wähle ein Bild aus deiner Galerie
 3. Das Bild wird automatisch geladen und in der Vorschau angezeigt

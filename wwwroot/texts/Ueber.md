@@ -1,6 +1,6 @@
 # Ueber Nasreddin's Camera Arcanum
 
-Nasreddin's Camera Arcanum ist eine Progressive Web App fuer mobile Browser. Die App nimmt ein Foto auf oder verarbeitet ein hochgeladenes Bild, trennt die Person per Body-Segmentation vom Hintergrund und setzt eine dekorative Zwischenschicht zwischen Hintergrund und Vordergrund.
+Nasreddin's Camera Arcanum ist eine Progressive Web App fuer mobile Browser. Die App nimmt ein Foto auf oder verarbeitet ein hochgeladenes Bild, trennt die Person per Body-Segmentation vom Hintergrund und setzt eine dekorative Geisterebene zwischen Hintergrund und Vordergrund.
 
 ## Technologie
 

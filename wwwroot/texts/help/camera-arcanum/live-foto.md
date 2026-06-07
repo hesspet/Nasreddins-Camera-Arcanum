@@ -22,4 +22,4 @@ Mach vor dem eigentlichen Einsatz der Kamera ein paar Testaufnahmen mit einem He
 
 ## Qualität
 
-Die Kamera nimmt das Bild in der nativen Auflösung deines Geräts auf. Für die spätere Separierung von Hintergrund und Person kann das Bild bei Bedarf auf eine kleinere Arbeitsgröße herunterskaliert werden.
+Die Kamera nimmt das Bild in der nativen Auflösung deines Geräts auf. Für die spätere Trennung von Person und Hintergrund kann das Bild bei Bedarf auf eine kleinere Arbeitsgröße herunterskaliert werden.

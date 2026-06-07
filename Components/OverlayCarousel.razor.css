@@ -7,7 +7,8 @@
 
 .carousel-stage {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
     align-items: center;
     gap: 8px;
 }
@@ -18,7 +19,7 @@
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
     background: linear-gradient(135deg, rgba(63, 81, 181, 0.08), rgba(63, 81, 181, 0.16));
-    min-height: 220px;
+    min-height: 180px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -47,12 +48,13 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 6px;
-    max-width: 560px;
+    width: 100%;
 }
 
 .overlay-choice-button {
-    min-width: 88px;
-    max-width: 160px;
+    min-width: 44px;
+    min-height: 44px;
+    flex: 1 1 44%;
 }
 
 .merge-control-block {
@@ -60,24 +62,4 @@
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 8px;
     background: #fafafa;
-}
-
-@media (max-width: 600px) {
-    .carousel-stage {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-    }
-
-    .carousel-image-wrapper {
-        min-height: 180px;
-    }
-
-    .overlay-choice-list {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .overlay-choice-button {
-        flex: 1 1 44%;
-    }
 }

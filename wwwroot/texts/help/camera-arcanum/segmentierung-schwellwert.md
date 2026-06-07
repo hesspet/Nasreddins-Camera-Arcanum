@@ -1,4 +1,4 @@
-# Segmentierung: Schwellwert
+# Trennung: Schwellwert
 
 ## Was der Schwellwert bewirkt
 
@@ -14,7 +14,7 @@ Der Schwellwert bestimmt, ab welcher **Sicherheit** ein Pixel als "Person" oder
 ## Einstellung
 
 Der Regler reicht von **0.05** bis **0.95** in Schritten von 0.05. Nach jeder Änderung
-musst du auf **"Aktualisieren"** klicken, um die Segmentierung neu zu berechnen.
+musst du auf **"Aktualisieren"** tippen, um die Trennung neu zu berechnen.
 
 ## Tipp
 

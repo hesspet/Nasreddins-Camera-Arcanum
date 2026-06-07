@@ -12,5 +12,5 @@ camera_arcanum_photo.png.
 
 ## Wichtiger Hinweis
 
-Diese Buttons betreffen das **Originalbild vor der Segmentierung**. Das zusammengeführte
+Diese Buttons betreffen das **Originalbild vor der Trennung**. Das zusammengeführte
 Endergebnis hat einen eigenen Download-Button weiter unten auf der Seite.

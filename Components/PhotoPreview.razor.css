@@ -50,7 +50,7 @@
 .segmentation-workbench {
     width: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     align-items: start;
 }
@@ -65,10 +65,4 @@
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 8px;
     background: #fafafa;
-}
-
-@media (max-width: 900px) {
-    .segmentation-workbench {
-        grid-template-columns: minmax(0, 1fr);
-    }
 }

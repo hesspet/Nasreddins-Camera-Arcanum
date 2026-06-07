@@ -2,7 +2,7 @@
 
 ## Snapshot-Funktion
 
-Der Button **"Einstellungen speichern"** sichert deine aktuellen Segmentierungsparameter
+Der Button **"Einstellungen speichern"** sichert deine aktuellen Trennungsparameter
 als Snapshot.
 
 ## Was wird gespeichert?

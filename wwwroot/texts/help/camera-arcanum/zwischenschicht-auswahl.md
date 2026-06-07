@@ -1,35 +1,35 @@
-# Zwischenschicht auswählen
+# Geisterebene auswählen
 
-## Was ist die Zwischenschicht?
+## Was ist die Geisterebene?
 
-Die Zwischenschicht ist ein dekoratives Bildelement (Flügel, Geister, Skelette, Schädel),
+Die Geisterebene ist ein dekoratives Bildelement (Flügel, Geister, Skelette, Schädel),
 das **zwischen** Hintergrund und Person eingefügt wird. Es erscheint also hinter der Person,
 aber vor dem Hintergrund.
 
 ## Auswahl
 
-- **Pfeiltasten** oder **Vor/Zurück-Buttons** blättern durch die verfügbaren Zwischenschichten
-- Ein **Klick auf den Namen** einer Zwischenschicht springt direkt dorthin
-- Ein **Doppelklick auf das Vorschaubild** bestätigt die Auswahl
+- **Vor/Zurück-Buttons** blättern durch die verfügbaren Geisterebenen
+- Ein **Tipp auf den Namen** einer Geisterebene springt direkt dorthin
+- Ein **Doppeltipp auf das Vorschaubild** bestätigt die Auswahl
 
 ## Hintergrund-Modus
 
-- **Originalbild als Hintergrund**: Das unbearbeitete Foto erscheint hinter der Zwischenschicht.
+- **Originalbild als Hintergrund**: Das unbearbeitete Foto erscheint hinter der Geisterebene.
   Gut, wenn der originale Hintergrund erhalten bleiben soll.
-- **Extrahiert**: Der per Segmentierung vom Körper getrennte Hintergrund erscheint.
+- **Extrahiert**: Der vom Körper getrennte Hintergrund erscheint.
   Gut, wenn die Person vor einem neuen, leeren Hintergrund stehen soll.
 
-## Zwischenschicht-Deckkraft
+## Deckkraft der Geisterebene
 
-Regelt, wie **durchsichtig** die Zwischenschicht ist:
+Regelt, wie **durchsichtig** die Geisterebene ist:
 
-- **100 %**: Volle Deckkraft – die Zwischenschicht verdeckt den Hintergrund
-- **50–70 %**: Die Zwischenschicht scheint durch – gut für Geister-Effekte
-- **0–30 %**: Kaum sichtbare Zwischenschicht – subtiler Effekt
+- **100 %**: Volle Deckkraft – die Geisterebene verdeckt den Hintergrund
+- **50–70 %**: Die Geisterebene scheint durch – gut für Geister-Effekte
+- **0–30 %**: Kaum sichtbare Geisterebene – subtiler Effekt
 
-Nach jeder Änderung auf **"Aktualisieren"** klicken, um das Ergebnis neu zu berechnen.
+Nach jeder Änderung auf **"Aktualisieren"** tippen, um das Ergebnis neu zu berechnen.
 
 ## Bestätigung
 
-Klicke auf **"Auswahl bestätigen"**, um die Zusammenführung mit den aktuellen Einstellungen
+Tippe auf **"Auswahl bestätigen"**, um die Zusammenführung mit den aktuellen Einstellungen
 durchzuführen.

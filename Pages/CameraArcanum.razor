@@ -11,10 +11,7 @@
             <MudText Typo="Typo.h5">Kameramodus</MudText>
             <HelpButton HelpKey="camera-arcanum/kameramodus" CssClass="help-button-inline" />
             <MudText Typo="Typo.body2">
-                Öffne die Live-Vorschau, löse per großem Kameraknopf aus und sieh dir dein Foto direkt danach in der Vorschau an.
-            </MudText>
-            <MudText Typo="Typo.body2">
-                Alternativ kannst du ein vorhandenes Bild hochladen, um die Verarbeitung ohne Live-Kamera zu testen.
+                Nimm ein Foto auf oder lade ein Bild hoch. Tippe dann auf die Person, um sie vom Hintergrund zu trennen.
             </MudText>
         </MudStack>
     </MudPaper>
@@ -28,20 +25,20 @@
     {
         <div class="capture-area">
             <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+                <MudItem xs="12">
                     <MudPaper Class="pa-4" Elevation="1">
                         <MudText Typo="Typo.subtitle1" Class="mb-2">Live-Foto aufnehmen</MudText>
                         <HelpButton HelpKey="camera-arcanum/live-foto" CssClass="help-button-inline" />
                         <CameraView OnCapture="HandleCapture" Disabled="@_isProcessingImage" />
                     </MudPaper>
                 </MudItem>
-                <MudItem xs="12" md="6">
+                <MudItem xs="12">
                     <MudPaper Class="pa-4" Elevation="1">
                         <MudStack Spacing="1">
                             <MudText Typo="Typo.subtitle1">Bild hochladen</MudText>
                             <HelpButton HelpKey="camera-arcanum/bild-hochladen" CssClass="help-button-inline" />
                             <MudText Typo="Typo.body2">
-                                Wähle sie aus deinem Dateisystem aus. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
+                                Wähle ein Bild aus deiner Galerie oder deinen Dateien. Unterstützte Formate: PNG, JPG, GIF, WEBP (max. 10 MB).
                             </MudText>
                             <MudFileUpload T="IBrowserFile"
                                            FilesChanged="@HandleFileSelected"

@@ -2,7 +2,7 @@
 
 ## Qualität
 
-Bestimmt die **Arbeitsauflösung**, mit der die Segmentierung rechnet.
+Bestimmt die **Arbeitsauflösung**, mit der die Trennung rechnet.
 
 | Stufe | Auflösung | Geeignet für |
 |-------|-----------|-------------|
@@ -13,18 +13,18 @@ Bestimmt die **Arbeitsauflösung**, mit der die Segmentierung rechnet.
 
 ## Backend
 
-Wählt die Segmentierungs-Engine:
+Wählt die Trennungs-Engine:
 
 - **TensorFlow.js (MediaPipe)**: Läuft im Browser, gute Kompatibilität
 - **ONNX (MODNet)**: Experimentelle Alternative, kann auf manchen Geräten schneller sein
 
 ## Zeitliche Glättung
 
-Wenn aktiviert, werden mehrere aufeinanderfolgende Segmentierungsergebnisse gemittelt.
+Wenn aktiviert, werden mehrere aufeinanderfolgende Trennungsergebnisse gemittelt.
 Das reduziert **Flackern** zwischen den Einzelbildern und erzeugt stabilere Masken.
-Nützlich bei Selfie-Videos oder wenn du die Segmentierung mehrfach wiederholst.
+Nützlich bei Selfie-Videos oder wenn du die Trennung mehrfach wiederholst.
 
 ## Performance-Overlay
 
-Zeigt technische Details zur Segmentierungsgeschwindigkeit direkt im Segmentierungsergebnis an.
+Zeigt technische Details zur Trennungsgeschwindigkeit direkt im Trennungsergebnis an.
 Hilfreich, um die Leistung deines Geräts zu beurteilen.

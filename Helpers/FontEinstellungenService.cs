@@ -39,6 +39,18 @@ public class FontEinstellungenService
         GewaehlteSchriftCss = cssWert;
         GewaehlteSchriftName = anzeigeName;
 
+        // CSS-Variable global auf document.documentElement setzen,
+        // damit der Drawer und alle Popover die Schrift sofort übernehmen.
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(cssWert))
+                await _javascriptLaufzeit.InvokeVoidAsync("document.documentElement.style.setProperty", "--font-fantasy", cssWert);
+            else
+                await _javascriptLaufzeit.InvokeVoidAsync("document.documentElement.style.removeProperty", "--font-fantasy");
+        }
+        catch
+        { /* JS-Kontext nicht verfügbar – CSS-Variable wird beim nächsten Rendering gesetzt */ }
+
         try
         {
             await _javascriptLaufzeit.InvokeVoidAsync("localStorage.setItem", SpeicherSchluessel, cssWert);
@@ -69,6 +81,18 @@ public class FontEinstellungenService
                     GewaehlteSchriftName = eintrag.AnzeigeName;
                 }
             }
+
+            // Globale CSS-Variable ebenfalls initialisieren
+            if (!string.IsNullOrWhiteSpace(GewaehlteSchriftCss))
+            {
+                await _javascriptLaufzeit.InvokeVoidAsync("document.documentElement.style.setProperty",
+                    "--font-fantasy", GewaehlteSchriftCss);
+            }
+            else
+            {
+                await _javascriptLaufzeit.InvokeVoidAsync("document.documentElement.style.removeProperty",
+                    "--font-fantasy");
+            }
         }
         catch
         {
@@ -85,12 +109,6 @@ public class FontEinstellungenService
 /// </summary>
 public static class VerfuegbareSchriften
 {
-    public static readonly IReadOnlyList<SchriftEintrag> Alle = new List<SchriftEintrag> { AppStandard }
-        .Concat(FantasySchriften)
-        .Concat(WebStandardSchriften)
-        .Concat(GenerischeSchriften)
-        .ToList()
-        .AsReadOnly();
 
     public static readonly SchriftEintrag AppStandard = new()
     {
@@ -133,6 +151,13 @@ public static class VerfuegbareSchriften
         new() { AnzeigeName = "Courier New",                 CssWert = "'Courier New', monospace",             Gruppe = "Web-Standard" },
         new() { AnzeigeName = "Impact",                      CssWert = "Impact, sans-serif",                   Gruppe = "Web-Standard" },
     };
+
+    public static readonly IReadOnlyList<SchriftEintrag> Alle = new List<SchriftEintrag> { AppStandard }
+        .Concat(FantasySchriften)
+        .Concat(WebStandardSchriften)
+        .Concat(GenerischeSchriften)
+        .ToList()
+        .AsReadOnly();
 
     public readonly struct SchriftEintrag
     {

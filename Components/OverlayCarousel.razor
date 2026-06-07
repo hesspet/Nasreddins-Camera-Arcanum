@@ -4,7 +4,7 @@
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
             <MudIcon Icon="@Icons.Material.Filled.Collections" Color="MudBlazor.Color.Primary" />
-            <MudText Typo="Typo.subtitle1">Zwischenschicht auswählen</MudText>
+            <MudText Typo="Typo.subtitle1">Geisterebene auswählen</MudText>
             <HelpButton HelpKey="camera-arcanum/zwischenschicht-auswahl" CssClass="help-button-inline" />
         </MudStack>
 
@@ -12,12 +12,12 @@
         {
             <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="1">
                 <SpinnerImage SizePx="80" />
-                <MudText Typo="Typo.body2">Zwischenschichten werden geladen.</MudText>
+                <MudText Typo="Typo.body2">Geisterebenen werden geladen.</MudText>
             </MudStack>
         }
         else if (_overlays.Count == 0)
         {
-            <MudText Typo="Typo.body2" Class="mud-secondary-text">Keine Zwischenschichten gefunden.</MudText>
+            <MudText Typo="Typo.body2" Class="mud-secondary-text">Keine Geisterebenen gefunden.</MudText>
         }
         else
         {
@@ -31,7 +31,7 @@
             </div>
 
             <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1">
-                <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Primary" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" StartIcon="@Icons.Material.Filled.NavigateBefore">
+                <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium" OnClick="PreviousAsync" Disabled="@(!_canNavigate)" StartIcon="@Icons.Material.Filled.NavigateBefore">
                     Zurück
                 </MudButton>
                 <div class="overlay-choice-list">
@@ -42,14 +42,14 @@
                         var isActive = i == _currentIndex;
                         <MudButton Variant="@(isActive ? Variant.Filled : Variant.Outlined)"
                                    Color="@(isActive ? MudBlazor.Color.Primary : MudBlazor.Color.Default)"
-                                   Size="MudBlazor.Size.Small"
+                                   Size="MudBlazor.Size.Medium"
                                    Class="overlay-choice-button"
                                    OnClick="@(() => SelectIndexAsync(overlayIndex))">
                             @overlay.Title
                         </MudButton>
                     }
                 </div>
-                <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Primary" OnClick="NextAsync" Disabled="@(!_canNavigate)" EndIcon="@Icons.Material.Filled.NavigateNext">
+                <MudButton Variant="Variant.Outlined" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium" OnClick="NextAsync" Disabled="@(!_canNavigate)" EndIcon="@Icons.Material.Filled.NavigateNext">
                     Weiter
                 </MudButton>
             </MudStack>
@@ -59,7 +59,7 @@
             <MudPaper Class="merge-control-block" Elevation="0">
                 <MudStack Spacing="1">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                        <MudText Typo="Typo.subtitle2">Zwischenschicht-Deckkraft</MudText>
+                        <MudText Typo="Typo.subtitle2">Deckkraft der Geisterebene</MudText>
                         <MudButton Variant="Variant.Text"
                                    Color="MudBlazor.Color.Primary"
                                    Size="MudBlazor.Size.Small"

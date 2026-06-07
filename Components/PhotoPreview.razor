@@ -10,14 +10,14 @@
             <img @ref="_photoRef" src="@PhotoDataUrl" alt="Aufgenommenes Foto" class="photo-image" @onclick="HandleImageClick" />
             @if (!_isSegmenting)
             {
-            <div class="photo-hint">Bitte auf die Stelle der Person klicken, an der die Mitte der Geistbilder eingefügt werden sollen. Üblicherweise Brusthöhe unterhalb des Halses.</div>
+            <div class="photo-hint">Tippe auf die Person – dorthin, wo die Geistbilder erscheinen sollen (meist Brusthöhe).</div>
             <HelpButton HelpKey="camera-arcanum/foto-vorschau" CssClass="help-button-inline" />
             }
             @if (_isSegmenting)
             {
             <div class="segmentation-overlay">
                 <SpinnerImage SizePx="100" />
-                <MudText Typo="Typo.body2" Class="segmentation-overlay-text">Segmentierung läuft …</MudText>
+                <MudText Typo="Typo.body2" Class="segmentation-overlay-text">Trennung läuft …</MudText>
             </div>
             }
         </div>
@@ -64,10 +64,9 @@
         <MudAlert Severity="Severity.Info" Dense="true">@_autoTuneInfo</MudAlert>
     }
 
-    <MudPaper Class="pa-3 mt-2" Elevation="1">
+    <MudExpansionPanel Text="Performance &amp; Qualität" Class="mt-2">
+        <HelpButton HelpKey="camera-arcanum/qualitaet-performance" CssClass="help-button-inline" />
         <MudStack Spacing="1">
-            <MudText Typo="Typo.subtitle2">Performance &amp; Qualität</MudText>
-            <HelpButton HelpKey="camera-arcanum/qualitaet-performance" CssClass="help-button-inline" />
             <MudStack Row="true" Spacing="1">
                 <MudSelect T="string"
                            Value="@SegmentationSettings.Options.Quality"
@@ -106,7 +105,7 @@
                 </MudSwitch>
             </MudStack>
         </MudStack>
-    </MudPaper>
+    </MudExpansionPanel>
 
     @if (_perfSummary is not null)
     {
@@ -124,7 +123,7 @@
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                         <MudIcon Icon="@Icons.Material.Filled.Tune" Color="MudBlazor.Color.Primary" />
-                        <MudText Typo="Typo.subtitle1">Segmentierung feinjustieren</MudText>
+                        <MudText Typo="Typo.subtitle1">Trennung feinjustieren</MudText>
                     </MudStack>
                     <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                    Color="MudBlazor.Color.Primary"
@@ -138,14 +137,6 @@
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                             <MudText Typo="Typo.subtitle2">Motiverkennung</MudText>
                             <HelpButton HelpKey="camera-arcanum/segmentierung-schwellwert" CssClass="help-button-inline" />
-                            <MudButton Variant="Variant.Text"
-                                       Color="MudBlazor.Color.Primary"
-                                       Size="MudBlazor.Size.Small"
-                                       StartIcon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
-                                       OnClick="ApplyInlineSegmentationSettingsAsync">
-                                Aktualisieren
-                            </MudButton>
                         </MudStack>
 
                         <MudText Typo="Typo.caption">Schwellwert</MudText>
@@ -165,14 +156,6 @@
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                             <MudText Typo="Typo.subtitle2">Maskenform</MudText>
                             <HelpButton HelpKey="camera-arcanum/segmentierung-maskenform" CssClass="help-button-inline" />
-                            <MudButton Variant="Variant.Text"
-                                       Color="MudBlazor.Color.Primary"
-                                       Size="MudBlazor.Size.Small"
-                                       StartIcon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
-                                       OnClick="ApplyInlineSegmentationSettingsAsync">
-                                Aktualisieren
-                            </MudButton>
                         </MudStack>
 
                         <MudText Typo="Typo.caption">Dilatation</MudText>
@@ -202,14 +185,6 @@
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                             <MudText Typo="Typo.subtitle2">Kanten</MudText>
                             <HelpButton HelpKey="camera-arcanum/segmentierung-kanten" CssClass="help-button-inline" />
-                            <MudButton Variant="Variant.Text"
-                                       Color="MudBlazor.Color.Primary"
-                                       Size="MudBlazor.Size.Small"
-                                       StartIcon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
-                                       OnClick="ApplyInlineSegmentationSettingsAsync">
-                                Aktualisieren
-                            </MudButton>
                         </MudStack>
 
                         <MudText Typo="Typo.caption">Maskenweichzeichnung</MudText>
@@ -244,6 +219,15 @@
                     </MudStack>
                 </MudPaper>
             </MudStack>
+            <MudButton Variant="Variant.Filled"
+                       Color="MudBlazor.Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       Disabled="@(_isSegmenting || string.IsNullOrEmpty(PhotoDataUrl))"
+                       OnClick="ApplyInlineSegmentationSettingsAsync"
+                       FullWidth="true"
+                       Class="mt-2">
+                Trennung aktualisieren
+            </MudButton>
         </MudPaper>
     </div>
 
@@ -410,7 +394,7 @@
                 $"Auto-Kalibrierung aktiv: weiche Kante {result.Stats.SoftEdgeRatio.ToString("P0", CultureInfo.InvariantCulture)}, " +
                 $"Übergang {result.Stats.AvgEdgeTransition:F0}, Randleck {result.Stats.BorderLeakRatio.ToString("P1", CultureInfo.InvariantCulture)}. Neue Werte wurden übernommen.";
 
-            Snackbar.Add("Segmentierungs-Parameter automatisch angepasst", Severity.Success);
+            Snackbar.Add("Trennungsparameter automatisch angepasst", Severity.Success);
 
             await RunSegmentationAsync();
         }
@@ -451,7 +435,7 @@
         }
         catch (JSException ex)
         {
-            _segmentationError = $"Segmentierung fehlgeschlagen: {ex.Message}";
+            _segmentationError = $"Trennung fehlgeschlagen: {ex.Message}";
             _foreground = null;
             _background = null;
             _perfSummary = null;
@@ -495,13 +479,13 @@
     {
         var overlayOpacityPercent = Math.Clamp(request.OverlayOpacityPercent, 0, 100);
         _selectionInfo = request.UseOriginalBackground
-            ? $"Ausgewählte Zwischenschicht: {request.OverlayPath} (Original-Hintergrund, Zwischenschicht {overlayOpacityPercent} %)"
-            : $"Ausgewählte Zwischenschicht: {request.OverlayPath} (extrahierter Hintergrund, Zwischenschicht {overlayOpacityPercent} %)";
+            ? $"Ausgewählte Geisterebene: {request.OverlayPath} (Original-Hintergrund, Geisterebene {overlayOpacityPercent} %)"
+            : $"Ausgewählte Geisterebene: {request.OverlayPath} (extrahierter Hintergrund, Geisterebene {overlayOpacityPercent} %)";
         await JS.InvokeVoidAsync("console.log", $"Overlay selection confirmed for {request.OverlayPath} with background {(request.UseOriginalBackground ? "original" : "extracted")} and overlay opacity {overlayOpacityPercent}%");
 
         if (!HasSegmentationResult)
         {
-            _mergeError = "Es ist kein Segmentierungsergebnis vorhanden.";
+            _mergeError = "Es ist kein Trennungsergebnis vorhanden.";
             return;
         }
 
@@ -643,7 +627,7 @@
         }
         else
         {
-            Snackbar.Add("Segmentierungs-Einstellungen aktualisiert", Severity.Success);
+            Snackbar.Add("Trennungseinstellungen aktualisiert", Severity.Success);
             await InvokeAsync(StateHasChanged);
         }
     }

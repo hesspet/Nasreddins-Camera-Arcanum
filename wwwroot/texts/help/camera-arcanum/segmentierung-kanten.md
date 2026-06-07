@@ -1,8 +1,8 @@
-# Segmentierung: Kanten
+# Trennung: Kanten
 
 ## Maskenweichzeichnung
 
-Wendet einen **Gaussian Blur** auf die gesamte Segmentierungsmaske an. Je höher der Wert,
+Wendet einen **Gaussian Blur** auf die gesamte Trennungsmaske an. Je höher der Wert,
 desto weicher die Übergänge.
 
 - **0**: Harte Kanten – klare Trennlinie, kann künstlich wirken

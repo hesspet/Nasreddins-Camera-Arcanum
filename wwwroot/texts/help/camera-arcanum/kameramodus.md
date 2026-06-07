@@ -10,7 +10,7 @@ Natürlich kannst du auch direkt mit der **Camera des Meisters** Fotos machen. I
 
 Die **Camera des Meisters** ist also dafür da, die Fotosituation in Ruhe durchzutesten, die Ergebnisse zu prüfen und eine gute Einstellung für den Einsatz beim Zaubern zu finden.
 
-Die hier gefundenen Einstellungen kannst du abspeichern. Sie werden dann später in der **Camera des Magiers** verwendet. Dort nimmst du das Foto auf, trennst die Person vom Hintergrund, fügst eine dekorative Zwischenschicht ein und lädst am Ende das fertige Bild herunter.
+Die hier gefundenen Einstellungen kannst du abspeichern. Sie werden dann später in der **Camera des Magiers** verwendet. Dort nimmst du das Foto auf, trennst die Person vom Hintergrund, fügst eine dekorative Geisterebene ein und lädst am Ende das fertige Bild herunter.
 
 ## Was du hier tun kannst
 
@@ -21,7 +21,7 @@ Die hier gefundenen Einstellungen kannst du abspeichern. Sie werden dann später
 ## Ablauf
 
 1. Foto aufnehmen oder hochladen
-2. Auf die Person im Bild tippen, um die Segmentierung zu starten
-3. Separierungsparameter bei Bedarf feinjustieren
+2. Auf die Person im Bild tippen, um die Trennung zu starten
+3. Trennungsparameter bei Bedarf feinjustieren
 4. Geisterbilder auswählen und Zusammenführung bestätigen
 5. Ergebnis herunterladen oder neu beginnen

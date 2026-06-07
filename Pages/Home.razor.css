@@ -9,10 +9,5 @@
 .mud-chip {
     min-width: 96px;
     justify-content: center;
-}
-
-@media (max-width: 599px) {
-    .mud-chip {
-        width: 100%;
-    }
+    width: 100%;
 }

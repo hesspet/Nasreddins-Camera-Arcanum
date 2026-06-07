@@ -1,4 +1,4 @@
-# Segmentierung: Maskenform
+# Trennung: Maskenform
 
 ## Dilatation
 
@@ -9,7 +9,7 @@ nach aussen erweitert.
 - **1–3**: Leichte Erweiterung – schliesst kleine Lücken
 - **4–10**: Starke Erweiterung – kann die Person unnatürlich aufblähen
 
-Verwende Dilatation, wenn die Segmentierung Körperteile **abschneidet** oder Löcher in der
+Verwende Dilatation, wenn die Trennung Körperteile **abschneidet** oder Löcher in der
 Maske auftreten.
 
 ## Erosion

@@ -11,7 +11,7 @@
         <MudStack Spacing="1">
             <MudText Typo="Typo.h5">Kamera Pur</MudText>
             <MudText Typo="Typo.body2">
-                Vereinfachter Ablauf: Foto aufnehmen, Zwischenschicht wählen, verarbeiten – fertig.
+                Vereinfachter Ablauf: Foto aufnehmen, Geisterebene wählen, verarbeiten – fertig.
             </MudText>
             @if (_snapshotGeladen)
             {
@@ -38,13 +38,13 @@
         case Schritt.Foto:
             <div class="capture-area">
                 <MudGrid Spacing="2">
-                    <MudItem xs="12" md="6">
+                    <MudItem xs="12">
                         <MudPaper Class="pa-4" Elevation="1">
                             <MudText Typo="Typo.subtitle1" Class="mb-2">Schritt 1: Foto aufnehmen</MudText>
                             <CameraView OnCapture="FotoAufgenommen" Disabled="@_verarbeitet" />
                         </MudPaper>
                     </MudItem>
-                    <MudItem xs="12" md="6">
+                    <MudItem xs="12">
                         <MudPaper Class="pa-4" Elevation="1">
                             <MudStack Spacing="1">
                                 <MudText Typo="Typo.subtitle1">Oder Bild hochladen</MudText>
@@ -75,9 +75,9 @@
         case Schritt.Overlay:
             <MudPaper Class="pa-4" Elevation="1">
                 <MudStack Spacing="1">
-                    <MudText Typo="Typo.subtitle1">Schritt 2: Zwischenschicht auswählen</MudText>
+                    <MudText Typo="Typo.subtitle1">Schritt 2: Geisterebene auswählen</MudText>
                     <MudText Typo="Typo.body2">
-                        Wähle eine Zwischenschicht und klicke auf „Auswahl bestätigen“. Die Verarbeitung startet automatisch.
+                        Wähle eine Geisterebene und tippe auf „Auswahl bestätigen“. Die Verarbeitung startet automatisch.
                     </MudText>
                 </MudStack>
             </MudPaper>
@@ -90,7 +90,7 @@
                     <SpinnerImage SizePx="120" />
                     <MudText Typo="Typo.body1">Schritt 3: Bild wird verarbeitet …</MudText>
                     <MudText Typo="Typo.caption" Color="MudBlazor.Color.Secondary">
-                        Segmentierung und Zusammenführung laufen. Das dauert einen Moment.
+                        Trennung und Zusammenführung laufen. Das dauert einen Moment.
                     </MudText>
                 </MudStack>
             </MudPaper>
